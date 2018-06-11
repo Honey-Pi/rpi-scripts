@@ -1,0 +1,1 @@
+{"sensoren":[{"type":0,"tsField":"field1","time":1,"pin":"4"},{"type":"1","tsField":"field2","time":1,"pin":"SCL,SDA"},{"type":"2","tsField":"field3","time":1,"pin":"5,6"}],"set_reference_unit":"92","simTime":"5","simApn":"pinternet.interkom.de","tsWriteKey":"missing","tsReadKey":"fehlt noch","tsChannelId":"206897"}
