@@ -1,13 +1,4 @@
 ﻿# Installiere alle benötigten Packages
-# https://tutorials-raspberrypi.de/raspberry-pi-daten-thingspeak-loggen-auswerten/
-	# Sofern du den Sensor vorher nie benutzt hast und auch die entsprechende Bibliothek noch nicht installiert ist, müssen wir erst einmal diese installieren:
-	sudo apt-get update
-	sudo apt-get install build-essential python-dev python-openssl git
-
-	# Nun installieren wir noch die Bibliothek zum Auslesen des DHT11/22 Sensor
-	git clone https://github.com/adafruit/Adafruit_Python_DHT.git && cd Adafruit_Python_DHT
-	sudo python setup.py install
-
 # https://learn.pimoroni.com/tutorial/sandyj/getting-started-with-bme680-breakout
 	# dieses package hatte bei mir bei raspbian-lite gefehlt:
 	sudo apt-get install python-smbus
