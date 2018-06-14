@@ -1,1 +1,32 @@
-{"sensoren":[{"type":0,"tsField":"field1","time":1,"pin":"4"},{"type":"1","tsField":"field2","time":1,"pin":"SCL,SDA"},{"type":"2","tsField":"field3","time":1,"pin":"5,6"}],"set_reference_unit":"92","simTime":"5","simApn":"pinternet.interkom.de","tsWriteKey":"missing","tsReadKey":"fehlt noch","tsChannelId":"206897"}
+{
+  "sensors": [
+    {
+      "type": 0,
+      "ts_field_indoor_temperature": "field1",
+      "interval": 60
+    },
+    {
+      "type": 1,
+      "name": "BME680",
+      "ts_field_outdoor_temperature": "field2",
+      "ts_field_humidity": "field3",
+      "ts_field_air_pressure": "field4",
+      "ts_field_air_quality": "field5",
+      "interval": 60
+    },
+    {
+      "type": 2,
+      "name": "DS18B20",
+      "ts_field_weight": "field6",
+      "interval": 60,
+      "pin_dt": 5,
+      "pin_sck": 6
+    }
+  ],
+  "set_reference_unit": "92",
+  "sim_time": "5",
+  "sim_apn": "pinternet.interkom.de",
+  "ts_write_key": "24GJQV17H7H4XGJ5",
+  "ts_read_key": "9EZ7E0918UVVAGAY",
+  "ts_channel_id": "206897"
+}
