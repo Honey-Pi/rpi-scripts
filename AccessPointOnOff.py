@@ -18,6 +18,7 @@ def shutdown_ap():
 button = Button(17)
 	#Wert ist der GPIO Pin
 i=0
+os.system("sudo ifconfig wlan0 down")
 
 
 while(true)
