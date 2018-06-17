@@ -1,10 +1,17 @@
 import os
 from signal import pause
+
+import RPi.GPIO as GPIO
 from gpiozero import Button # sudo apt install python3-gpiozero
 
+from read_settings import get_settings
 from read_and_upload_all import start_read_and_upload_all, stop_read_and_upload_all
 
-button = Button(17)  # value is the GPIO pin
+settings = get_settings()
+
+gpio = settings["button_pin"] # SET GPIO Button-Pin
+button = Button(gpio)  # value is the GPIO pin
+
 i = 0
 os.system("sudo ifconfig wlan0 down")
 

@@ -1,5 +1,4 @@
 # read settings.json which is saved by rpi-webinterface
-#!/usr/bin/env python3
 
 import json
 import io

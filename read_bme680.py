@@ -5,30 +5,7 @@ from pprint import pprint
 
 import bme680
 
-from HX711 import HX711
 from read_settings import get_settings, get_sensors
-
-settings = get_settings()
-
-# weight sensor pins
-pin_dt = get_sensors(2)[0]["pin_dt"]
-pin_sck = get_sensors(2)[0]["pin_sck"]
-reference_unit = get_sensors(2)[0]["reference_unit"]
-
-# setup weight sensor
-hx = HX711(pin_dt, pin_sck)
-hx.set_reading_format("LSB", "MSB")
-
-# HOW TO CALCULATE THE REFFERENCE UNIT
-# To set the reference unit to 1. Put 1kg on your sensor or anything you have and know exactly how much it weights.
-# In this case, 92 is 1 gram because, with 1 as a reference unit I got numbers near 0 without any weight
-# and I got numbers around 184000 when I added 2kg. So, according to the rule of thirds:
-# If 2000 grams is 184000 then 1000 grams is 184000 / 2000 = 92.
-# hx.set_reference_unit(113)
-hx.set_reference_unit(reference_unit)
-
-hx.reset()
-hx.tare()
 
 # setup BME680 sensor
 sensor = bme680.BME680()
@@ -79,7 +56,7 @@ def burn_in_bme680():
         return None
 
 
-def measure_other_sensors(gas_baseline):
+def measure_bme680(gas_baseline, ts_sensor):
     if sensor.get_sensor_data() and sensor.data.heat_stable:
         temperature = sensor.data.temperature
         humidity = sensor.data.humidity
@@ -106,14 +83,13 @@ def measure_other_sensors(gas_baseline):
         # Calculate air_quality_score.
         air_quality = hum_score + gas_score
 
-        weight = hx.get_weight(5)
-        # transform weight value
-        weight = max(0, int(weight))
-        hx.power_down()
-        hx.power_up()
+        # ThingSpeak fields
+        ts_field_temperature = ts_sensor["ts_field_temperature"]
+        ts_field_humidity = ts_sensor["ts_field_humidity"]
+        ts_field_air_pressure = ts_sensor["ts_field_air_pressure"]
+        ts_field_air_quality = ts_sensor["ts_field_air_quality"]
 
-        return ({"temperature": temperature,
-                 "humidity": humidity,
-                 "air_pressure": air_pressure,
-                 "air_quality": air_quality,
-                 "weight": weight})
+        return ({ts_field_temperature: temperature,
+                 ts_field_humidity: humidity,
+                 ts_field_air_pressure: air_pressure,
+                 ts_field_air_quality: air_quality})

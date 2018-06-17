@@ -8,8 +8,9 @@ import RPi.GPIO as GPIO
 import numpy
 import thingspeak
 
-from read_bme680_and_hx711 import measure_other_sensors, burn_in_bme680
+from read_bme680 import measure_bme680, burn_in_bme680
 from read_ds18b20 import get_temperature
+from read_hx711 import measure_weight
 from read_settings import get_settings, get_sensors
 
 
@@ -19,14 +20,6 @@ settings = get_settings()
 channel_id = settings["ts_channel_id"]
 write_key = settings["ts_write_key"]
 interval = settings["interval"]
-
-# ThingSpeak fields
-ts_field_ds18b20_temperature = get_sensors(0)[0]["ts_field"]
-ts_field_temperature = get_sensors(1)[0]["ts_field_temperature"]
-ts_field_humidity = get_sensors(1)[0]["ts_field_humidity"]
-ts_field_air_pressure = get_sensors(1)[0]["ts_field_air_pressure"]
-ts_field_air_quality = get_sensors(1)[0]["ts_field_air_quality"]
-ts_field_weight = get_sensors(2)[0]["ts_field"]
 
 filtered_temperature = []  # here we keep the temperature values after removing outliers
 filtered_humidity = []  # here we keep the filtered humidity values after removing the outliers
@@ -45,12 +38,12 @@ def read_values():
         while counter < seconds and not event.is_set():
             temperature = None
             try:
-                temperature = get_temperature(get_sensors(0)[0]["device_id"])
-                print("temperature", temperature)
+                temperature = get_temperature(get_sensors(0)[0])
+                print "temperature: " + str(temperature)
             except IOError:
-                print("IOError occurred")    
+                print "IOError occurred"    
             except TypeError:
-                print("TypeError occurred") 
+                print "TypeError occurred"
 
             if math.isnan(temperature) == False:
                 values.append(temperature)
@@ -96,7 +89,7 @@ def start_read_and_upload_all():
     	
     # if burning was canceled=> exit
     if gas_baseline is None:
-    	print("gas_baseline can't be None")
+    	print "gas_baseline can't be None"
     	stop_read_and_upload_all()
 
     # here we start the thread
@@ -111,25 +104,34 @@ def start_read_and_upload_all():
         if len(filtered_temperature) > 0:  # or we could have used filtered_humidity instead
             lock.acquire()
 
+            # dict with all fields and values with will be tranfered later to ThingSpeak
+            ts_fields = {}
+
             # here you can do whatever you want with the variables: print them, file them out, anything
+            
+            # measure sensor with type 0
             ds18b20_temperature = filtered_temperature.pop()
-            other_sensor_values = measure_other_sensors(gas_baseline)
+            ts_field_ds18b20 = get_sensors(0)[0]["ts_field"]
+            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
 
-            # print values for debug reasons
-            print(ts_field_ds18b20_temperature, ds18b20_temperature)
-            print(ts_field_temperature, other_sensor_values.get("temperature"))
-            print(ts_field_humidity, other_sensor_values.get("humidity"))
-            print(ts_field_air_pressure, other_sensor_values.get("air_pressure"))
-            print(ts_field_air_quality, other_sensor_values.get("air_quality"))
-            print(ts_field_weight, other_sensor_values.get("weight"))
+            # measure BME680 (can only be once)
+            bme680_values = measure_bme680(gas_baseline, get_sensors(1)[0])
+            ts_fields.update(bme680_values)
 
-            # update ThingSpeak / transfer values
-            channel.update({ts_field_ds18b20_temperature: ds18b20_temperature,
-                            ts_field_temperature: other_sensor_values.get("temperature"),
-                            ts_field_humidity: other_sensor_values.get("humidity"),
-                            ts_field_air_pressure: other_sensor_values.get("air_pressure"),
-                            ts_field_air_quality: other_sensor_values.get("air_quality"),
-                            ts_field_weight: other_sensor_values.get("weight")})
+            # measure every sensor with type 2
+            for (i, sensor) in enumerate(get_sensors(2)):
+                weight = measure_weight(sensor)
+                ts_fields.update(weight)
+
+            # print measurement values for debug reasons
+            for key, value in ts_fields.iteritems():
+                print key + ": " + str(value)
+            
+            try:
+                # update ThingSpeak / transfer values
+                channel.update(ts_fields)
+            except HTTPError:
+                print "HTTPError occurred"  
 
             lock.release()
 
