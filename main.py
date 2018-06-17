@@ -1,7 +1,6 @@
 import os
 from signal import pause
-
-from gpiozero import Button
+from gpiozero import Button # sudo apt install python3-gpiozero
 
 from read_and_upload_all import start_read_and_upload_all, stop_read_and_upload_all
 

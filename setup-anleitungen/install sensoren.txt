@@ -4,6 +4,7 @@
 	sudo apt-get install python-smbus
 	# You'll need to have I2C enabled:
 	curl https://get.pimoroni.com/i2c | bash
+	# I2C war bei mir nach einem Neustart auf einmal wieder deaktiviert https://developer-blog.net/raspberry-pi-i2c-aktivieren/
 	
 	# Next, in the terminal, type the following to clone the repository and install it
 	git clone https://github.com/pimoroni/bme680
@@ -26,3 +27,17 @@
 	sudo apt-get install python-rpi.gpio python3-rpi.gpio
 	
 	git clone https://github.com/tatobari/hx711py
+	
+# Für die .py Skripte war noch notwendig:
+	sudo apt install python-gpiozero python3-gpiozero
+	
+	# pip für python 2 hat gefehlt
+	sudo apt-get install python-setuptools
+	sudo easy_install pip
+	
+	# um thingspeak über pip zu installieren
+	sudo pip install thingspeak
+	
+	# pathlib ist nur in python3 standardgemäß dabei und muss daher für python2 nachinstalliert werden:
+	sudo pip install pathlib
+	

@@ -10,22 +10,22 @@ import thingspeak
 
 from read_bme680_and_hx711 import measure_other_sensors, burn_in_bme680
 from read_ds18b20 import get_temperature
-from read_settings import get_settings
+from read_settings import get_settings, get_sensors
 
-settings = pprint(get_settings())
+settings = get_settings()
 
 # ThingSpeak data
 channel_id = settings["ts_channel_id"]
 write_key = settings["ts_write_key"]
-interval = settings["sensors"][2]
+interval = settings["interval"]
 
 # ThingSpeak fields
-ts_field_outdoor_temperature = settings["sensors"][0]["ts_field_indoor_temperature"]
-ts_field_indoor_temperature = settings["sensors"][1]["ts_field_temperature"]
-ts_field_humidity = settings["sensors"][1]["ts_field_humidity"]
-ts_field_air_pressure = settings["sensors"][1]["ts_field_air_pressure"]
-ts_field_air_quality = settings["sensors"][1]["ts_field_air_quality"]
-ts_field_weight = settings["sensors"][2]["ts_field_weight"]
+ts_field_ds18b20_temperature = get_sensors(0)[0]["ts_field"]
+ts_field_temperature = get_sensors(1)[0]["ts_field_temperature"]
+ts_field_humidity = get_sensors(1)[0]["ts_field_humidity"]
+ts_field_air_pressure = get_sensors(1)[0]["ts_field_air_pressure"]
+ts_field_air_quality = get_sensors(1)[0]["ts_field_air_quality"]
+ts_field_weight = get_sensors(2)[0]["ts_field"]
 
 filtered_temperature = []  # here we keep the temperature values after removing outliers
 filtered_humidity = []  # here we keep the filtered humidity values after removing the outliers
@@ -44,8 +44,8 @@ def read_values():
         while counter < seconds and not event.is_set():
             temperature = None
             try:
-                temperature = get_temperature()
-
+                temperature = get_temperature(get_sensors(0)[0]["device_id"])
+                print(temperature)
             except IOError:
                 print("IOError occurred")
 
@@ -104,11 +104,20 @@ def start_read_and_upload_all():
             lock.acquire()
 
             # here you can do whatever you want with the variables: print them, file them out, anything
-            temperature = filtered_temperature.pop()
+            ds18b20_temperature = filtered_temperature.pop()
             other_sensor_values = measure_other_sensors(gas_baseline)
 
-            channel.update({ts_field_indoor_temperature: temperature,
-                            ts_field_outdoor_temperature: other_sensor_values.get("outdoor_temperature"),
+            # print values for debug reasons
+            print(ts_field_ds18b20_temperature, ds18b20_temperature)
+            print(ts_field_temperature, other_sensor_values.get("temperature"))
+            print(ts_field_humidity, other_sensor_values.get("humidity"))
+            print(ts_field_air_pressure, other_sensor_values.get("air_pressure"))
+            print(ts_field_air_quality, other_sensor_values.get("air_quality"))
+            print(ts_field_weight, other_sensor_values.get("weight"))
+
+            # update ThingSpeak / transfer values
+            channel.update({ts_field_ds18b20_temperature: ds18b20_temperature,
+                            ts_field_temperature: other_sensor_values.get("temperature"),
                             ts_field_humidity: other_sensor_values.get("humidity"),
                             ts_field_air_pressure: other_sensor_values.get("air_pressure"),
                             ts_field_air_quality: other_sensor_values.get("air_quality"),

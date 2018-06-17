@@ -1,16 +1,19 @@
+#!/usr/bin/env python
+
 import time
 from pprint import pprint
 
 import bme680
 
 from HX711 import HX711
-from read_settings import get_settings
+from read_settings import get_settings, get_sensors
 
-settings = pprint(get_settings())
+settings = get_settings()
 
 # weight sensor pins
-pin_dt = settings["sensors"][2]["pin_dt"]
-pin_sck = settings["sensors"][2]["pin_sck"]
+pin_dt = get_sensors(2)[0]["pin_dt"]
+pin_sck = get_sensors(2)[0]["pin_sck"]
+reference_unit = get_sensors(2)[0]["reference_unit"]
 
 # setup weight sensor
 hx = HX711(pin_dt, pin_sck)
@@ -22,23 +25,23 @@ hx.set_reading_format("LSB", "MSB")
 # and I got numbers around 184000 when I added 2kg. So, according to the rule of thirds:
 # If 2000 grams is 184000 then 1000 grams is 184000 / 2000 = 92.
 # hx.set_reference_unit(113)
-hx.set_reference_unit(92)
+hx.set_reference_unit(reference_unit)
 
 hx.reset()
 hx.tare()
 
 # setup BME680 sensor
-bme680 = bme680.BME680()
+sensor = bme680.BME680()
 
 # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
-bme680.set_humidity_oversample(bme680.OS_2X)
-bme680.set_pressure_oversample(bme680.OS_4X)
-bme680.set_temperature_oversample(bme680.OS_8X)
-bme680.set_filter(bme680.FILTER_SIZE_3)
-bme680.set_gas_status(bme680.ENABLE_GAS_MEAS)
-bme680.set_gas_heater_temperature(320)
-bme680.set_gas_heater_duration(150)
-bme680.select_gas_heater_profile(0)
+sensor.set_humidity_oversample(bme680.OS_2X)
+sensor.set_pressure_oversample(bme680.OS_4X)
+sensor.set_temperature_oversample(bme680.OS_8X)
+sensor.set_filter(bme680.FILTER_SIZE_3)
+sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
+sensor.set_gas_heater_temperature(320)
+sensor.set_gas_heater_duration(150)
+sensor.select_gas_heater_profile(0)
 
 # Set the humidity baseline to 40%, an optimal indoor humidity.
 hum_baseline = 40.0
@@ -64,8 +67,8 @@ def burn_in_bme680():
 
         while curr_time - start_time < burn_in_time:
             curr_time = time.time()
-            if bme680.get_sensor_data() and bme680.data.heat_stable:
-                gas = bme680.data.gas_resistance
+            if sensor.get_sensor_data() and sensor.data.heat_stable:
+                gas = sensor.data.gas_resistance
                 burn_in_data.append(gas)
                 time.sleep(1)
 
@@ -75,12 +78,12 @@ def burn_in_bme680():
 
 
 def measure_other_sensors(gas_baseline):
-    if bme680.get_sensor_data() and bme680.data.heat_stable:
-        outdoor_temperature = bme680.data.temperature
-        humidity = bme680.data.humidity
-        air_pressure = bme680.data.data_pressure
+    if sensor.get_sensor_data() and sensor.data.heat_stable:
+        temperature = sensor.data.temperature
+        humidity = sensor.data.humidity
+        air_pressure = sensor.data.data_pressure
 
-        gas = bme680.data.gas_resistance
+        gas = sensor.data.gas_resistance
         gas_offset = gas_baseline - gas
         humidity_offset = humidity - hum_baseline
 
@@ -105,7 +108,7 @@ def measure_other_sensors(gas_baseline):
         hx.power_down()
         hx.power_up()
 
-        return ({"outdoor_temperature": outdoor_temperature,
+        return ({"temperature": temperature,
                  "humidity": humidity,
                  "air_pressure": air_pressure,
                  "air_quality": air_quality,

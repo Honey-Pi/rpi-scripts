@@ -1,6 +1,8 @@
-def get_temperature():
+# read temperature from DS18b20 sensor
+
+def get_temperature(device_id):
     # read 1-wire slave file
-    file = open('/sys/bus/w1/devices/28-000005d2e508/w1_slave')
+    file = open('/sys/bus/w1/devices/' + device_id + '/w1_slave')
     file_content = file.read()
     file.close()
 
