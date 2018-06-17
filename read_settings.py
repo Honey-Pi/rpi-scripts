@@ -1,4 +1,5 @@
 # read settings.json which is saved by rpi-webinterface
+#!/usr/bin/env python3
 
 import json
 import io
@@ -6,7 +7,7 @@ from pathlib import Path
 
 
 def get_settings():
-    filename = "./settings/settings.json"
+    filename = "/var/www/html/backend/settings.json"
     my_file = Path(filename)
     settings = {}
 
