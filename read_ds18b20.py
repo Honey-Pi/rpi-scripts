@@ -10,4 +10,4 @@ def get_temperature(device_id):
     string_value = file_content.split("\n")[1].split(" ")[9]
     temperature = float(string_value[2:]) / 1000
 
-    return '%6.2f' % temperature
+    return float('%6.2f' % temperature)
