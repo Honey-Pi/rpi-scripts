@@ -12,6 +12,7 @@ from read_bme680_and_hx711 import measure_other_sensors, burn_in_bme680
 from read_ds18b20 import get_temperature
 from read_settings import get_settings, get_sensors
 
+
 settings = get_settings()
 
 # ThingSpeak data
@@ -45,14 +46,16 @@ def read_values():
             temperature = None
             try:
                 temperature = get_temperature(get_sensors(0)[0]["device_id"])
-                print(temperature)
+                print("temperature", temperature)
             except IOError:
-                print("IOError occurred")
+                print("IOError occurred")    
+            except TypeError:
+                print("TypeError occurred") 
 
             if math.isnan(temperature) == False:
                 values.append(temperature)
                 counter += 1
-
+                
             sleep(1)
 
         lock.acquire()
@@ -90,6 +93,11 @@ def stop_read_and_upload_all():
 def start_read_and_upload_all():
     # bme680 sensor must be burned in before use
     gas_baseline = burn_in_bme680()
+    	
+    # if burning was canceled=> exit
+    if gas_baseline is None:
+    	print("gas_baseline can't be None")
+    	stop_read_and_upload_all()
 
     # here we start the thread
     # we use a thread in order to gather/process the data separately from the printing process

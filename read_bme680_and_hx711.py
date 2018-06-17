@@ -70,18 +70,19 @@ def burn_in_bme680():
             if sensor.get_sensor_data() and sensor.data.heat_stable:
                 gas = sensor.data.gas_resistance
                 burn_in_data.append(gas)
+                print "BME680 wird noch " + str(int(round(burn_in_time-(curr_time - start_time)))) + "sec eingebannt."
                 time.sleep(1)
 
         return sum(burn_in_data[-50:]) / 50.0
     except KeyboardInterrupt:
-        pass
+        return None
 
 
 def measure_other_sensors(gas_baseline):
     if sensor.get_sensor_data() and sensor.data.heat_stable:
         temperature = sensor.data.temperature
         humidity = sensor.data.humidity
-        air_pressure = sensor.data.data_pressure
+        air_pressure = sensor.data.pressure
 
         gas = sensor.data.gas_resistance
         gas_offset = gas_baseline - gas
@@ -105,6 +106,8 @@ def measure_other_sensors(gas_baseline):
         air_quality = hum_score + gas_score
 
         weight = hx.get_weight(5)
+        # transform weight value
+        weight = max(0, int(weight))
         hx.power_down()
         hx.power_up()
 
