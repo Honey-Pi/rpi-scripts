@@ -1,7 +1,9 @@
 ﻿# Installiere alle benötigten Packages
 # https://learn.pimoroni.com/tutorial/sandyj/getting-started-with-bme680-breakout
+
 	# dieses package hatte bei mir bei raspbian-lite gefehlt:
 	sudo apt-get install python-smbus
+	
 	# You'll need to have I2C enabled:
 	curl https://get.pimoroni.com/i2c | bash
 	# I2C war bei mir nach einem Neustart auf einmal wieder deaktiviert https://developer-blog.net/raspberry-pi-i2c-aktivieren/
@@ -11,7 +13,7 @@
 	cd bme680/library
 	sudo python setup.py install
 	
-	#To run the example, type the following
+	# To run the example, type the following
 	cd /home/pi/bme680/examples
 	python read-all.py
 	
@@ -22,9 +24,10 @@
 	sudo modprobe w1-therm
 	
 # https://tutorials-raspberrypi.de/raspberry-pi-waage-bauen-gewichtssensor-hx711/
+
 	# dieses package hatte bei mir auf raspbian-lite gefehlt:
 	sudo apt-get install python-numpy
-	sudo apt-get install python-rpi.gpio python3-rpi.gpio
+	sudo apt-get install python-rpi.gpio
 	
 	git clone https://github.com/tatobari/hx711py
 	
