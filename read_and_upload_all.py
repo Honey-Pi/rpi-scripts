@@ -3,6 +3,7 @@ import sys
 import threading
 from pprint import pprint
 from time import sleep
+from urllib2 import HTTPError
 
 import RPi.GPIO as GPIO
 import numpy
@@ -30,12 +31,12 @@ event = threading.Event()  # we are using an event so we can close the thread as
 
 # function for processing the data
 def read_values():
-    seconds = 10  # after this many second we make a record
+    records = 10 # after this many records we make a record
     values = []
 
     while not event.is_set():
         counter = 0
-        while counter < seconds and not event.is_set():
+        while counter < records and not event.is_set():
             temperature = None
             try:
                 temperature = get_temperature(get_sensors(0)[0])
@@ -49,7 +50,7 @@ def read_values():
                 values.append(temperature)
                 counter += 1
                 
-            sleep(1)
+            sleep(3)
 
         lock.acquire()
         filtered_temperature.append(numpy.mean(filter_values([x for x in values])))
@@ -74,23 +75,23 @@ def filter_values(values, std_factor=2):
 
     return final_values
 
-
 def stop_read_and_upload_all():
     event.set()
-    print("Cleaning...")
-    GPIO.cleanup()
-    print("Bye!")
-    sys.exit()
+    print("Stop Thread!")
 
+def close_script():
+    event.set()
+    print("Exit Script!")
+    sys.exit()
 
 def start_read_and_upload_all():
     # bme680 sensor must be burned in before use
     gas_baseline = burn_in_bme680()
-    	
+    
     # if burning was canceled=> exit
     if gas_baseline is None:
-    	print "gas_baseline can't be None"
-    	stop_read_and_upload_all()
+        print "gas_baseline can't be None"
+        stop_read_and_upload_all()
 
     # here we start the thread
     # we use a thread in order to gather/process the data separately from the printing process

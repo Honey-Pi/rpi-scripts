@@ -32,8 +32,7 @@ def measure_weight(weight_sensor):
     hx.tare()
 
     weight = hx.get_weight(5)
-    # transform weight value
-    #weight = max(0, int(weight))
+    weight = max(0, int(weight)) # transform weight value
     hx.power_down()
     hx.power_up()
 
