@@ -28,16 +28,3 @@
 	
 	git clone https://github.com/tatobari/hx711py
 	
-# Für die .py Skripte war noch notwendig:
-	sudo apt install python-gpiozero python3-gpiozero
-	
-	# pip für python 2 hat gefehlt
-	sudo apt-get install python-setuptools
-	sudo easy_install pip
-	
-	# um thingspeak über pip zu installieren
-	sudo pip install thingspeak
-	
-	# pathlib ist nur in python3 standardgemäß dabei und muss daher für python2 nachinstalliert werden:
-	sudo pip install pathlib
-	
