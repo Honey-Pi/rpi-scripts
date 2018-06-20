@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
 import time
-from pprint import pprint
 
 import bme680
-
-from read_settings import get_settings, get_sensors
 
 # setup BME680 sensor
 sensor = bme680.BME680()
@@ -48,7 +45,8 @@ def burn_in_bme680():
                 gas = sensor.data.gas_resistance
                 burn_in_data.append(gas)
                 # log time for burning process
-                print "BME680 wird noch " + str(int(round(burn_in_time-(curr_time - start_time)))) + "sec eingebrannt."
+                print("BME680 will be burn in for " + str(
+                    int(round(burn_in_time - (curr_time - start_time)))) + " seconds.")
                 time.sleep(1)
 
         return sum(burn_in_data[-50:]) / 50.0

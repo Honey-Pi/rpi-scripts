@@ -1,19 +1,16 @@
 import math
 import sys
 import threading
-from pprint import pprint
 from time import sleep
-from urllib2 import HTTPError
 
-import RPi.GPIO as GPIO
 import numpy
 import thingspeak
+from urllib2 import HTTPError
 
 from read_bme680 import measure_bme680, burn_in_bme680
 from read_ds18b20 import get_temperature
 from read_hx711 import measure_weight
 from read_settings import get_settings, get_sensors
-
 
 settings = get_settings()
 
@@ -31,7 +28,7 @@ event = threading.Event()  # we are using an event so we can close the thread as
 
 # function for processing the data
 def read_values():
-    records = 10 # after this many records we make a record
+    records = 10  # how many records to take from the sensor
     values = []
 
     while not event.is_set():
@@ -40,16 +37,16 @@ def read_values():
             temperature = None
             try:
                 temperature = get_temperature(get_sensors(0)[0])
-                print "temperature: " + str(temperature)
+                print("temperature: " + str(temperature))
             except IOError:
-                print "IOError occurred"    
+                print("IOError occurred")
             except TypeError:
-                print "TypeError occurred"
+                print("TypeError occurred")
 
             if math.isnan(temperature) == False:
                 values.append(temperature)
                 counter += 1
-                
+
             sleep(3)
 
         lock.acquire()
@@ -75,23 +72,31 @@ def filter_values(values, std_factor=2):
 
     return final_values
 
-def stop_read_and_upload_all():
-    event.set()
-    print("Stop Thread!")
 
-def close_script():
+def pause_read_and_upload_all():
+    lock.acquire()
+    print("Pause read_and_upload thread!")
+
+
+def release_read_and_upload_all():
+    lock.release()
+    print("Release read_and_upload thread!")
+
+
+def stop_script():
     event.set()
-    print("Exit Script!")
+    print("Exit script!")
     sys.exit()
+
 
 def start_read_and_upload_all():
     # bme680 sensor must be burned in before use
     gas_baseline = burn_in_bme680()
-    
-    # if burning was canceled=> exit
+
+    # if burning was canceled => exit
     if gas_baseline is None:
-        print "gas_baseline can't be None"
-        stop_read_and_upload_all()
+        print("gas_baseline can't be None")
+        stop_script()
 
     # here we start the thread
     # we use a thread in order to gather/process the data separately from the printing process
@@ -102,14 +107,14 @@ def start_read_and_upload_all():
     channel = thingspeak.Channel(id=channel_id, write_key=write_key)
 
     while not event.is_set():
-        if len(filtered_temperature) > 0:  # or we could have used filtered_humidity instead
+        if len(filtered_temperature) > 0:
             lock.acquire()
 
-            # dict with all fields and values with will be tranfered later to ThingSpeak
+            # dict with all fields and values with will be uploaded later to ThingSpeak
             ts_fields = {}
 
             # here you can do whatever you want with the variables: print them, file them out, anything
-            
+
             # measure sensor with type 0
             ds18b20_temperature = filtered_temperature.pop()
             ts_field_ds18b20 = get_sensors(0)[0]["ts_field"]
@@ -126,19 +131,21 @@ def start_read_and_upload_all():
 
             # print measurement values for debug reasons
             for key, value in ts_fields.iteritems():
-                print key + ": " + str(value)
-            
+                print(key + ": " + str(value))
+
             try:
-                # update ThingSpeak / transfer values
+                # update ThingSpeak/upload values
                 channel.update(ts_fields)
             except HTTPError:
-                print "HTTPError occurred"  
+                print("HTTPError occurred")
 
+            # wait seconds of interval before releasing the read_values thread
+            # free ThingSpeak account has an upload limit of 15 seconds
+            sleep(interval)
             lock.release()
 
-        # wait seconds of interval before next check
-        # free ThingSpeak account has an upload limit of 15 seconds
-        sleep(interval)
+        # wait a second before the next check
+        sleep(1)
 
     # wait until the thread is finished
     data_collector.join()

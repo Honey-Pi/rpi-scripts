@@ -1,7 +1,7 @@
 # read settings.json which is saved by rpi-webinterface
 
-import json
 import io
+import json
 from pathlib import Path
 
 
@@ -23,18 +23,19 @@ def get_settings():
 
         return settings
 
+
 # get sensors by type
 def get_sensors(type):
-	settings = get_settings()
-	try:
-		all_sensors = settings["sensors"]
-	except TypeError:
-		# doesn"t exist => return empty array
-		return []
-		
-	sensors = [x for x in all_sensors if x["type"] == type]
-	# not found => return empty array
-	if len(sensors) < 1:
-		return []
-	else:
-		return sensors
+    settings = get_settings()
+    try:
+        all_sensors = settings["sensors"]
+    except TypeError:
+        # doesn"t exist => return empty array
+        return []
+
+    sensors = [x for x in all_sensors if x["type"] == type]
+    # not found => return empty array
+    if len(sensors) < 1:
+        return []
+    else:
+        return sensors

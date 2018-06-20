@@ -2,6 +2,7 @@
 
 from HX711 import HX711
 
+
 def measure_weight(weight_sensor):
     # weight sensor pins
     pin_dt = weight_sensor["pin_dt"]
@@ -10,7 +11,7 @@ def measure_weight(weight_sensor):
 
     # setup weight sensor
     hx = HX711(pin_dt, pin_sck)
-   
+
     # I've found out that, for some reason, the order of the bytes is not always the same between versions of python, numpy and the hx711 itself.
     # Still need to figure out why does it change.
     # If you're experiencing super random values, change these values to MSB or LSB until to get more stable values.
@@ -32,7 +33,7 @@ def measure_weight(weight_sensor):
     hx.tare()
 
     weight = hx.get_weight(5)
-    weight = max(0, int(weight)) # transform weight value
+    weight = max(0, int(weight))  # transform weight value
     hx.power_down()
     hx.power_up()
 
