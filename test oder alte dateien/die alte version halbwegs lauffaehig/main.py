@@ -1,15 +1,13 @@
 import os
 import threading
-import sys
 import time
 import RPi.GPIO as GPIO #allgemeines Einbinden der GPIO-Funktion
 
 from read_settings import get_settings
-from read_and_upload_all import start_measurement
+from read_and_upload_all import close_script, start_read_and_upload_all, stop_read_and_upload_all
 
 settings = get_settings() # read settings for number of GPIO pin
 i = 0 # flag to know if measurement is active or not
-measurement_stop = threading.Event() # create event to stop measurement
 
 def start_ap():
     global i
@@ -26,14 +24,9 @@ def stop_ap():
     os.system("sudo ifconfig wlan0 down")
     time.sleep(0.4) 
 
-def close_script():
-    global measurement_stop
-    measurement_stop.set()
-    print("Exit!")
-    sys.exit()
 
 def main():
-    global i, measurement_stop
+    global i
 
     # setup gpio
     gpio = settings["button_pin"]
@@ -45,8 +38,8 @@ def main():
     stop_ap()
     # start as seperate background thread
     # because Taster pressing was not recognised
-    measurement_stop = threading.Event() # create event to stop measurement
-    measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
+    measurement_stop = threading.Event() # set flag to stop measurement
+    measurement = threading.Thread(target=start_read_and_upload_all, args=(measurement_stop,))
     measurement.start() # start measurement
 
     while True:
@@ -56,20 +49,22 @@ def main():
             print("Taster wurde gedrueckt")
             if i == 0:
                 print("Taster: Stoppe Messungen")
+                stop_read_and_upload_all()
                 # stop the measurement by event's flag
                 measurement_stop.set()
                 start_ap() # finally start AP
             else:
                 print("Taster: Starte Messungen")
-                if measurement.is_alive():
+                if not measurement.is_alive():
+                    print("Alles Okay, Thread ist tot.")
+                else:
                     print("Fehler: Thread ist noch aktiv.")
                 measurement_stop.clear() # reset flag
-                measurement_stop = threading.Event() # create event to stop measurement
-                measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
+                measurement_stop = threading.Event() # set flag to stop measurement
+                measurement = threading.Thread(target=start_read_and_upload_all, args=(measurement_stop,))
                 measurement.start() # start measurement
                 stop_ap() # finally stop AP
         time.sleep(0.0001) # short sleep is good
-
     print("Dieser Text wird nie erreicht.")
 
 if __name__ == '__main__':
