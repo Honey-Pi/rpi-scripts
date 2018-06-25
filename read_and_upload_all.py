@@ -28,7 +28,10 @@ def read_values():
     temperature = None
     try:
         temperature = get_temperature(get_sensors(0)[0])
-        print "temperature: " + str(temperature)
+        print("temperature: " + str(temperature))
+        # for testing:
+        #weight = measure_weight(get_sensors(2)[0])
+        #print(weight)
     except IOError:
         print "IOError occurred"    
     except TypeError:
@@ -62,6 +65,9 @@ def append_filter():
 def start_measurement(measurement_stop):
     print("Messungen beginnen")
     
+    # reload settings because could be changed
+    settings = get_settings()
+
     # bme680 sensor must be burned in before use
     gas_baseline = burn_in_bme680()
     
