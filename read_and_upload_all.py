@@ -3,6 +3,7 @@ import threading
 from pprint import pprint
 from time import sleep
 from urllib2 import HTTPError
+from requests.exceptions import ConnectionError
 
 import RPi.GPIO as GPIO
 import numpy
@@ -120,6 +121,8 @@ def start_measurement(measurement_stop):
                 try:
                     # update ThingSpeak / transfer values
                     channel.update(ts_fields)
+                except ConnectionError:
+                    print "ConnectionError occurred"  
                 except HTTPError:
                     print "HTTPError occurred"  
         
