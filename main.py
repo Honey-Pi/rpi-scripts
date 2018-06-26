@@ -1,11 +1,13 @@
+#!/usr/bin/env python
 import os
-import threading
 import sys
+import threading
 import time
-import RPi.GPIO as GPIO #allgemeines Einbinden der GPIO-Funktion
 
-from read_settings import get_settings
+import RPi.GPIO as GPIO  # allgemeines Einbinden der GPIO-Funktion
+
 from read_and_upload_all import start_measurement
+from read_settings import get_settings
 
 settings = get_settings() # read settings for number of GPIO pin
 i = 0 # flag to know if measurement is active or not

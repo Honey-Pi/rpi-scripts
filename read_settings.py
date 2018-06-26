@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 # read settings.json which is saved by rpi-webinterface
-
 import io
 import json
 from pathlib import Path

@@ -1,12 +1,10 @@
+#!/usr/bin/env python
 import math
-import threading
-from pprint import pprint
 from time import sleep
-from urllib2 import HTTPError
 
-import RPi.GPIO as GPIO
 import numpy
 import thingspeak
+from urllib2 import HTTPError
 
 from read_bme680 import measure_bme680, burn_in_bme680
 from read_ds18b20 import get_temperature
