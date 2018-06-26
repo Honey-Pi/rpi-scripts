@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # read temperature from DS18b20 sensor
 
 def get_temperature(temp_sensor):
