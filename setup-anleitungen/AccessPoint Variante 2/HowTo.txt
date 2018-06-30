@@ -7,7 +7,7 @@
 	
 # außerdem noch
 hostapd.conf nach /etc/hostapd/
-dnsmasq.conf nach /etc/hostapd/
 interfaces nach /etc/network/
+dnsmasq.conf nach /etc/
 
 passwort und ssid sind in hostapd setzbar
