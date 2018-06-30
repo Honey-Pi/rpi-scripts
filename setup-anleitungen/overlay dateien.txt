@@ -1,9 +1,0 @@
-Overlay Prozess:
-	lighttpd/webserver
-		Die Webinterface Dateien, die in das www/ Verzeichnis sollen, befinden sich hier:
-			https://github.com/Honey-Pi/rpi-webinterface/tree/master/dist
-		Außerdem muss dieser Backend-ordner in ein www/backend/ Verzeichnis:
-			https://github.com/Honey-Pi/rpi-webinterface/tree/master/backend
-		Das Webserver-Verzeichnis befindet sich bei Raspbian Weezy unter "/var/www" und bei Raspbian Jessie unter "/var/www/html".
-		Diese Rechte sind für die Dateien notwendig:
-			Der "backend" Ordner bekommt mit allen Unterdateien chmod 777
