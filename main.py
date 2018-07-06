@@ -13,19 +13,29 @@ settings = get_settings() # read settings for number of GPIO pin
 i = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
 
+def stop_tv():
+    os.system("sudo /usr/bin/tvservice -o")
+
+def stop_led():
+    os.system("sudo bash -c \"echo 0 > /sys/class/leds/led0/brightness\"") #Turn off
+
+def start_led():
+    os.system("sudo bash -c \"echo 1 > /sys/class/leds/led0/brightness\"") #Turn on
+
 def start_ap():
     global i
     i = 1 # measurement shall start next time
     print("AccessPoint wird aktiviert")
     os.system("sudo ifconfig wlan0 up") 
+    start_led()
     time.sleep(0.4) 
-
 
 def stop_ap():
     global i
     i = 0 # measurement shall stop next time
     print("AccessPoint wird deaktiviert")
     os.system("sudo ifconfig wlan0 down")
+    stop_led()
     time.sleep(0.4) 
 
 def close_script():
@@ -45,6 +55,8 @@ def main():
 
     # by default is AccessPoint down
     stop_ap()
+    # stop HDMI power (save energy)
+    stop_tv()
     # start as seperate background thread
     # because Taster pressing was not recognised
     measurement_stop = threading.Event() # create event to stop measurement
@@ -52,7 +64,6 @@ def main():
     measurement.start() # start measurement
 
     while True:
-        #print("Taster")
         input_state = GPIO.input(gpio)
         if input_state == GPIO.HIGH:
             print("Taster wurde gedrueckt")
