@@ -35,6 +35,7 @@ def start_measurement(measurement_stop):
     ds18b20Sensors = get_sensors(settings, 0)
     bme680Sensors = get_sensors(settings, 1)
     weightSensors = get_sensors(settings, 2)
+    dht11Sensors = get_sensors(settings, 3)
 
     # if bme680 is configured
     if bme680Sensors and len(bme680Sensors) == 1:
@@ -93,10 +94,15 @@ def start_measurement(measurement_stop):
                 bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
                 ts_fields.update(bme680_values)
 
-            # measure every sensor with type 2
+            # measure every sensor with type 2 [HX711]
             for (i, sensor) in enumerate(weightSensors):
                 weight = measure_weight(sensor)
                 ts_fields.update(weight)
+
+            # measure every sensor with type 3 [DHT11]
+            #for (i, sensor) in enumerate(dht11Sensors):
+            #    tempAndHum = measure_dht11(sensor)
+            #    ts_fields.update(tempAndHum)
 
             # print measurement values for debug reasons
             for key, value in ts_fields.iteritems():
