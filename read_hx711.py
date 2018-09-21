@@ -11,6 +11,7 @@ def measure_weight(weight_sensor):
     channel = weight_sensor["channel"]
     reference_unit = weight_sensor["reference_unit"]
     offset = weight_sensor["offset"]
+    ts_field = weight_sensor["ts_field"]
 
     # setup weight sensor
     hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, gain_channel_A=128, select_channel=channel)
@@ -21,4 +22,4 @@ def measure_weight(weight_sensor):
     weight = weight/1000  # gramms to kg
     weight = float("{0:.3f}".format(weight)) # float only 3 decimals
 
-    return ({weight_sensor["ts_field"]: weight})
+    return ({ts_field: weight})

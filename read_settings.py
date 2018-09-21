@@ -26,8 +26,7 @@ def get_settings():
         return settings
 
 # get sensors by type
-def get_sensors(type):
-    settings = get_settings()
+def get_sensors(settings, type):
     try:
         all_sensors = settings["sensors"]
     except TypeError:

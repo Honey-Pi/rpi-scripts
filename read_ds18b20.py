@@ -7,11 +7,10 @@ import math
 import numpy
 from pprint import pprint
 
-filtered_temperature = [][]  # here we keep the temperature values after removing outliers
-unfiltered_values = [][] # here we keep all the unfilteres values
+unfiltered_values = [[]] # here we keep all the unfilteres values
+filtered_temperature = [[]]  # here we keep the temperature values after removing outliers
 
-def measure_temperature(temp_sensor):
-    device_id = temp_sensor["device_id"]
+def measure_temperature(device_id):
     # read 1-wire slave file
     file = open('/sys/bus/w1/devices/' + device_id + '/w1_slave')
     file_content = file.read()
@@ -24,19 +23,18 @@ def measure_temperature(temp_sensor):
     return float('%6.2f' % temperature)
 
 # function for reading the value from sensor
-def read_unfiltered_temperatur_values():
-    for (sensorIndex, sensor) in enumerate(get_sensors(0)):
-        temperature = None
-        try:
-            temperature = measure_temperature(sensor)
-            print("temperature: " + str(temperature))
-        except IOError:
-            print "IOError occurred"    
-        except TypeError:
-            print "TypeError occurred"
+def read_unfiltered_temperatur_values(sensorIndex, sensor):
+    temperature = None
+    try:
+        temperature = measure_temperature(sensor["device_id"])
+        print("temperature: " + str(temperature))
+    except IOError:
+        print "IOError occurred"    
+    except TypeError:
+        print "TypeError occurred"
 
-        if math.isnan(temperature) == False:
-            unfiltered_values[sensorIndex].append(temperature)
+    if math.isnan(temperature) == False:
+        unfiltered_values[sensorIndex].append(temperature)
 
 # function which eliminates the noise by using a statistical model
 # we determine the standard normal deviation and we exclude anything that goes beyond a threshold
@@ -59,3 +57,11 @@ def filter_temperatur_values(sensorIndex):
     # read the last 9 values
     # and filter them
     filtered_temperature[sensorIndex].append(numpy.mean(filter_values([x for x in unfiltered_values[sensorIndex][-9:]])))
+
+def checkIfSensorExistsInArray(sensorIndex):
+    try:
+        filtered_temperature[sensorIndex]
+    except IndexError:
+        # handle this
+        filtered_temperature.append([])
+        unfiltered_values.append([])
