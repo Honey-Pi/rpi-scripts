@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# This file is part of HoneyPi which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
+# See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
+
 # read settings.json which is saved by rpi-webinterface
 import io
 import json
