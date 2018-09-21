@@ -27,7 +27,7 @@ def start_measurement(measurement_stop):
     write_key = settings["ts_write_key"]
     interval = settings["interval"]
 
-    if interval and !isinstance(interval, int) or !channel_id or !write_key:
+    if interval and not isinstance(interval, int) or not channel_id or not write_key:
         print "settings.json is not correct"
         measurement_stop.set()
 
