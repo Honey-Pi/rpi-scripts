@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from HX711 import HX711
 
-
 def measure_weight(weight_sensor):
     # weight sensor pins
     pin_dt = weight_sensor["pin_dt"]

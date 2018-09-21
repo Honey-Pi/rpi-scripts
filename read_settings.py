@@ -4,7 +4,6 @@ import io
 import json
 from pathlib import Path
 
-
 def get_settings():
     filename = "/var/www/html/backend/settings.json"
     my_file = Path(filename)
@@ -22,7 +21,6 @@ def get_settings():
             settings = json.loads(data_file.read())
 
         return settings
-
 
 # get sensors by type
 def get_sensors(type):

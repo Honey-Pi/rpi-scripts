@@ -89,7 +89,15 @@ def measure_bme680(gas_baseline, ts_sensor):
         ts_field_air_pressure = ts_sensor["ts_field_air_pressure"]
         ts_field_air_quality = ts_sensor["ts_field_air_quality"]
 
-        return ({ts_field_temperature: temperature,
-                 ts_field_humidity: humidity,
-                 ts_field_air_pressure: air_pressure,
-                 ts_field_air_quality: air_quality})
+        # Create returned dict if ts-field is defined
+        fields = {}
+        if ts_field_temperature:
+            fields[ts_field_temperature] = temperature
+        if ts_field_humidity:
+            fields[ts_field_humidity] = humidity
+        if ts_field_air_pressure:
+            fields[ts_field_air_pressure] = air_pressure
+        if ts_field_air_quality:
+            fields[ts_field_air_quality] = air_quality
+
+        return fields
