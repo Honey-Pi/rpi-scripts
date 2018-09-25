@@ -28,13 +28,14 @@ def read_unfiltered_temperatur_values(sensorIndex, sensor):
     try:
         temperature = measure_temperature(sensor["device_id"])
         print("temperature: " + str(temperature))
+
+        if math.isnan(temperature) == False:
+            unfiltered_values[sensorIndex].append(temperature)
+
     except IOError:
-        print "IOError occurred"    
+        print "IOError occurred: Maybe wrong Device-ID"    
     except TypeError:
         print "TypeError occurred"
-
-    if math.isnan(temperature) == False:
-        unfiltered_values[sensorIndex].append(temperature)
 
 # function which eliminates the noise by using a statistical model
 # we determine the standard normal deviation and we exclude anything that goes beyond a threshold

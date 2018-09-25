@@ -12,7 +12,7 @@ from requests.exceptions import ConnectionError
 import RPi.GPIO as GPIO
 import thingspeak
 
-from read_bme680 import measure_bme680, burn_in_bme680
+from read_bme680 import measure_bme680, burn_in_bme680, bme680IsConnected
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import measure_weight
 from read_dht11 import measure_dht11
@@ -39,7 +39,7 @@ def start_measurement(measurement_stop):
     dht11Sensors = get_sensors(settings, 3)
 
     # if bme680 is configured
-    if bme680Sensors and len(bme680Sensors) == 1:
+    if bme680Sensors and len(bme680Sensors) == 1 and bme680IsConnected:
         # bme680 sensor must be burned in before use
         gas_baseline = burn_in_bme680()
 
@@ -61,13 +61,15 @@ def start_measurement(measurement_stop):
             read_unfiltered_temperatur_values(sensorIndex, sensor)
         
         # for testing:
-        try:
-            weight = measure_weight(weightSensors[0])
-            print("weight: " + str(list(weight.values())[0]))
-        except IOError:
-            print "IOError occurred"    
-        except TypeError:
-            print "TypeError occurred"
+        #try:
+        #    weight = measure_weight(weightSensors[0])
+        #    print("weight: " + str(list(weight.values())[0]))
+        #except IOError:
+        #    print "IOError occurred"    
+        #except TypeError:
+        #    print "TypeError occurred"
+        #except IndexError:
+        #    print "IndexError occurred"
 
         # wait seconds of interval before next check
         # free ThingSpeak account has an upload limit of 15 seconds
@@ -91,7 +93,7 @@ def start_measurement(measurement_stop):
                         ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
 
             # measure BME680 (can only be once) [type 1]
-            if bme680Sensors and len(bme680Sensors) == 1:
+            if bme680Sensors and len(bme680Sensors) == 1 and bme680IsConnected:
                 bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
                 ts_fields.update(bme680_values)
 
