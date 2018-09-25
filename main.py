@@ -7,7 +7,7 @@ import sys
 import threading
 import time
 
-import RPi.GPIO as GPIO  # allgemeines Einbinden der GPIO-Funktion
+import RPi.GPIO as GPIO 
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
@@ -19,7 +19,7 @@ measurement_stop = threading.Event() # create event to stop measurement
 def start_ap():
     global isActive
     isActive = 1 # measurement shall start next time
-    print("AccessPoint wird aktiviert")
+    print("AccessPoint start")
     os.system("sudo ifconfig wlan0 up") 
     start_led()
     time.sleep(0.4) 
@@ -27,7 +27,7 @@ def start_ap():
 def stop_ap():
     global isActive
     isActive = 0 # measurement shall stop next time
-    print("AccessPoint wird deaktiviert")
+    print("AccessPoint stop")
     os.system("sudo ifconfig wlan0 down")
     stop_led()
     time.sleep(0.4) 
@@ -62,16 +62,16 @@ def main():
     while True:
         input_state = GPIO.input(gpio)
         if input_state == GPIO.HIGH:
-            print("Taster wurde gedrueckt")
+            print("Button was pressed")
             if isActive == 0:
-                print("Taster: Stoppe Messungen")
+                print("Button: Stop measurement")
                 # stop the measurement by event's flag
                 measurement_stop.set()
                 start_ap() # finally start AP
             else:
-                print("Taster: Starte Messungen")
+                print("Button: Start measurement")
                 if measurement.is_alive():
-                    print("Fehler: Thread ist noch aktiv.")
+                    print("Warning: Thread should not be active anymore")
                 measurement_stop.clear() # reset flag
                 measurement_stop = threading.Event() # create event to stop measurement
                 measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
@@ -79,7 +79,7 @@ def main():
                 stop_ap() # finally stop AP
         time.sleep(0.0001) # short sleep is good
 
-    print("Dieser Text wird nie erreicht.")
+    print("This text will never be printed.")
 
 if __name__ == '__main__':
     try:

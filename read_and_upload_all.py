@@ -15,10 +15,11 @@ import thingspeak
 from read_bme680 import measure_bme680, burn_in_bme680
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import measure_weight
+from read_dht11 import measure_dht11
 from read_settings import get_settings, get_sensors
 
 def start_measurement(measurement_stop):
-    print("Messungen beginnen")
+    print("The measurements have started.")
     
     # load settings
     settings = get_settings()
@@ -61,8 +62,8 @@ def start_measurement(measurement_stop):
         
         # for testing:
         try:
-            #weight = measure_weight(weightSensors[0])
-            #print(weight)
+            weight = measure_weight(weightSensors[0])
+            print("weight: " + str(list(weight.values())[0]))
         except IOError:
             print "IOError occurred"    
         except TypeError:
@@ -100,9 +101,9 @@ def start_measurement(measurement_stop):
                 ts_fields.update(weight)
 
             # measure every sensor with type 3 [DHT11]
-            #for (i, sensor) in enumerate(dht11Sensors):
-            #    tempAndHum = measure_dht11(sensor)
-            #    ts_fields.update(tempAndHum)
+            for (i, sensor) in enumerate(dht11Sensors):
+                tempAndHum = measure_dht11(sensor)
+                ts_fields.update(tempAndHum)
 
             # print measurement values for debug reasons
             for key, value in ts_fields.iteritems():
