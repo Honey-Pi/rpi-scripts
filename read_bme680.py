@@ -5,6 +5,9 @@
 import time
 import bme680
 
+# global vars
+bme680IsConnected = 0
+
 try:
     # setup BME680 sensor
     sensor = bme680.BME680()
@@ -19,8 +22,10 @@ try:
     sensor.set_gas_heater_duration(150)
     sensor.select_gas_heater_profile(0)
     
+    bme680IsConnected = 1
+
 except IOError:
-    print("Exception: Kein SMBus angeschlossen.")
+    print("IOError Exception: No SMBus connected.")
 
 # Set the humidity baseline to 40%, an optimal indoor humidity.
 hum_baseline = 40.0
@@ -55,6 +60,8 @@ def burn_in_bme680():
                 time.sleep(1)
 
         return sum(burn_in_data[-50:]) / 50.0
+    except NameError:
+        print("Sensor BME680 is not connected.")
     except KeyboardInterrupt:
         return None
 
