@@ -7,8 +7,8 @@ import math
 import numpy as np
 from pprint import pprint
 
-unfiltered_values = np.array([np.array([], dtype=np.float32)], dtype=np.int8) # here we keep all the unfilteres values
-filtered_temperature = np.array([np.array([], dtype=np.float32)], dtype=np.int8)  # here we keep the temperature values after removing outliers
+unfiltered_values = [[]] # here we keep all the unfilteres values
+filtered_temperature = [[]] # here we keep the temperature values after removing outliers
 
 def measure_temperature(device_id):
     # read 1-wire slave file
@@ -55,9 +55,9 @@ def filter_values(unfiltered_values, std_factor=2):
 
 # function for appending the filter
 def filter_temperatur_values(sensorIndex):
-    # read the last 9 values
+    # read the last 5 values
     # and filter them
-    filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-9:]])))
+    filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-5:]])))
 
 def checkIfSensorExistsInArray(sensorIndex):
     try:
@@ -66,3 +66,9 @@ def checkIfSensorExistsInArray(sensorIndex):
         # handle this
         filtered_temperature.append([])
         unfiltered_values.append([])
+
+    # prevent buffer overflow
+    if len(filtered_temperature[sensorIndex]) > 300:
+        filtered_temperature[sensorIndex] = filtered_temperature[sensorIndex][len(filtered_temperature[sensorIndex])-10:] # remove all but the last 10 elements
+    if len(unfiltered_values[sensorIndex]) > 300:
+        unfiltered_values[sensorIndex] = unfiltered_values[sensorIndex][len(unfiltered_values[sensorIndex])-10:] # remove all but the last 10 elements

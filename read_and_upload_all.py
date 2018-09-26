@@ -7,7 +7,7 @@ import threading
 from pprint import pprint
 from time import sleep
 from urllib2 import HTTPError
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, HTTPError , Timeout, RequestException 
 
 import RPi.GPIO as GPIO
 import thingspeak
@@ -20,6 +20,7 @@ from read_settings import get_settings, get_sensors
 
 def start_measurement(measurement_stop):
     print("The measurements have started.")
+    start_time = time()
     
     # load settings
     settings = get_settings()
@@ -51,8 +52,8 @@ def start_measurement(measurement_stop):
     # ThingSpeak channel
     channel = thingspeak.Channel(id=channel_id, write_key=write_key)
 
-    # start at -10 because we want to get 10 values before we can filter some out
-    counter = -10
+    # start at -6 because we want to get 6 values before we can filter some out
+    counter = -6
     while not measurement_stop.is_set():
 
         # read values from sensors every second
@@ -116,11 +117,15 @@ def start_measurement(measurement_stop):
                 if len(ts_fields) > 0:
                     channel.update(ts_fields)
             except ConnectionError:
-                print "ConnectionError occurred: Could not upload measurements to ThingSpeak"  
+                print "ConnectionError occurred: Could not upload measurements to ThingSpeak"
             except HTTPError:
                 print "HTTPError occurred: Could not upload measurements to ThingSpeak"  
+            except:
+                print "Exception occurred: Could not upload measurements to ThingSpeak"
         
         counter += 1
-        sleep(0.98)
+        sleep(0.96)
 
-    print("Measurement-Script runtime was " + str(counter) + " seconds.")
+    end_time = time()
+    time_taken = end_time - starttime # time_taken is in seconds
+    print("Measurement-Script runtime was " + str(time_taken) + " seconds.")

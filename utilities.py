@@ -12,3 +12,10 @@ def stop_led():
 
 def start_led():
     os.system("sudo bash -c \"echo 1 > /sys/class/leds/led0/brightness\"") #Turn on
+
+def reboot():
+    os.system("sudo reboot") # reboots the pi
+
+def error_log(e):
+    with open("/home/pi/rpi-scripts/error.log", "a") as myfile:
+        myfile.write (repr(e))
