@@ -4,6 +4,7 @@
 
 import math
 import threading
+import time
 from pprint import pprint
 from time import sleep
 from urllib2 import HTTPError
@@ -20,7 +21,7 @@ from read_settings import get_settings, get_sensors
 
 def start_measurement(measurement_stop):
     print("The measurements have started.")
-    start_time = time()
+    start_time = time.time()
     
     # load settings
     settings = get_settings()
@@ -126,6 +127,6 @@ def start_measurement(measurement_stop):
         counter += 1
         sleep(0.96)
 
-    end_time = time()
-    time_taken = end_time - starttime # time_taken is in seconds
+    end_time = time.time()
+    time_taken = end_time - start_time # time_taken is in seconds
     print("Measurement-Script runtime was " + str(time_taken) + " seconds.")
