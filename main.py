@@ -11,7 +11,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, reboot, error_log
+from utilities import stop_tv, stop_led, start_led
 
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
@@ -87,10 +87,3 @@ if __name__ == '__main__':
 
     except (KeyboardInterrupt, SystemExit):
         close_script()
-
-    except Exception, e:
-        print("Unhandled Exception: " + repr(e))
-        error_log(e)
-
-        time.sleep(1)
-        reboot()

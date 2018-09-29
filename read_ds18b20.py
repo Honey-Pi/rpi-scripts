@@ -69,7 +69,7 @@ def checkIfSensorExistsInArray(sensorIndex):
         unfiltered_values.append([])
 
     # prevent buffer overflow
-    if len(filtered_temperature[sensorIndex]) > 300:
+    if len(filtered_temperature[sensorIndex]) > 50:
         filtered_temperature[sensorIndex] = filtered_temperature[sensorIndex][len(filtered_temperature[sensorIndex])-10:] # remove all but the last 10 elements
-    if len(unfiltered_values[sensorIndex]) > 300:
+    if len(unfiltered_values[sensorIndex]) > 50:
         unfiltered_values[sensorIndex] = unfiltered_values[sensorIndex][len(unfiltered_values[sensorIndex])-10:] # remove all but the last 10 elements

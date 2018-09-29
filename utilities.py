@@ -3,6 +3,7 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 import os
+from datetime import datetime
 
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
@@ -16,6 +17,19 @@ def start_led():
 def reboot():
     os.system("sudo reboot") # reboots the pi
 
-def error_log(e):
-    with open("/home/pi/rpi-scripts/error.log", "a") as myfile:
-        myfile.write (repr(e))
+def error_log(e, printText=None):
+    try:
+        if printText:
+            printText = printText + " | " + repr(e)
+            print(printText)
+        else:
+            printText = repr(e)
+
+        file = '/home/pi/rpi-scripts/error.log'
+        with open(file, "a") as myfile:
+            myfile.write (str(datetime.now()) + " | " + printText + "\n")
+        
+        if os.path.getsize(file) > 100 * 1024:
+            os.remove(file)
+    except Exception: 
+        pass
