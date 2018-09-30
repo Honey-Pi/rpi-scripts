@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of HoneyPi which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
+# This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 import math
@@ -9,7 +9,7 @@ from pprint import pprint
 from time import sleep
 
 import RPi.GPIO as GPIO
-import thingspeak
+import thingspeak # https://github.com/mchwalisz/thingspeak/
 import requests 
 
 from read_bme680 import measure_bme680, burn_in_bme680, bme680IsConnected
@@ -18,6 +18,9 @@ from read_hx711 import measure_weight
 from read_dht11 import measure_dht11
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log
+
+class MyRebootException(Exception):
+    pass
 
 def start_measurement(measurement_stop):
     try:
@@ -53,6 +56,9 @@ def start_measurement(measurement_stop):
 
         # ThingSpeak channel
         channel = thingspeak.Channel(id=channel_id, write_key=write_key)
+
+        # counting connection Errors
+        connectionErros = 0
 
         # start at -6 because we want to get 6 values before we can filter some out
         counter = -6
@@ -122,6 +128,9 @@ def start_measurement(measurement_stop):
                     error_log(errh, "Http Error")
                 except requests.exceptions.ConnectionError as errc:
                     error_log(errc, "Error Connecting")
+                    connectionErros += 1
+                    if connectionErros > 10:
+                        raise MyRebootException("Too many ConnectionErrors => Rebooting")
                 except requests.exceptions.Timeout as errt:
                     error_log(errt, "Timeout Error")
                 except requests.exceptions.RequestException as err:
@@ -135,7 +144,11 @@ def start_measurement(measurement_stop):
         time_taken_s = float("{0:.2f}".format(time_taken)) # remove microseconds
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
         
+    except MyRebootException as re:
+        error_log(re, "MyRebootException")
+        time.sleep(1)
+        reboot()
     except Exception as e:
         error_log(e, "Unhandled Exception")
-        time.sleep(1)
+        time.sleep(60)
         reboot()

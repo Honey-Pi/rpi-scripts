@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# This file is part of HoneyPi which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
+# This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 import os
@@ -44,7 +44,7 @@ def main():
     settings = get_settings() # read settings for number of GPIO pin
 
     # setup gpio
-    gpio = settings["button_pin"] or 17 # read pin from settings, if not defined choose pin 17
+    gpio = settings["button_pin"] # read pin from settings
     GPIO.setwarnings(False) # Ignore warning for now
     GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine, analog zu allen Beispielen
     GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 17 to be an input pin and set initial value to be pulled low (off)
