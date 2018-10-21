@@ -149,6 +149,6 @@ def start_measurement(measurement_stop):
         time.sleep(1)
         reboot()
     except Exception as e:
-        error_log(e, "Unhandled Exception")
+        error_log(e, "Unhandled Exception while Measurement")
         time.sleep(60)
         reboot()
