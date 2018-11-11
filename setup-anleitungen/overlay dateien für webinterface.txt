@@ -6,3 +6,6 @@
 			https://github.com/Honey-Pi/rpi-webinterface/tree/master/backend
 		Diese Rechte sind für die Dateien notwendig:
 			Der "backend" Ordner bekommt mit allen Unterdateien chmod 777
+
+www-data ALL=NOPASSWD:/var/www/html/backend/shell-scripts/*.sh
+ In sudo visudo
