@@ -20,6 +20,7 @@ from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log
 
 class MyRebootException(Exception):
+    """Too many ConnectionErrors => Rebooting"""
     pass
 
 def start_measurement(measurement_stop):
@@ -124,13 +125,16 @@ def start_measurement(measurement_stop):
                     # update ThingSpeak / transfer values
                     if len(ts_fields) > 0:
                         channel.update(ts_fields)
+                        # reset connectionErros because transfer succeded
+                        connectionErros = 0
                 except requests.exceptions.HTTPError as errh:
                     error_log(errh, "Http Error")
                 except requests.exceptions.ConnectionError as errc:
                     error_log(errc, "Error Connecting")
                     connectionErros += 1
-                    if connectionErros > 10:
-                        raise MyRebootException("Too many ConnectionErrors => Rebooting")
+                    # multiple connectionErrors in a row => Exception
+                    if connectionErros > 4:
+                        raise MyRebootException
                 except requests.exceptions.Timeout as errt:
                     error_log(errt, "Timeout Error")
                 except requests.exceptions.RequestException as err:
@@ -145,7 +149,7 @@ def start_measurement(measurement_stop):
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
         
     except MyRebootException as re:
-        error_log(re, "MyRebootException")
+        error_log(re, "Too many ConnectionErrors => Rebooting")
         time.sleep(1)
         reboot()
     except Exception as e:
