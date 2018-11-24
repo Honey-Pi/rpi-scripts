@@ -12,7 +12,7 @@ www-data ALL = NOPASSWD: /var/www/html/backend/shell-scripts/change_router_ssid.
 www-data ALL = NOPASSWD: /var/www/html/backend/shell-scripts/change_honeypi_ssidpw.sh
 
 #network interfaces
-www-data ALL = NOPASSWD: /bin/sed * /etc/network/interfaces;
+www-data ALL = NOPASSWD: /bin/sed * /etc/wpa_supplicant/wpa_supplicant.conf;
 
 #hostapd.conf file
 www-data ALL = NOPASSWD: /bin/sed * /etc/hostapd/hostapd.conf;

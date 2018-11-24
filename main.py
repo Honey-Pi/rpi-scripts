@@ -2,7 +2,6 @@
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
-import os
 import sys
 import threading
 import time
@@ -11,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode
 
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
@@ -20,16 +19,18 @@ def start_ap():
     global isActive
     isActive = 1 # measurement shall start next time
     print("AccessPoint start")
-    os.system("sudo ifconfig wlan0 up") 
     start_led()
+    GPIO.output(21,GPIO.HIGH) # GPIO for led
+    client_to_ap_mode()
     time.sleep(0.4) 
 
 def stop_ap():
     global isActive
     isActive = 0 # measurement shall stop next time
     print("AccessPoint stop")
-    os.system("sudo ifconfig wlan0 down")
     stop_led()
+    GPIO.output(21,GPIO.LOW) # GPIO for led
+    ap_to_client_mode()
     time.sleep(0.4) 
 
 def close_script():
@@ -46,12 +47,14 @@ def main():
     # setup gpio
     gpio = settings["button_pin"] # read pin from settings
     GPIO.setwarnings(False) # Ignore warning for now
-    GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine, analog zu allen Beispielen
+    GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine
     GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 17 to be an input pin and set initial value to be pulled low (off)
+    GPIO.setup(21, GPIO.OUT) # Set pin 18 to led output
 
     # by default is AccessPoint down
     stop_ap()
     # stop HDMI power (save energy)
+    print("Shutting down HDMI to save engery.")
     stop_tv()
     # start as seperate background thread
     # because Taster pressing was not recognised

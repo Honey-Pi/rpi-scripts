@@ -14,6 +14,34 @@ def stop_led():
 def start_led():
     os.system("sudo bash -c \"echo 1 > /sys/class/leds/led0/brightness\"") #Turn on
 
+def client_to_ap_mode():
+    # Disable router network
+    os.system("wpa_cli disable_network 0")
+    # pushing the wlan0 interface down
+    os.system("sudo ip link set dev wlan0 down")
+    # restart AP Services
+    os.system("sudo systemctl restart dnsmasq.service")
+    os.system("sudo systemctl restart hostapd.service")
+    # bring up the wi-fi
+    os.system("sudo ifconfig wlan0 up")
+
+def ap_to_client_mode():
+    # Stop AP Services
+    os.system("sudo systemctl stop hostapd.service")
+    os.system("sudo systemctl stop dnsmasq.service")
+    # Start WPA Daemon
+    os.system("sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B")
+    # Start dhclient for IP-Adresses
+    os.system("sudo dhclient wlan0")
+    # Enable first router in list
+    os.system("wpa_cli enable_network 0")
+
+def start_wlan():
+    os.system("sudo ifconfig wlan0 down")
+
+def stop_wlan():
+    os.system("sudo ifconfig wlan0 up") 
+
 def reboot():
     os.system("sudo reboot") # reboots the pi
 
