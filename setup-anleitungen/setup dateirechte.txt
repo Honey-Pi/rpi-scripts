@@ -1,5 +1,7 @@
-﻿sudo chown -R www-data:www-data /var/www/html
+﻿# settings.php und log.php benötigen noch entsprechende Rechte:
+sudo chown -R www-data:www-data /var/www/html
 sudo chmod -R 775 /var/www/html
+
 # Von PHP ausgeführten Shell Befehlen noch die Rechte geben
 sudo visudo
 # diese Zeilen hinzufügen:
