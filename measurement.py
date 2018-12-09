@@ -7,13 +7,14 @@ import threading
 import time
 from pprint import pprint
 from time import sleep
+import json
 
 import RPi.GPIO as GPIO
 
 from read_bme680 import measure_bme680, burn_in_bme680, bme680IsConnected
 from read_ds18b20 import measure_temperature
 from read_hx711 import measure_weight
-from read_dht11 import measure_dht11
+from read_dht import measure_dht
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log
 
@@ -25,7 +26,7 @@ def measurement():
         ds18b20Sensors = get_sensors(settings, 0)
         bme680Sensors = get_sensors(settings, 1)
         weightSensors = get_sensors(settings, 2)
-        dht11Sensors = get_sensors(settings, 3)
+        dhtSensors = get_sensors(settings, 3)
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1 and bme680IsConnected:
@@ -56,12 +57,12 @@ def measurement():
             weight = measure_weight(sensor)
             ts_fields.update(weight)
 
-        # measure every sensor with type 3 [DHT11]
-        for (i, sensor) in enumerate(dht11Sensors):
-            tempAndHum = measure_dht11(sensor)
+        # measure every sensor with type 3 [DHT11/DHT22]
+        for (i, sensor) in enumerate(dhtSensors):
+            tempAndHum = measure_dht(sensor)
             ts_fields.update(tempAndHum)
 
-        return ts_fields
+        return json.dumps(ts_fields)
            
     except Exception as e:
         print "Unhandled Exception while Measurement: " + str(e)

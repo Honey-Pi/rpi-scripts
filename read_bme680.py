@@ -25,7 +25,7 @@ try:
     bme680IsConnected = 1
 
 except IOError:
-    print("IOError Exception: No SMBus connected.")
+    pass #print("IOError Exception: No SMBus connected.")
 
 # Set the humidity baseline to 40%, an optimal indoor humidity.
 hum_baseline = 40.0
