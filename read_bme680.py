@@ -4,9 +4,18 @@
 
 import time
 import bme680
+import smbus
 
 # global vars
 bme680IsConnected = 0
+
+try:
+    bus = smbus.SMBus(1)
+    address = 0x77
+    data = [0xA5,0x5A]
+    bus.write_i2c_block_data(address, 0, data)
+except Exception as ex:
+    print("Reading BME680 failed: " + str(ex))
 
 try:
     # setup BME680 sensor
@@ -24,8 +33,9 @@ try:
     
     bme680IsConnected = 1
 
-except IOError:
-    pass #print("IOError Exception: No SMBus connected.")
+except IOError as ex:
+    print("IOError Exception: No SMBus connected: " + str(ex))
+
 
 # Set the humidity baseline to 40%, an optimal indoor humidity.
 hum_baseline = 40.0
