@@ -5,12 +5,12 @@
 from HX711 import HX711
 
 def measure_weight(weight_sensor):
+    ts_field = weight_sensor["ts_field"]
     # weight sensor pins
     try:
         pin_dt = weight_sensor["pin_dt"]
         pin_sck = weight_sensor["pin_sck"]
-        channel = weight_sensor["channel"]
-        ts_field = weight_sensor["ts_field"]
+        channel = weight_sensor["channel"]   
     except Exception as e:
         print("HX711 missing params: " + str(e))
     
@@ -38,4 +38,7 @@ def measure_weight(weight_sensor):
     except Exception as e:
         print("Reading HX711 failed: " + str(e))
 
-    return ({ts_field: weight})
+    if ts_field:
+        return ({ts_field: weight})
+    else:
+        return {}
