@@ -35,7 +35,7 @@ def measurement():
 
             # if burning was canceled => exit
             if gas_baseline is None:
-                print "gas_baseline can't be None"
+                print("gas_baseline can't be None")
 
         # dict with all fields and values which will be tranfered to ThingSpeak later
         ts_fields = {}
@@ -65,7 +65,7 @@ def measurement():
         return json.dumps(ts_fields)
            
     except Exception as e:
-        print "Unhandled Exception while Measurement: " + str(e)
+        print("Unhandled Exception while Measurement: " + str(e))
 
 
 print measurement()

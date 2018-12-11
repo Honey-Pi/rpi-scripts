@@ -36,7 +36,7 @@ def start_measurement(measurement_stop):
         interval = settings["interval"]
 
         if interval and not isinstance(interval, int) or interval == 0 or not channel_id or not write_key:
-            print "ThingSpeak settings are not complete or interval is 0"
+            print("ThingSpeak settings are not complete or interval is 0")
             measurement_stop.set()
 
         # read configured sensors from settings.json
@@ -52,7 +52,7 @@ def start_measurement(measurement_stop):
 
             # if burning was canceled => exit
             if gas_baseline is None:
-                print "gas_baseline can't be None"
+                print("gas_baseline can't be None")
                 measurement_stop.set()
 
         # ThingSpeak channel
