@@ -32,7 +32,7 @@ def ap_to_client_mode():
     # Start WPA Daemon
     os.system("sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B")
     # Start dhclient for IP-Adresses
-    os.system("sudo dhclient wlan0")
+    os.system("sudo dhclient wlan0 &") # & will execute command in the background
     # Enable first router in list
     os.system("wpa_cli enable_network 0")
 
