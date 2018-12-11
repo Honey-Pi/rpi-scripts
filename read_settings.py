@@ -29,8 +29,9 @@ def get_settings():
 
 def check_vars(settings):
     try:
-        if not settings["button_pin"] or not isinstance(settings["button_pin"], int):
-            settings["button_pin"] = 17
+        settings["button_pin"] = int(settings["button_pin"])
+        if not settings["button_pin"]:
+            raise Exception("button_pin is not defined.")
     except:
         settings["button_pin"] = 17
 
