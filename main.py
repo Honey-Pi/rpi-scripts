@@ -12,6 +12,8 @@ from read_and_upload_all import start_measurement
 from read_settings import get_settings
 from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode
 
+# global vars
+measurement = None
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
 
@@ -37,10 +39,29 @@ def close_script():
     global measurement_stop
     measurement_stop.set()
     print("Exit!")
+    GPIO.cleanup()
     sys.exit()
 
+def button_pressed(gpio):
+    global isActive, measurement_stop, measurement
+    print("Button was pressed")
+    if isActive == 0:
+        print("Button: Stop measurement")
+        # stop the measurement by event's flag
+        measurement_stop.set()
+        start_ap() # finally start AP
+    else:
+        print("Button: Start measurement")
+        if measurement.is_alive():
+            print("Warning: Thread should not be active anymore")
+        measurement_stop.clear() # reset flag
+        measurement_stop = threading.Event() # create event to stop measurement
+        measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
+        measurement.start() # start measurement
+        stop_ap() # finally stop AP
+
 def main():
-    global isActive, measurement_stop
+    global isActive, measurement_stop, measurement
 
     settings = get_settings() # read settings for number of GPIO pin
 
@@ -62,25 +83,13 @@ def main():
     measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
     measurement.start() # start measurement
 
+    # register button press event
+    GPIO.add_event_detect(gpio, GPIO.FALLING, callback=button_pressed, bouncetime = 150)
+
+    # Main Lopp: Cancel with STRG+C
     while True:
-        input_state = GPIO.input(gpio)
-        if input_state == GPIO.HIGH:
-            print("Button was pressed")
-            if isActive == 0:
-                print("Button: Stop measurement")
-                # stop the measurement by event's flag
-                measurement_stop.set()
-                start_ap() # finally start AP
-            else:
-                print("Button: Start measurement")
-                if measurement.is_alive():
-                    print("Warning: Thread should not be active anymore")
-                measurement_stop.clear() # reset flag
-                measurement_stop = threading.Event() # create event to stop measurement
-                measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
-                measurement.start() # start measurement
-                stop_ap() # finally stop AP
-        time.sleep(0.0001) # short sleep is good
+        time.sleep(0.01)  # wait 10 ms to give CPU chance to do other things
+        pass
 
     print("This text will never be printed.")
 
