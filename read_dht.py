@@ -27,9 +27,9 @@ def measure_dht(ts_sensor):
             humidity, temperature = Adafruit_DHT.read_retry(sensorDHT, pin)
 
             # Create returned dict if ts-field is defined
-            if ts_field_temperature:
+            if ts_field_temperature and temperature is not None:
                 fields[ts_field_temperature] = temperature
-            if ts_field_humidity:
+            if ts_field_humidity and humidity is not None:
                 fields[ts_field_humidity] = humidity
 
         except Exception as e:

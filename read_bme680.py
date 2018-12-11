@@ -10,7 +10,6 @@ def isSMBusConnected():
     try:
         bus = smbus.SMBus(1)
         address = 0x77
-        bus.write_data(address,0xA5,0x5A)
         return 1
     except Exception as ex:
         print("Reading BME680 failed: " + str(ex))

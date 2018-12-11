@@ -52,6 +52,9 @@ def measurement():
             bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
             ts_fields.update(bme680_values)
 
+        # disable warnings for HX711
+        GPIO.setwarnings(False)
+        
         # measure every sensor with type 2 [HX711]
         for (i, sensor) in enumerate(weightSensors):
             weight = measure_weight(sensor)
