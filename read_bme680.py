@@ -6,16 +6,20 @@ import time
 import bme680
 import smbus
 
+def isSMBusConnected():
+    try:
+        bus = smbus.SMBus(1)
+        address = 0x77
+        bus.write_data(address,0xA5,0x5A)
+        return 1
+    except Exception as ex:
+        print("Reading BME680 failed: " + str(ex))
+    return 0
+
+print("isSMBusConnected: " + str(isSMBusConnected()))
+
 # global vars
 bme680IsConnected = 0
-
-try:
-    bus = smbus.SMBus(1)
-    address = 0x77
-    data = [0xA5,0x5A]
-    bus.write_i2c_block_data(address, 0, data)
-except Exception as ex:
-    print("Reading BME680 failed: " + str(ex))
 
 try:
     # setup BME680 sensor
