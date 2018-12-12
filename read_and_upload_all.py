@@ -12,7 +12,7 @@ import RPi.GPIO as GPIO
 import thingspeak # https://github.com/mchwalisz/thingspeak/
 import requests 
 
-from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain, bme680IsConnected
+from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import measure_weight
 from read_dht import measure_dht
@@ -47,15 +47,14 @@ def start_measurement(measurement_stop):
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
-            initBME680FromMain()
-            if bme680IsConnected:
+            gas_baseline = None
+            if initBME680FromMain():
                 # bme680 sensor must be burned in before use
-                gas_baseline = burn_in_bme680()
+                gas_baseline = burn_in_bme680(30)
 
                 # if burning was canceled => exit
                 if gas_baseline is None:
                     print("gas_baseline can't be None")
-                    measurement_stop.set()
 
         # ThingSpeak channel
         channel = thingspeak.Channel(id=channel_id, write_key=write_key)
@@ -70,7 +69,8 @@ def start_measurement(measurement_stop):
             # read values from sensors every second
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 checkIfSensorExistsInArray(sensorIndex)
-                read_unfiltered_temperatur_values(sensorIndex, sensor)
+                if 'device_id' in sensor:
+                    read_unfiltered_temperatur_values(sensorIndex, sensor['device_id'])
             
             # for testing:
             #try:
@@ -98,14 +98,14 @@ def start_measurement(measurement_stop):
                 # measure every sensor with type 0
                 for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                     # if we have at leat one filtered value we can upload
-                    if len(filtered_temperature[sensorIndex]) > 0: 
+                    if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor: 
                         ds18b20_temperature = filtered_temperature[sensorIndex].pop() # get last value from array
                         ts_field_ds18b20 = sensor["ts_field"]
                         if ts_field_ds18b20:
                             ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
 
                 # measure BME680 (can only be once) [type 1]
-                if bme680Sensors and len(bme680Sensors) == 1 and bme680IsConnected:
+                if bme680Sensors and len(bme680Sensors) == 1 and gas_baseline:
                     bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
                     ts_fields.update(bme680_values)
 

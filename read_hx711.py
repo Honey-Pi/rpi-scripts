@@ -5,20 +5,22 @@
 from HX711 import HX711
 
 def measure_weight(weight_sensor):
-    ts_field = weight_sensor["ts_field"]
     # weight sensor pins
+    pin_dt = 5
+    pin_sck = 6
+    channel = 'A'
     try:
-        pin_dt = weight_sensor["pin_dt"]
-        pin_sck = weight_sensor["pin_sck"]
+        pin_dt = int(weight_sensor["pin_dt"])
+        pin_sck = int(weight_sensor["pin_sck"])
         channel = weight_sensor["channel"]   
     except Exception as e:
-        print("HX711 missing params: " + str(e))
+        print("HX711 missing param: " + str(e))
     
-    if weight_sensor["reference_unit"]:
+    if 'reference_unit' in weight_sensor:
         reference_unit = weight_sensor["reference_unit"]
     else:
         reference_unit = 1
-    if weight_sensor["offset"]:
+    if 'offset' in weight_sensor:
         offset = weight_sensor["offset"]
     else:
         offset = 0
@@ -33,12 +35,13 @@ def measure_weight(weight_sensor):
         hx.set_offset(offset=offset)
 
         weight = hx.get_weight_mean(5) # average from 5 times
-        weight = weight/1000  # gramms to kg
+        if weight is not 0:
+            weight = weight/1000  # gramms to kg
         weight = float("{0:.3f}".format(weight)) # float only 3 decimals
     except Exception as e:
         print("Reading HX711 failed: " + str(e))
 
-    if ts_field:
-        return ({ts_field: weight})
+    if 'ts_field' in weight_sensor:
+        return ({weight_sensor["ts_field"]: weight})
     else:
         return {}

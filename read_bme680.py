@@ -10,25 +10,16 @@ import smbus
 sensor = None
 bme680IsConnected = 0
 
-# Set the humidity baseline to 40%, an optimal indoor humidity.
-hum_baseline = 40.0
-
-# This sets the balance between humidity and gas reading in the
-# calculation of air_quality_score (25:75, humidity:gas)
-humidity_weighting = 0.25
-
 def isSMBusConnected():
     try:
         bus = smbus.SMBus(1)
-        # maybe try to reset
-        #writeByte(BME680_ADDRESS, BME680_RESET, 0xB6); // reset BME680 before initialization
         return 1
     except Exception as ex:
         pass #print("No BME680 connected: " + str(ex))
     return 0
 
 def initBME680():
-    global sensor, bme680IsConnected
+    global sensor
     try:
         # setup BME680 sensor
         sensor = bme680.BME680()
@@ -43,20 +34,22 @@ def initBME680():
         sensor.set_gas_heater_duration(150)
         sensor.select_gas_heater_profile(0)
         
-        bme680IsConnected = 1
-
+        return 1
     except IOError as ex:
         print("Reading BME680 failed: IOError Exception: " + str(ex))
+        print("In case of \"[Errno 121] Remote I/O error\": Maybe SD0 is not connected to GND")
+    return 0
 
 def initBME680FromMain():
     if isSMBusConnected():
-        print("BME680 is correct connected to SMBus")
-        initBME680()
+        print("BME680 is connected to SMBus")
+        return initBME680()
     else:
         print("BME680 is not connected")
+        return 0
 
 
-def burn_in_bme680():
+def burn_in_bme680(burn_in_time):
     global sensor
     try:
         # Collect gas resistance burn-in values, then use the average
@@ -67,7 +60,6 @@ def burn_in_bme680():
 
         start_time = time.time()
         curr_time = time.time()
-        burn_in_time = 10
 
         burn_in_data = []
 
@@ -90,7 +82,14 @@ def burn_in_bme680():
 
 
 def measure_bme680(gas_baseline, ts_sensor):
-    global hum_baseline, humidity_weighting, sensor
+    global sensor
+
+    # Set the humidity baseline to 40%, an optimal indoor humidity.
+    hum_baseline = 40.0
+
+    # This sets the balance between humidity and gas reading in the
+    # calculation of air_quality_score (25:75, humidity:gas)
+    humidity_weighting = 0.25
 
     if sensor.get_sensor_data() and sensor.data.heat_stable:
         temperature = sensor.data.temperature
@@ -119,20 +118,15 @@ def measure_bme680(gas_baseline, ts_sensor):
         air_quality = hum_score + gas_score
 
         # ThingSpeak fields
-        ts_field_temperature = ts_sensor["ts_field_temperature"]
-        ts_field_humidity = ts_sensor["ts_field_humidity"]
-        ts_field_air_pressure = ts_sensor["ts_field_air_pressure"]
-        ts_field_air_quality = ts_sensor["ts_field_air_quality"]
-
         # Create returned dict if ts-field is defined
         fields = {}
-        if ts_field_temperature:
-            fields[ts_field_temperature] = temperature
-        if ts_field_humidity:
-            fields[ts_field_humidity] = humidity
-        if ts_field_air_pressure:
-            fields[ts_field_air_pressure] = air_pressure
-        if ts_field_air_quality:
-            fields[ts_field_air_quality] = air_quality
+        if 'ts_field_temperature' in ts_sensor:
+            fields[ts_sensor["ts_field_temperature"]] = temperature
+        if 'ts_field_humidity' in ts_sensor:
+            fields[ts_sensor["ts_field_humidity"]] = humidity
+        if 'ts_field_air_pressure' in ts_sensor:
+            fields[ts_sensor["ts_field_air_pressure"]] = air_pressure
+        if 'ts_field_air_quality' in ts_sensor:
+            fields[ts_sensor["ts_field_air_quality"]] = air_quality
 
         return fields

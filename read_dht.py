@@ -12,8 +12,6 @@ def measure_dht(ts_sensor):
     try:
         pin = int(ts_sensor["pin"])
         dht_type = int(ts_sensor["dht_type"])
-        ts_field_temperature = ts_sensor["ts_field_temperature"]
-        ts_field_humidity = ts_sensor["ts_field_humidity"]
 
         # setup sensor
         if dht_type == 2302:
@@ -27,15 +25,15 @@ def measure_dht(ts_sensor):
             humidity, temperature = Adafruit_DHT.read_retry(sensorDHT, pin)
 
             # Create returned dict if ts-field is defined
-            if ts_field_temperature and temperature is not None:
-                fields[ts_field_temperature] = temperature
-            if ts_field_humidity and humidity is not None:
-                fields[ts_field_humidity] = humidity
+            if 'ts_field_temperature' in ts_sensor and temperature is not None:
+                fields[ts_sensor["ts_field_temperature"]] = temperature
+            if 'ts_field_humidity' in ts_sensor and humidity is not None:
+                fields[ts_sensor["ts_field_humidity"]] = humidity
 
         except Exception as e:
             print("Reading DHT failed (DHT: " + str(dht_type) + "/" + str(sensorDHT) +", GPIO: " + str(pin) + "): " + str(e))
 
     except Exception as e:
-        print("DHT missing params: " + str(e))
+        print("DHT missing param: " + str(e))
       
     return fields

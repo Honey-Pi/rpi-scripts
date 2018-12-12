@@ -84,7 +84,7 @@ def main():
     measurement.start() # start measurement
 
     # register button press event
-    GPIO.add_event_detect(gpio, GPIO.FALLING, callback=button_pressed, bouncetime = 150)
+    GPIO.add_event_detect(gpio, GPIO.FALLING, callback=button_pressed, bouncetime = 300)
 
     # Main Lopp: Cancel with STRG+C
     while True:
