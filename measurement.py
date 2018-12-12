@@ -11,7 +11,7 @@ import json
 
 import RPi.GPIO as GPIO
 
-from read_bme680 import measure_bme680, burn_in_bme680, bme680IsConnected
+from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain, bme680IsConnected
 from read_ds18b20 import measure_temperature
 from read_hx711 import measure_weight
 from read_dht import measure_dht
@@ -29,13 +29,15 @@ def measurement():
         dhtSensors = get_sensors(settings, 3)
 
         # if bme680 is configured
-        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsConnected:
-            # bme680 sensor must be burned in before use
-            gas_baseline = burn_in_bme680()
+        if bme680Sensors and len(bme680Sensors) == 1:
+            initBME680FromMain()
+            if bme680IsConnected:
+                # bme680 sensor must be burned in before use
+                gas_baseline = burn_in_bme680()
 
-            # if burning was canceled => exit
-            if gas_baseline is None:
-                print("gas_baseline can't be None")
+                # if burning was canceled => exit
+                if gas_baseline is None:
+                    print("gas_baseline can't be None")
 
         # dict with all fields and values which will be tranfered to ThingSpeak later
         ts_fields = {}

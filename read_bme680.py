@@ -6,39 +6,9 @@ import time
 import bme680
 import smbus
 
-def isSMBusConnected():
-    try:
-        bus = smbus.SMBus(1)
-        address = 0x77
-        return 1
-    except Exception as ex:
-        print("Reading BME680 failed: " + str(ex))
-    return 0
-
-print("isSMBusConnected: " + str(isSMBusConnected()))
-
 # global vars
+sensor = None
 bme680IsConnected = 0
-
-try:
-    # setup BME680 sensor
-    sensor = bme680.BME680()
-
-    # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
-    sensor.set_humidity_oversample(bme680.OS_2X)
-    sensor.set_pressure_oversample(bme680.OS_4X)
-    sensor.set_temperature_oversample(bme680.OS_8X)
-    sensor.set_filter(bme680.FILTER_SIZE_3)
-    sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
-    sensor.set_gas_heater_temperature(320)
-    sensor.set_gas_heater_duration(150)
-    sensor.select_gas_heater_profile(0)
-    
-    bme680IsConnected = 1
-
-except IOError as ex:
-    print("IOError Exception: No SMBus connected: " + str(ex))
-
 
 # Set the humidity baseline to 40%, an optimal indoor humidity.
 hum_baseline = 40.0
@@ -47,8 +17,47 @@ hum_baseline = 40.0
 # calculation of air_quality_score (25:75, humidity:gas)
 humidity_weighting = 0.25
 
+def isSMBusConnected():
+    try:
+        bus = smbus.SMBus(1)
+        # maybe try to reset
+        #writeByte(BME680_ADDRESS, BME680_RESET, 0xB6); // reset BME680 before initialization
+        return 1
+    except Exception as ex:
+        pass #print("No BME680 connected: " + str(ex))
+    return 0
+
+def initBME680():
+    global sensor, bme680IsConnected
+    try:
+        # setup BME680 sensor
+        sensor = bme680.BME680()
+
+        # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
+        sensor.set_humidity_oversample(bme680.OS_2X)
+        sensor.set_pressure_oversample(bme680.OS_4X)
+        sensor.set_temperature_oversample(bme680.OS_8X)
+        sensor.set_filter(bme680.FILTER_SIZE_3)
+        sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
+        sensor.set_gas_heater_temperature(320)
+        sensor.set_gas_heater_duration(150)
+        sensor.select_gas_heater_profile(0)
+        
+        bme680IsConnected = 1
+
+    except IOError as ex:
+        print("Reading BME680 failed: IOError Exception: " + str(ex))
+
+def initBME680FromMain():
+    if isSMBusConnected():
+        print("BME680 is correct connected to SMBus")
+        initBME680()
+    else:
+        print("BME680 is not connected")
+
 
 def burn_in_bme680():
+    global sensor
     try:
         # Collect gas resistance burn-in values, then use the average
         # of the last 50 values to set the upper limit for calculating
@@ -76,10 +85,13 @@ def burn_in_bme680():
     except NameError:
         print("Sensor BME680 is not connected.")
     except KeyboardInterrupt:
-        return None
+        print("Burning BME680 interruped by Keyboard.")
+    return None
 
 
 def measure_bme680(gas_baseline, ts_sensor):
+    global hum_baseline, humidity_weighting, sensor
+
     if sensor.get_sensor_data() and sensor.data.heat_stable:
         temperature = sensor.data.temperature
         humidity = sensor.data.humidity
