@@ -151,7 +151,7 @@ def start_measurement(measurement_stop):
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
         
     except MyRebootException as re:
-        error_log(re, "Too many ConnectionErrors => Rebooting")
+        error_log(re, "Too many ConnectionErrors in a row => Rebooting")
         time.sleep(1)
         reboot()
     except Exception as e:
