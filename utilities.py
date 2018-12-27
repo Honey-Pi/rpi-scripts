@@ -45,6 +45,9 @@ def stop_wlan():
 def reboot():
     os.system("sudo reboot") # reboots the pi
 
+def shutdown():
+    os.system("sudo shutdown -h 0")
+
 def error_log(e, printText=None):
     try:
         if printText:
