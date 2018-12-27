@@ -26,8 +26,12 @@ def measure_dht(ts_sensor):
 
             # Create returned dict if ts-field is defined
             if 'ts_field_temperature' in ts_sensor and temperature is not None:
+                # limit to 2 digits
+                temperature = float("{0:.2f}".format(temperature))
                 fields[ts_sensor["ts_field_temperature"]] = temperature
             if 'ts_field_humidity' in ts_sensor and humidity is not None:
+                # limit to 2 digits
+                humidity = float("{0:.2f}".format(humidity))
                 fields[ts_sensor["ts_field_humidity"]] = humidity
 
         except Exception as e:
