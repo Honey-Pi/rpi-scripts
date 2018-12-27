@@ -23,17 +23,17 @@ def start_ap():
     print("AccessPoint start")
     start_led()
     GPIO.output(21,GPIO.HIGH) # GPIO for led
-    client_to_ap_mode()
-    time.sleep(0.4) 
+    t1 = threading.Thread(target=client_to_ap_mode) #client_to_ap_mode()
+    t1.start()
 
-def stop_ap():
+def stop_ap(boot=0):
     global isActive
     isActive = 0 # measurement shall stop next time
     print("AccessPoint stop")
     stop_led()
     GPIO.output(21,GPIO.LOW) # GPIO for led
-    ap_to_client_mode()
-    time.sleep(0.4) 
+    t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
+    t2.start()
 
 def close_script():
     global measurement_stop
@@ -73,7 +73,7 @@ def main():
     GPIO.setup(21, GPIO.OUT) # Set pin 18 to led output
 
     # by default is AccessPoint down
-    stop_ap()
+    stop_ap(1)
     # stop HDMI power (save energy)
     print("Shutting down HDMI to save engery.")
     stop_tv()
