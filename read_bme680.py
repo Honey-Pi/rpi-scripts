@@ -117,8 +117,8 @@ def measure_bme680(gas_baseline, ts_sensor):
         # Calculate air_quality_score.
         air_quality = hum_score + gas_score
 
-        # limit to 2 digits
-        air_quality = float("{0:.2f}".format(air_quality))
+        # limit to 0 digits
+        air_quality = int("{0:.0f}".format(air_quality))
 
         # ThingSpeak fields
         # Create returned dict if ts-field is defined
