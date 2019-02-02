@@ -85,7 +85,7 @@ def start_measurement(measurement_stop):
 
             # wait seconds of interval before next check
             # free ThingSpeak account has an upload limit of 15 seconds
-            if counter%interval == 0:
+            if counter%interval == 0 or interval == 1:
                 print("Time over for a new measurement.")
 
                 # filter the values out
@@ -141,7 +141,12 @@ def start_measurement(measurement_stop):
                     error_log(errt, "Timeout Error")
                 except requests.exceptions.RequestException as err:
                     error_log(err, "Something Else")
-            
+                
+                # stop measurements after uploading once
+                if interval == 1:
+                    print("Only one measurement was set => stop measurements.")
+                    measurement_stop.set()
+
             counter += 1
             sleep(0.96)
 
