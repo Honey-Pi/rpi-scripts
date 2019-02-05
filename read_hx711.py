@@ -38,6 +38,11 @@ def measure_weight(weight_sensor):
         if weight is not 0:
             weight = weight/1000  # gramms to kg
         weight = float("{0:.3f}".format(weight)) # float only 3 decimals
+
+        # invert weight if flag is set
+        if 'invert' in weight_sensor and weight_sensor['invert'] == True:
+        	weight = weight*-1;
+
     except Exception as e:
         print("Reading HX711 failed: " + str(e))
 
