@@ -36,6 +36,12 @@ def check_vars(settings):
         settings["button_pin"] = 17
 
     try:
+        if not 'debug' in settings:
+            settings["debug"] = 0
+    except:
+        settings["debug"] = 0
+
+    try:
         settings["ts_channel_id"]
         settings["ts_write_key"]
     except KeyError:
@@ -49,10 +55,10 @@ def get_sensors(settings, type):
     try:
         all_sensors = settings["sensors"]
     except TypeError:
-        # doesn"t exist => return empty array
+        # doesn't exist => return empty array
         return []
     except KeyError:
-        # doesn"t exist => return empty array
+        # doesn't exist => return empty array
         return []
 
     sensors = [x for x in all_sensors if x["type"] == type]

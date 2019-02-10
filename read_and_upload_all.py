@@ -34,6 +34,7 @@ def start_measurement(measurement_stop):
         channel_id = settings["ts_channel_id"]
         write_key = settings["ts_write_key"]
         interval = settings["interval"]
+        debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
 
         if interval and not isinstance(interval, int) or interval == 0 or not channel_id or not write_key:
             print("ThingSpeak settings are not complete or interval is 0")
@@ -157,9 +158,11 @@ def start_measurement(measurement_stop):
         
     except MyRebootException as re:
         error_log(re, "Too many ConnectionErrors in a row => Rebooting")
-        time.sleep(1)
-        reboot()
+        if not debug:
+            time.sleep(1)
+            reboot()
     except Exception as e:
         error_log(e, "Unhandled Exception while Measurement")
-        time.sleep(60)
-        reboot()
+        if not debug:
+            time.sleep(60)
+            reboot()

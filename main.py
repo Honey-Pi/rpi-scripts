@@ -16,6 +16,7 @@ from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to
 measurement = None
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
+debug = 0 # will be overriten by settings.json
 
 def start_ap():
     global isActive
@@ -61,7 +62,7 @@ def button_pressed(gpio):
         stop_ap() # finally stop AP
 
 def main():
-    global isActive, measurement_stop, measurement
+    global isActive, measurement_stop, measurement, debug
 
     settings = get_settings() # read settings for number of GPIO pin
 
@@ -74,9 +75,13 @@ def main():
 
     # by default is AccessPoint down
     stop_ap(1)
-    # stop HDMI power (save energy)
-    print("Shutting down HDMI to save engery.")
-    stop_tv()
+    
+    debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
+    if not debug:
+        # stop HDMI power (save energy)
+        print("Shutting down HDMI to save engery.")
+        stop_tv()
+        
     # start as seperate background thread
     # because Taster pressing was not recognised
     measurement_stop = threading.Event() # create event to stop measurement
@@ -102,5 +107,6 @@ if __name__ == '__main__':
 
     except Exception as e:
         error_log(e, "Unhandled Exception in Main")
-        time.sleep(60)
-        reboot()
+        if not debug:
+            time.sleep(60)
+            reboot()
