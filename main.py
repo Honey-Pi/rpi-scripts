@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led
 
 # global vars
 measurement = None
@@ -88,7 +88,7 @@ def button_pressed_falling():
         error_log("Info: Too short Button press, Too long Button press OR inteference occured.")
 
 def main():
-    global isActive, measurement_stop, measurement, debug, gpio
+    global isActive, measurement_stop, measurement, debug, gpio, GPIO_LED
 
     settings = get_settings() # read settings for number of GPIO pin
 
@@ -97,7 +97,10 @@ def main():
     GPIO.setwarnings(False) # Ignore warning for now
     GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine
     GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 17 to be an input pin and set initial value to be pulled low (off)
-    GPIO.setup(21, GPIO.OUT) # Set pin 18 to led output
+    GPIO.setup(GPIO_LED, GPIO.OUT) # Set pin 21 to led output
+
+    # blink with LED on startup
+    blink_led()
 
     # by default is AccessPoint down
     stop_ap(1)
