@@ -35,6 +35,8 @@ def start_measurement(measurement_stop):
         write_key = settings["ts_write_key"]
         interval = settings["interval"]
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
+        if debug:
+            print("Debug-Mode is enabled.")
 
         if interval and not isinstance(interval, int) or interval == 0 or not channel_id or not write_key:
             print("ThingSpeak settings are not complete or interval is 0")
@@ -128,15 +130,20 @@ def start_measurement(measurement_stop):
                     # update ThingSpeak / transfer values
                     if len(ts_fields) > 0:
                         channel.update(ts_fields)
-                        # reset connectionErros because transfer succeded
-                        connectionErros = 0
+                        if debug:
+                            error_log("Info: Data succesfully transfered to ThingSpeak.")
+                        if connectionErros > 0:
+                            if debug:
+                                error_log("Info: Connection Errors (" + str(connectionErros) + ") Counting resetet.")
+                            # reset connectionErros because transfer succeded
+                            connectionErros = 0
                 except requests.exceptions.HTTPError as errh:
                     error_log(errh, "Http Error")
                 except requests.exceptions.ConnectionError as errc:
-                    error_log(errc, "Error Connecting")
+                    error_log(errc, "Error Connecting " + str(connectionErros))
                     connectionErros += 1
                     # multiple connectionErrors in a row => Exception
-                    if connectionErros > 4:
+                    if connectionErros >= 5:
                         raise MyRebootException
                 except requests.exceptions.Timeout as errt:
                     error_log(errt, "Timeout Error")

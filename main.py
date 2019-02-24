@@ -16,23 +16,26 @@ from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to
 measurement = None
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
-debug = 0 # will be overriten by settings.json
+debug = 0 # will be overriten by settings.json. you need to change the debug-mode in settings.json
+time_start = 0 # will be set by button_pressed event if the button is rised
+GPIO_LED = 21 # GPIO for led
+gpio = 17 # gpio for button, will be overwritten by settings.json
 
 def start_ap():
-    global isActive
+    global isActive, GPIO_LED
     isActive = 1 # measurement shall start next time
     print("AccessPoint start")
     start_led()
-    GPIO.output(21,GPIO.HIGH) # GPIO for led
+    GPIO.output(GPIO_LED, GPIO.HIGH) 
     t1 = threading.Thread(target=client_to_ap_mode) #client_to_ap_mode()
     t1.start()
 
 def stop_ap(boot=0):
-    global isActive
+    global isActive, GPIO_LED
     isActive = 0 # measurement shall stop next time
     print("AccessPoint stop")
     stop_led()
-    GPIO.output(21,GPIO.LOW) # GPIO for led
+    GPIO.output(GPIO_LED, GPIO.LOW) 
     t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
     t2.start()
 
@@ -43,7 +46,7 @@ def close_script():
     GPIO.cleanup()
     sys.exit()
 
-def button_pressed(gpio):
+def toggle_measurement():
     global isActive, measurement_stop, measurement
     print("Button was pressed")
     if isActive == 0:
@@ -61,8 +64,31 @@ def button_pressed(gpio):
         measurement.start() # start measurement
         stop_ap() # finally stop AP
 
+def button_pressed(channel):
+    global gpio
+    if GPIO.input(gpio): # if port == 1  
+        button_pressed_rising()  
+    else: # if port != 1  
+        button_pressed_falling()  
+
+def button_pressed_rising():
+    global time_start
+    time_start = time.time()
+
+def button_pressed_falling():
+    global time_start, debug
+    time_end = time.time()
+    time_elapsed = time_end-time_start
+    MIN_SECONDS_TO_ELAPSE = 1 # seconds
+    MAX_SECONDS_TO_ELAPSE = 3
+    if time_elapsed >= MIN_SECONDS_TO_ELAPSE and time_elapsed <= MAX_SECONDS_TO_ELAPSE:
+        time_start = 0 # reset to prevent multiple fallings from the same rising
+        toggle_measurement()
+    elif debug:
+        error_log("Info: Too short Button press, Too long Button press OR inteference occured.")
+
 def main():
-    global isActive, measurement_stop, measurement, debug
+    global isActive, measurement_stop, measurement, debug, gpio
 
     settings = get_settings() # read settings for number of GPIO pin
 
@@ -88,8 +114,9 @@ def main():
     measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
     measurement.start() # start measurement
 
+    bouncetime = 300 # ignoring further edges for 300ms for switch bounce handling
     # register button press event
-    GPIO.add_event_detect(gpio, GPIO.FALLING, callback=button_pressed, bouncetime = 300)
+    GPIO.add_event_detect(gpio, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
 
     # Main Lopp: Cancel with STRG+C
     while True:

@@ -48,19 +48,26 @@ def reboot():
 def shutdown():
     os.system("sudo shutdown -h 0")
 
-def error_log(e, printText=None):
+def error_log(e=None, printText=None):
     try:
-        if printText:
-            printText = printText + " | " + repr(e)
-            print(printText)
-        else:
-            printText = repr(e)
-
         file = '/home/pi/rpi-scripts/error.log'
+        # reset file if to big
+        if os.path.getsize(file) > 100 * 1024:
+            os.remove(file)
+
+        # generate printed text
+        if printText and e:
+            printText = printText + " | " + repr(e)
+        elif e:
+            printText = repr(e)
+        else:
+            printText = "No Text defined."
+
+        print printText
+
+        # write to file
         with open(file, "a") as myfile:
             myfile.write (str(datetime.now()) + " | " + printText + "\n")
         
-        if os.path.getsize(file) > 100 * 1024:
-            os.remove(file)
     except Exception: 
         pass
