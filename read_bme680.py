@@ -103,14 +103,12 @@ def measure_bme680(gas_baseline, ts_sensor):
         # Calculate hum_score as the distance from the hum_baseline.
         if humidity_offset > 0:
             hum_score = (100 - hum_baseline - humidity_offset) / (100 - hum_baseline) * (humidity_weighting * 100)
-
         else:
             hum_score = (hum_baseline + humidity_offset) / hum_baseline * (humidity_weighting * 100)
 
         # Calculate gas_score as the distance from the gas_baseline.
         if gas_offset > 0:
             gas_score = (gas / gas_baseline) * (100 - (humidity_weighting * 100))
-
         else:
             gas_score = 100 - (humidity_weighting * 100)
 
