@@ -3,6 +3,23 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 from HX711 import HX711
+import RPi.GPIO as GPIO 
+import time
+
+# global var
+ledState = False
+GPIO_PIN = 20 # debug pin
+
+# setup GPIO
+GPIO.setwarnings(False) # Ignore warning for now
+GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine
+GPIO.setup(GPIO_PIN, GPIO.OUT) # Set pin 20 to led output
+
+def triggerPIN():
+    global ledState, GPIO_PIN
+    # Method for Alex
+    ledState = not ledState
+    GPIO.output(GPIO_PIN, ledState)
 
 def takeClosest(myList, myNumber):
     # from list of integers, get number closest to a given value
@@ -48,15 +65,27 @@ def measure_weight(weight_sensor):
         hx.set_scale_ratio(scale_ratio=reference_unit)
         hx.set_offset(offset=offset)
 
-        # improve weight measurement by doing 3 weight measures
-        weightMeasures=[]
-        for i in range(5):
-            weightMeasures.append(hx.get_weight_mean(3))
+        count = 0
+        while True and count < 3:
+            count += 1
+            # improve weight measurement by doing 3 weight measures
+            weightMeasures=[]
+            for i in range(3):
+                weightMeasures.append(hx.get_weight_mean(2))
 
-        # take "best" measure
-        average_weight = int(average(weightMeasures))
-        weight = takeClosest(weightMeasures, average_weight)
-        print("AVG Weight: " + str(average_weight))
+            # take "best" measure
+            average_weight = int(average(weightMeasures))
+            weight = takeClosest(weightMeasures, average_weight)
+            print("Average weight: " + str(average_weight))
+
+            # if divergence is too big
+            if abs(average_weight-weight) > abs(weight)*0.1:
+                # if difference between avg weight and chosen weight is bigger than 10 percent of weight
+                triggerPIN() # debug method
+                print("Info: Difference between average weight and chosen weight is more than 10 percent.")
+            else:
+                # divergence is OK => skip
+                break
 
         #weight = hx.get_weight_mean(5) # average from 5 times
         if weight is not 0:
