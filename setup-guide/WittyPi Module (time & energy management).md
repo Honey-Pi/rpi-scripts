@@ -1,7 +1,8 @@
 ## Physical install 
 ### WittyPi Pins to Raspberry Pins
-GPIO (BCM) | Phycial PIN
---- | --- | ---
+
+GPIO (BCM) | Phycial PIN 
+--- | ---: 
 2 (SDA 1) | 3
 3 (SCL 1) | 5
 4 (GPIO 7) | 7
