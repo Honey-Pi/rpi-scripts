@@ -27,10 +27,6 @@ sudo pip3 install Adafruit_DHT
 
 * Autostart
 	
-	`sudo nano /etc/rc.local`
-
-	Vor die zeile `exit 0` folgendes einfügen:
-	
-	`python3 /home/pi/rpi-scripts/main.py`
+	`sudo nano /etc/rc.local` auf python3 wechseln
 
 
