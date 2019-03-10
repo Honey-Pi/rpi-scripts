@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 
 from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature
-from read_hx711 import measure_weight
+from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
 from read_max6675 import measure_tc
 from read_settings import get_settings, get_sensors
@@ -66,7 +66,6 @@ def measurement():
             tempAndHum = measure_dht(sensor)
             ts_fields.update(tempAndHum)
 
-
         # measure every sensor with type 4 [MAX6675]
         for (i, sensor) in enumerate(tcSensors):
             tc_temp = measure_tc(sensor)
@@ -75,6 +74,7 @@ def measurement():
         # measure every sensor with type 2 [HX711]
         for (i, sensor) in enumerate(weightSensors):
             weight = measure_weight(sensor)
+            weight = compensate_temperature(sensor, weight, ts_fields)
             ts_fields.update(weight)
 
         return json.dumps(ts_fields)

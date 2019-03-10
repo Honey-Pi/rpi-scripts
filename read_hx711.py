@@ -39,41 +39,55 @@ def get_temp(weight_sensor, ts_fields):
     try:
         if 'ts_field_temperature' in weight_sensor:
             ts_field_temperature = weight_sensor["ts_field_temperature"]
-            return getattr(ts_fields, ts_field_temperature) 
+            return float(ts_fields[ts_field_temperature])
 
     except Exception as e:
         print("Exeption while getting temperature field: " + str(e))
     
     return None
 
-def compensate_weight(weight_sensor, weight, ts_fields):
+def compensate_temperature(weight_sensor, weight, ts_fields):
     try:
         if 'compensation' in weight_sensor:
             compensation = weight_sensor["compensation"]
             if compensation:
                 if 'compensation_value' in weight_sensor:
-                    compensation_value = weight_sensor["compensation_value"]
+                    compensation_value = float(weight_sensor["compensation_value"])
                 else:
                     compensation_value = None
                 if 'compensation_temp' in weight_sensor:
-                    compensation_temp = weight_sensor["compensation_temp"]
+                    compensation_temp = float(weight_sensor["compensation_temp"])
                 else:
                     compensation_temp = None
-                ts_field_temperature = get_temp(weight_sensor, ts_fields)
-
-                # do compensation
-                if compensation_temp and compensation_value and (ts_field_temperature or ts_field_temperature == 0):
-                    delta = compensation_temp-ts_field_temperature
-                    if compensation_temp > ts_field_temperature:
-                        weight = weight - compensation_value*delta
-                    elif compensation_temp < ts_field_temperature:
-                        weight = weight + compensation_value*delta
+                
+                temp_now = get_temp(weight_sensor, ts_fields)
+                if temp_now:
+                    print("Weight cell temperature compensation is enabled (TempNow:" + str(temp_now) + " WeightBefore:" + str(weight) + ")")
+                    # do compensation
+                    if compensation_temp and compensation_value and (temp_now or temp_now == 0):
+                        delta = compensation_temp-temp_now
+                        if compensation_temp > temp_now:
+                            weight = weight - compensation_value*delta
+                        elif compensation_temp < temp_now:
+                            weight = weight + compensation_value*delta
+                else:
+                    print("Temperature Compensation: No temperature in given field.")
 
 
     except Exception as e:
         print("Exeption while temperature compensation: " + str(e))
     
-    return weight
+    return set_ts_field(weight_sensor, weight)
+
+def set_ts_field(weight_sensor, weight):
+    if weight is not 0:
+        weight = weight/1000  # gramms to kg
+    weight = float("{0:.3f}".format(weight)) # float only 3 decimals
+
+    if 'ts_field' in weight_sensor:
+        return ({weight_sensor["ts_field"]: weight})
+    else:
+        return {}
 
 def measure_weight(weight_sensor):
     # weight sensor pins
@@ -106,33 +120,31 @@ def measure_weight(weight_sensor):
         hx.set_offset(offset=offset)
 
         count = 0
-        while True and count < 3:
+        LOOP_TIMES = 3
+        while True and count < LOOP_TIMES:
             count += 1
-            # improve weight measurement by doing 3 weight measures
+            # improve weight measurement by doing LOOP_TIMES weight measurements
             weightMeasures=[]
-            for i in range(3):
-                #use outliers_filter and do average over 5 measurements
-                weightMeasures.append(hx.get_data_mean(5))
+            for i in range(LOOP_TIMES):
+                # use outliers_filter and do average over 3 measurements
+                weightMeasures.append(hx.get_weight_mean(3)) 
 
             # take "best" measure
             average_weight = int(average(weightMeasures))
-            weight = takeClosest(weightMeasures, average_weight)
-            print("Average weight: " + str(average_weight))
+            weight = int(takeClosest(weightMeasures, average_weight))
+            print("Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
 
             ALLOWED_DIVERGENCE = 20 # old: abs(weight)*0.1
             # if divergence is too big
             if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
                 # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
                 triggerPIN() # debug method
-                print("Info: Difference between average weight and chosen weight is more than ALLOWED_DIVERGENCE.")
+                print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than 20g. => Try again")
             else:
                 # divergence is OK => skip
                 break
 
         #weight = hx.get_weight_mean(5) # average from 5 times
-        if weight is not 0:
-            weight = weight/1000  # gramms to kg
-        weight = float("{0:.3f}".format(weight)) # float only 3 decimals
 
         # invert weight if flag is set
         if 'invert' in weight_sensor and weight_sensor['invert'] == True:
@@ -141,7 +153,4 @@ def measure_weight(weight_sensor):
     except Exception as e:
         print("Reading HX711 failed: " + str(e))
 
-    if 'ts_field' in weight_sensor:
-        return ({weight_sensor["ts_field"]: weight})
-    else:
-        return {}
+    return weight

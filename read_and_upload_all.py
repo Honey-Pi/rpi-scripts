@@ -14,7 +14,7 @@ import requests
 
 from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
-from read_hx711 import measure_weight
+from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log
@@ -47,6 +47,7 @@ def start_measurement(measurement_stop):
         bme680Sensors = get_sensors(settings, 1)
         weightSensors = get_sensors(settings, 2)
         dhtSensors = get_sensors(settings, 3)
+        tcSensors = get_sensors(settings, 4)
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
@@ -112,15 +113,21 @@ def start_measurement(measurement_stop):
                     bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
                     ts_fields.update(bme680_values)
 
-                # measure every sensor with type 2 [HX711]
-                for (i, sensor) in enumerate(weightSensors):
-                    weight = measure_weight(sensor)
-                    ts_fields.update(weight)
-
                 # measure every sensor with type 3 [DHT11/DHT22]
                 for (i, sensor) in enumerate(dhtSensors):
                     tempAndHum = measure_dht(sensor)
                     ts_fields.update(tempAndHum)
+
+                # measure every sensor with type 4 [MAX6675]
+                for (i, sensor) in enumerate(tcSensors):
+                    tc_temp = measure_tc(sensor)
+                    ts_fields.update(tc_temp)
+
+                # measure every sensor with type 2 [HX711]
+                for (i, sensor) in enumerate(weightSensors):
+                    weight = measure_weight(sensor)
+                    weight = compensate_temperature(sensor, weight, ts_fields)
+                    ts_fields.update(weight)
 
                 try:
                     # python2
