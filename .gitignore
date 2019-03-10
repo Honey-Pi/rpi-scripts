@@ -22,3 +22,13 @@ $RECYCLE.BIN/
 # Operating System Files
 # =========================
 .DS_Store
+
+# =========================
+# Logfiles
+# =========================
+error.log
+
+# =========================
+# compiled Python files
+# =========================
+*.pyc
