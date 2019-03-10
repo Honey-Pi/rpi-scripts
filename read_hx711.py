@@ -35,6 +35,46 @@ def average(myList):
     total = float(total)
     return total / len(myList)
 
+def get_temp(weight_sensor, ts_fields):
+    try:
+        if 'ts_field_temperature' in weight_sensor:
+            ts_field_temperature = weight_sensor["ts_field_temperature"]
+            return getattr(ts_fields, ts_field_temperature) 
+
+    except Exception as e:
+        print("Exeption while getting temperature field: " + str(e))
+    
+    return None
+
+def compensate_weight(weight_sensor, weight, ts_fields):
+    try:
+        if 'compensation' in weight_sensor:
+            compensation = weight_sensor["compensation"]
+            if compensation:
+                if 'compensation_value' in weight_sensor:
+                    compensation_value = weight_sensor["compensation_value"]
+                else:
+                    compensation_value = None
+                if 'compensation_temp' in weight_sensor:
+                    compensation_temp = weight_sensor["compensation_temp"]
+                else:
+                    compensation_temp = None
+                ts_field_temperature = get_temp(weight_sensor, ts_fields)
+
+                # do compensation
+                if compensation_temp and compensation_value and (ts_field_temperature or ts_field_temperature == 0):
+                    delta = compensation_temp-ts_field_temperature
+                    if compensation_temp > ts_field_temperature:
+                        weight = weight - compensation_value*delta
+                    elif compensation_temp < ts_field_temperature:
+                        weight = weight + compensation_value*delta
+
+
+    except Exception as e:
+        print("Exeption while temperature compensation: " + str(e))
+    
+    return weight
+
 def measure_weight(weight_sensor):
     # weight sensor pins
     pin_dt = 5
@@ -71,18 +111,20 @@ def measure_weight(weight_sensor):
             # improve weight measurement by doing 3 weight measures
             weightMeasures=[]
             for i in range(3):
-                weightMeasures.append(hx.get_weight_mean(2))
+                #use outliers_filter and do average over 5 measurements
+                weightMeasures.append(hx.get_data_mean(5))
 
             # take "best" measure
             average_weight = int(average(weightMeasures))
             weight = takeClosest(weightMeasures, average_weight)
             print("Average weight: " + str(average_weight))
 
+            ALLOWED_DIVERGENCE = 20 # old: abs(weight)*0.1
             # if divergence is too big
-            if abs(average_weight-weight) > abs(weight)*0.1:
-                # if difference between avg weight and chosen weight is bigger than 10 percent of weight
+            if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
+                # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
                 triggerPIN() # debug method
-                print("Info: Difference between average weight and chosen weight is more than 10 percent.")
+                print("Info: Difference between average weight and chosen weight is more than ALLOWED_DIVERGENCE.")
             else:
                 # divergence is OK => skip
                 break
