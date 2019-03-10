@@ -8,8 +8,8 @@ def measure_tc(tc_sensor):
     pin_do = 19
     try:
         pin_cs = int(tc_sensor["pin_cs"])
-        pin_sck = int(tc_sensor["pin_sck"])
-        pin_do = int(tc_sensor["pin_do"])
+        pin_clock = int(tc_sensor["pin_clock"])
+        pin_miso = int(tc_sensor["pin"])
     except Exception as e:
         print("MAX6675 missing param: " + str(e))
 
@@ -17,7 +17,7 @@ def measure_tc(tc_sensor):
 
     # setup tc-Sensor
     try:
-        tc = MAX6675(cs_pin = pin_cs, clock_pin = pin_sck, data_pin = pin_do, units = "c", board = GPIO.BCM)
+        tc = MAX6675(cs_pin = pin_cs, clock_pin = pin_clock, data_pin = pin_miso, units = "c", board = GPIO.BCM)
     except Exception as e:
         print("Setup Max6675 failed " + str(e))
 
