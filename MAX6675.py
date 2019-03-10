@@ -117,7 +117,7 @@ if __name__ == "__main__":
                 tc = "Error: "+ e.value
                 running = False
                 print("tc: {}".format(tc))
-        print(tc)
+            print(tc)
             time.sleep(1)
         except KeyboardInterrupt:
             running = False
