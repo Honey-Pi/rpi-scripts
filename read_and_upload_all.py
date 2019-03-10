@@ -122,9 +122,16 @@ def start_measurement(measurement_stop):
                     tempAndHum = measure_dht(sensor)
                     ts_fields.update(tempAndHum)
 
-                # print measurement values for debug reasons
-                for key, value in ts_fields.iteritems(): # Python3: .items()
-                    print(key + ": " + str(value))
+                try:
+                    # python2
+                    # print measurement values for debug reasons
+                    for key, value in ts_fields.iteritems():
+                        print(key + ": " + str(value))
+                except AttributeError:
+                    # python3
+                    # print measurement values for debug reasons
+                    for key, value in ts_fields.items(): 
+                        print(key + ": " + str(value))
                 
                 try:
                     # update ThingSpeak / transfer values

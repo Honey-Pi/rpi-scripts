@@ -77,7 +77,7 @@ def error_log(e=None, printText=None):
         if printText and e:
             printText = printText + " | " + repr(e)
         elif e:
-            printText = repr(e)
+            printText = e
         else:
             printText = "No Text defined."
 
