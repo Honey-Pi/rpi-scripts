@@ -15,6 +15,7 @@ from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature
 from read_hx711 import measure_weight
 from read_dht import measure_dht
+from read_max6675 import measure_tc
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log
 
@@ -27,6 +28,7 @@ def measurement():
         bme680Sensors = get_sensors(settings, 1)
         weightSensors = get_sensors(settings, 2)
         dhtSensors = get_sensors(settings, 3)
+        tcSensors = get_sensors(settings, 4)
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
@@ -65,11 +67,15 @@ def measurement():
             ts_fields.update(tempAndHum)
 
 
+        # measure every sensor with type 4 [MAX6675]
+        for (i, sensor) in enumerate(tcSensors):
+            tc_temp = measure_tc(sensor)
+            ts_fields.update(tc_temp)
+
         # measure every sensor with type 2 [HX711]
         for (i, sensor) in enumerate(weightSensors):
             weight = measure_weight(sensor)
             ts_fields.update(weight)
-
 
         return json.dumps(ts_fields)
            
