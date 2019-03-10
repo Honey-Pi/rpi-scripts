@@ -17,7 +17,7 @@ from read_hx711 import measure_weight
 from read_dht import measure_dht
 from read_max6675 import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log
+from utilities import reboot
 
 def measurement():
     try:
