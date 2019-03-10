@@ -81,7 +81,7 @@ def error_log(e=None, printText=None):
         else:
             printText = "No Text defined."
 
-        print printText
+        print(printText)
 
         # write to file
         with open(file, "a") as myfile:

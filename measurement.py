@@ -58,16 +58,18 @@ def measurement():
 
         # disable warnings for HX711
         GPIO.setwarnings(False)
-        
-        # measure every sensor with type 2 [HX711]
-        for (i, sensor) in enumerate(weightSensors):
-            weight = measure_weight(sensor)
-            ts_fields.update(weight)
 
         # measure every sensor with type 3 [DHT11/DHT22]
         for (i, sensor) in enumerate(dhtSensors):
             tempAndHum = measure_dht(sensor)
             ts_fields.update(tempAndHum)
+
+
+        # measure every sensor with type 2 [HX711]
+        for (i, sensor) in enumerate(weightSensors):
+            weight = measure_weight(sensor)
+            ts_fields.update(weight)
+
 
         return json.dumps(ts_fields)
            
@@ -75,4 +77,4 @@ def measurement():
         print("Measurement: " + str(e))
 
 
-print measurement()
+print(measurement())

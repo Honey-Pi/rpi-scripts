@@ -123,8 +123,8 @@ def start_measurement(measurement_stop):
                     ts_fields.update(tempAndHum)
 
                 # print measurement values for debug reasons
-                for key, value in ts_fields.iteritems():
-                    print key + ": " + str(value)
+                for key, value in ts_fields.iteritems(): # Python3: .items()
+                    print(key + ": " + str(value))
                 
                 try:
                     # update ThingSpeak / transfer values
