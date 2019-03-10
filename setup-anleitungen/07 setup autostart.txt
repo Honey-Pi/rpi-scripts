@@ -1,5 +1,0 @@
-sudo nano /etc/rc.local
-
-# vor die zeile exit 0 folgendes einfügen:
-
-python /home/pi/rpi-scripts/main.py

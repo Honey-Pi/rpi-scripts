@@ -1,5 +1,5 @@
-﻿# Installiere alle benötigten Packages
-# https://learn.pimoroni.com/tutorial/sandyj/getting-started-with-bme680-breakout
+# Setup for sensors
+## [BME680](https://learn.pimoroni.com/tutorial/sandyj/getting-started-with-bme680-breakout)
 
 	# dieses package hatte bei mir bei raspbian-lite gefehlt:
 	sudo apt-get install python-smbus
@@ -17,13 +17,13 @@
 	cd /home/pi/bme680/examples
 	python read-all.py
 	
-# https://tutorials-raspberrypi.de/raspberry-pi-temperatur-mittels-sensor-messen/
+## [1Wire/DS18b20](https://tutorials-raspberrypi.de/raspberry-pi-temperatur-mittels-sensor-messen/)
 	
 	# Wenn alles entsprechend verkabelt ist, können wir das 1-Wire Protokoll damit aktivieren:
 	sudo modprobe w1-gpio
 	sudo modprobe w1-therm
 	
-# https://tutorials-raspberrypi.de/raspberry-pi-waage-bauen-gewichtssensor-hx711/
+## [HX711](https://tutorials-raspberrypi.de/raspberry-pi-waage-bauen-gewichtssensor-hx711/)
 
 	# dieses package hatte bei mir auf raspbian-lite gefehlt:
 	sudo apt-get install python-numpy
@@ -31,7 +31,7 @@
 	
 	git clone https://github.com/tatobari/hx711py
 	
-# DHT11: http://www.circuitbasics.com/how-to-set-up-the-dht11-humidity-sensor-on-the-raspberry-pi/
+## [DHT11/DHT22](http://www.circuitbasics.com/how-to-set-up-the-dht11-humidity-sensor-on-the-raspberry-pi/)
 	git clone https://github.com/adafruit/Adafruit_Python_DHT.git
 	cd Adafruit_Python_DHT
 	sudo apt-get install build-essential python-dev
