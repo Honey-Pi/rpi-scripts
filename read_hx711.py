@@ -60,10 +60,10 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
                     compensation_temp = None
                 
                 temp_now = get_temp(weight_sensor, ts_fields)
-                if temp_now:
+                if (temp_now or temp_now == 0) and (weight or weight == 0):
                     print("Weight cell temperature compensation is enabled (TempNow:" + str(temp_now) + " WeightBefore:" + str(weight) + ")")
                     # do compensation
-                    if compensation_temp and compensation_value and (temp_now or temp_now == 0):
+                    if compensation_temp and compensation_value:
                         delta = compensation_temp-temp_now
                         if compensation_temp > temp_now:
                             weight = weight - compensation_value*delta
@@ -75,21 +75,21 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
 
     except Exception as e:
         print("Exeption while temperature compensation: " + str(e))
-    
+
     return set_ts_field(weight_sensor, weight)
 
 def set_ts_field(weight_sensor, weight):
-    if weight is not 0:
+    if weight and type(weight) in (float, int):
         weight = weight/1000  # gramms to kg
-    weight = float("{0:.3f}".format(weight)) # float only 3 decimals
+        weight = float("{0:.3f}".format(weight)) # float only 3 decimals
 
-    if 'ts_field' in weight_sensor:
+    if 'ts_field' in weight_sensor and (weight or weight == 0):
         return ({weight_sensor["ts_field"]: weight})
     else:
         return {}
 
-def measure_weight(weight_sensor):
-    # weight sensor pins
+def init_hx711(weight_sensor, debug=False):
+    # HX711 GPIO
     pin_dt = 5
     pin_sck = 6
     channel = 'A'
@@ -99,6 +99,21 @@ def measure_weight(weight_sensor):
         channel = weight_sensor["channel"]   
     except Exception as e:
         print("HX711 missing param: " + str(e))
+
+    try:
+        # setup weight sensor
+        hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, gain_channel_A=128, select_channel=channel)
+        hx.set_debug_mode(flag=debug)
+        hx.reset() # Before we start, reset the hx711 (not necessary)
+
+        return hx
+    except Exception as e:
+        print("Initializing HX711 failed: " + str(e))
+
+    return None
+
+
+def measure_weight(weight_sensor, hx=None):
     
     if 'reference_unit' in weight_sensor:
         reference_unit = float(weight_sensor["reference_unit"])
@@ -109,12 +124,13 @@ def measure_weight(weight_sensor):
     else:
         offset = 0
 
-    weight = 0
-
-    # setup weight sensor
+    weight = None
     try:
-        hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, gain_channel_A=128, select_channel=channel)
+        # init hx711
+        if not hx:
+            hx = init_hx711(weight_sensor)   
 
+        hx.power_up()
         hx.set_scale_ratio(scale_ratio=reference_unit)
         hx.set_offset(offset=offset)
 
@@ -125,14 +141,15 @@ def measure_weight(weight_sensor):
             # improve weight measurement by doing LOOP_TIMES weight measurements
             weightMeasures=[]
             count_avg = 0
-            while count_avg < 3:
+            LOOP_AVG = 3
+            while count_avg < LOOP_AVG and count_avg < 6: # Break after max. 6 loops
                 count_avg += 1
                 # use outliers_filter and do average over 3 measurements
                 hx_weight = hx.get_weight_mean(3)
                 if hx_weight or hx_weight == 0:
                     weightMeasures.append(hx_weight) 
-                else:
-                    count_avg -= 1 # decrease count because of failured measurement
+                else: # returned False
+                    LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
 
             # take "best" measure
             average_weight = format(average(weightMeasures), '.1f')
@@ -150,10 +167,11 @@ def measure_weight(weight_sensor):
                 # divergence is OK => skip
                 break
 
-        #weight = hx.get_weight_mean(5) # average from 5 times
+        #weight = hx.get_weight_mean(30) # average from 30 times
+        hx.power_down()
 
         # invert weight if flag is set
-        if 'invert' in weight_sensor and weight_sensor['invert'] == True:
+        if 'invert' in weight_sensor and weight_sensor['invert'] == True and (weight or weight == 0):
             weight = weight*-1;
 
     except Exception as e:

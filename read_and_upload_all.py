@@ -50,6 +50,7 @@ def start_measurement(measurement_stop):
         dhtSensors = get_sensors(settings, 3)
         tcSensors = get_sensors(settings, 4)
 
+        # -- Run Pre Configuration --
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
             gas_baseline = None
@@ -60,6 +61,12 @@ def start_measurement(measurement_stop):
                 # if burning was canceled => exit
                 if gas_baseline is None:
                     print("gas_baseline can't be None")
+
+        # if hx711 is set
+        hxInits = []
+        for (i, sensor) in enumerate(weightSensors):
+            _hx = init_hx711(sensor, debug)
+            hxInits.append(_hx)
 
         # ThingSpeak channel
         channel = thingspeak.Channel(id=channel_id, write_key=write_key)
@@ -126,18 +133,17 @@ def start_measurement(measurement_stop):
 
                 # measure every sensor with type 2 [HX711]
                 for (i, sensor) in enumerate(weightSensors):
-                    weight = measure_weight(sensor)
+                    weight = measure_weight(sensor, hxInits[i])
                     weight = compensate_temperature(sensor, weight, ts_fields)
                     ts_fields.update(weight)
 
+                # print all measurement values stored in ts_fields
                 try:
                     # python2
-                    # print measurement values for debug reasons
                     for key, value in ts_fields.iteritems():
                         print(key + ": " + str(value))
                 except AttributeError:
                     # python3
-                    # print measurement values for debug reasons
                     for key, value in ts_fields.items(): 
                         print(key + ": " + str(value))
                 
