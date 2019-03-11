@@ -129,7 +129,7 @@ def measure_weight(weight_sensor):
                 count_avg += 1
                 # use outliers_filter and do average over 3 measurements
                 hx_weight = hx.get_weight_mean(3)
-                if hx_weight:
+                if hx_weight or hx_weight == 0:
                     weightMeasures.append(hx_weight) 
                 else:
                     count_avg -= 1 # decrease count because of failured measurement
