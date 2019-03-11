@@ -61,14 +61,13 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
                 
                 temp_now = get_temp(weight_sensor, ts_fields)
                 if (temp_now or temp_now == 0) and (weight or weight == 0):
-                    print("Weight cell temperature compensation is enabled (TempNow:" + str(temp_now) + " WeightBefore:" + str(weight) + ")")
+                    print("Weight cell temperature compensation is enabled.")
+                    print("=> TempCalibration: " + str(compensation_temp) + "C TempNow: " + str(temp_now) + "C WeightBefore: " + str(weight) + "g")
                     # do compensation
                     if compensation_temp and compensation_value:
-                        delta = compensation_temp-temp_now
-                        if compensation_temp > temp_now:
-                            weight = weight - compensation_value*delta
-                        elif compensation_temp < temp_now:
-                            weight = weight + compensation_value*delta
+                        delta = round(temp_now-compensation_temp, 4)
+                        weight = weight - (compensation_value*delta)
+                    print("=> TempDelta: " + str(delta) + "C WeightAfter: " + str(weight) + "g")
                 else:
                     print("Temperature Compensation: No temperature in given field.")
 
@@ -103,7 +102,8 @@ def init_hx711(weight_sensor, debug=False):
     try:
         # setup weight sensor
         hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, gain_channel_A=128, select_channel=channel)
-        hx.set_debug_mode(flag=debug)
+        if debug:
+            hx.set_debug_mode(flag=debug)
         hx.reset() # Before we start, reset the hx711 (not necessary)
 
         return hx
@@ -152,11 +152,11 @@ def measure_weight(weight_sensor, hx=None):
                     LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
 
             # take "best" measure
-            average_weight = format(average(weightMeasures), '.1f')
-            weight = format(takeClosest(weightMeasures, average_weight), '.1f')
+            average_weight = round(average(weightMeasures), 1)
+            weight = round(takeClosest(weightMeasures, average_weight), 1)
             print("Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
 
-            ALLOWED_DIVERGENCE = format((500/reference_unit), '.1f')
+            ALLOWED_DIVERGENCE = round((500/reference_unit), 1)
             # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
             # bei reference_unit=1 soll ALLOWED_DIVERGENCE=300
             if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
