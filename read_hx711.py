@@ -32,14 +32,13 @@ def takeClosest(myList, myNumber):
 def average(myList):
     # Finding the average of a list
     total = sum(myList)
-    total = float(total)
     return total / len(myList)
 
 def get_temp(weight_sensor, ts_fields):
     try:
         if 'ts_field_temperature' in weight_sensor:
-            ts_field_temperature = weight_sensor["ts_field_temperature"]
-            return float(ts_fields[ts_field_temperature])
+            field_name = weight_sensor["ts_field_temperature"]
+            return float(ts_fields[field_name])
 
     except Exception as e:
         print("Exeption while getting temperature field: " + str(e))
@@ -102,11 +101,11 @@ def measure_weight(weight_sensor):
         print("HX711 missing param: " + str(e))
     
     if 'reference_unit' in weight_sensor:
-        reference_unit = weight_sensor["reference_unit"]
+        reference_unit = float(weight_sensor["reference_unit"])
     else:
         reference_unit = 1
     if 'offset' in weight_sensor:
-        offset = weight_sensor["offset"]
+        offset = int(weight_sensor["offset"])
     else:
         offset = 0
 
@@ -120,22 +119,29 @@ def measure_weight(weight_sensor):
         hx.set_offset(offset=offset)
 
         count = 0
-        LOOP_TIMES = 3
-        while True and count < LOOP_TIMES:
+        LOOP_TRYS = 3
+        while count < LOOP_TRYS:
             count += 1
             # improve weight measurement by doing LOOP_TIMES weight measurements
             weightMeasures=[]
-            for i in range(LOOP_TIMES):
+            count_avg = 0
+            while count_avg < 3:
+                count_avg += 1
                 # use outliers_filter and do average over 3 measurements
-                weightMeasures.append(hx.get_weight_mean(3)) 
+                hx_weight = hx.get_weight_mean(3)
+                if hx_weight:
+                    weightMeasures.append(hx_weight) 
+                else:
+                    count_avg -= 1 # decrease count because of failured measurement
 
             # take "best" measure
-            average_weight = int(average(weightMeasures))
-            weight = int(takeClosest(weightMeasures, average_weight))
+            average_weight = format(average(weightMeasures), '.1f')
+            weight = format(takeClosest(weightMeasures, average_weight), '.1f')
             print("Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
 
-            ALLOWED_DIVERGENCE = 20 # old: abs(weight)*0.1
-            # if divergence is too big
+            ALLOWED_DIVERGENCE = 500/reference_unit
+            # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
+            # bei reference_unit=1 soll ALLOWED_DIVERGENCE=300
             if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
                 # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
                 triggerPIN() # debug method
