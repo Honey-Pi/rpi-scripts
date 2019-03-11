@@ -139,13 +139,13 @@ def measure_weight(weight_sensor):
             weight = format(takeClosest(weightMeasures, average_weight), '.1f')
             print("Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
 
-            ALLOWED_DIVERGENCE = 500/reference_unit
+            ALLOWED_DIVERGENCE = format((500/reference_unit), '.1f')
             # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
             # bei reference_unit=1 soll ALLOWED_DIVERGENCE=300
             if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
                 # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
                 triggerPIN() # debug method
-                print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than 20g. => Try again")
+                print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again")
             else:
                 # divergence is OK => skip
                 break
