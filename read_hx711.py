@@ -163,11 +163,15 @@ def measure_weight(weight_sensor, hx=None):
                 # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
                 triggerPIN() # debug method
                 print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again")
+
+                if LOOP_TRYS == count: # last loop
+                    # 3 loops and still no chosen weight => fallback measurement
+                    weight = round(hx.get_weight_mean(30), 1) # average from 30 times
+                    print("Chosen weight: " + str(weight) + "g")
             else:
                 # divergence is OK => skip
                 break
 
-        #weight = hx.get_weight_mean(30) # average from 30 times
         hx.power_down()
 
         # invert weight if flag is set
