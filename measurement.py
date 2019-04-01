@@ -15,7 +15,7 @@ from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature
 from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
-from read_max6675 import measure_tc
+from read_max import measure_tc
 from read_settings import get_settings, get_sensors
 from utilities import reboot
 
