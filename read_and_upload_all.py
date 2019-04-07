@@ -14,8 +14,9 @@ import requests
 
 from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
-from read_hx711 import measure_weight
+from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
+from read_max import measure_tc
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log
 
@@ -47,7 +48,9 @@ def start_measurement(measurement_stop):
         bme680Sensors = get_sensors(settings, 1)
         weightSensors = get_sensors(settings, 2)
         dhtSensors = get_sensors(settings, 3)
+        tcSensors = get_sensors(settings, 4)
 
+        # -- Run Pre Configuration --
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
             gas_baseline = None
@@ -58,6 +61,12 @@ def start_measurement(measurement_stop):
                 # if burning was canceled => exit
                 if gas_baseline is None:
                     print("gas_baseline can't be None")
+
+        # if hx711 is set
+        hxInits = []
+        for (i, sensor) in enumerate(weightSensors):
+            _hx = init_hx711(sensor, debug)
+            hxInits.append(_hx)
 
         # ThingSpeak channel
         channel = thingspeak.Channel(id=channel_id, write_key=write_key)
@@ -112,19 +121,31 @@ def start_measurement(measurement_stop):
                     bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
                     ts_fields.update(bme680_values)
 
-                # measure every sensor with type 2 [HX711]
-                for (i, sensor) in enumerate(weightSensors):
-                    weight = measure_weight(sensor)
-                    ts_fields.update(weight)
-
                 # measure every sensor with type 3 [DHT11/DHT22]
                 for (i, sensor) in enumerate(dhtSensors):
                     tempAndHum = measure_dht(sensor)
                     ts_fields.update(tempAndHum)
 
-                # print measurement values for debug reasons
-                for key, value in ts_fields.iteritems():
-                    print key + ": " + str(value)
+                # measure every sensor with type 4 [MAX6675]
+                for (i, sensor) in enumerate(tcSensors):
+                    tc_temp = measure_tc(sensor)
+                    ts_fields.update(tc_temp)
+
+                # measure every sensor with type 2 [HX711]
+                for (i, sensor) in enumerate(weightSensors):
+                    weight = measure_weight(sensor, hxInits[i])
+                    weight = compensate_temperature(sensor, weight, ts_fields)
+                    ts_fields.update(weight)
+
+                # print all measurement values stored in ts_fields
+                try:
+                    # python2
+                    for key, value in ts_fields.iteritems():
+                        print(key + ": " + str(value))
+                except AttributeError:
+                    # python3
+                    for key, value in ts_fields.items(): 
+                        print(key + ": " + str(value))
                 
                 try:
                     # update ThingSpeak / transfer values

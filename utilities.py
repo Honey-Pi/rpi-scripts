@@ -3,6 +3,7 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 import os
+import time
 from datetime import datetime
 
 def stop_tv():
@@ -13,6 +14,23 @@ def stop_led():
 
 def start_led():
     os.system("sudo bash -c \"echo 1 > /sys/class/leds/led0/brightness\"") #Turn on
+
+def blink_led():
+    stop_led()
+    time.sleep(0.25)
+    start_led()
+    time.sleep(0.25)
+    stop_led()
+    time.sleep(0.25)
+    start_led()
+    time.sleep(0.25)
+    stop_led()
+    time.sleep(0.25)
+    start_led()
+    time.sleep(0.25)
+    stop_led()
+    time.sleep(0.25)
+    start_led()
 
 def client_to_ap_mode():
     # Disable router network
@@ -59,11 +77,11 @@ def error_log(e=None, printText=None):
         if printText and e:
             printText = printText + " | " + repr(e)
         elif e:
-            printText = repr(e)
+            printText = e
         else:
             printText = "No Text defined."
 
-        print printText
+        print(printText)
 
         # write to file
         with open(file, "a") as myfile:
