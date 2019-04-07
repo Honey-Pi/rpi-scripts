@@ -13,7 +13,7 @@ GPIO_PIN = 20 # debug pin
 # setup GPIO
 GPIO.setwarnings(False) # Ignore warning for now
 GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine
-GPIO.setup(GPIO_PIN, GPIO.OUT) # Set pin 20 to led output
+#GPIO.setup(GPIO_PIN, GPIO.OUT) # Set pin 20 to led output
 
 def triggerPIN():
     global ledState, GPIO_PIN
@@ -128,11 +128,14 @@ def measure_weight(weight_sensor, hx=None):
     try:
         # init hx711
         if not hx:
-            hx = init_hx711(weight_sensor)   
+            hx = init_hx711(weight_sensor)
+            time.sleep(0.01) # sleep 10ms 
 
         hx.power_up()
         hx.set_scale_ratio(scale_ratio=reference_unit)
         hx.set_offset(offset=offset)
+
+        temp = hx.get_raw_data_mean(6) # measure just for fun
 
         count = 0
         LOOP_TRYS = 3
@@ -161,8 +164,9 @@ def measure_weight(weight_sensor, hx=None):
             # bei reference_unit=1 soll ALLOWED_DIVERGENCE=300
             if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
                 # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
-                triggerPIN() # debug method
+                # triggerPIN() # debug method
                 print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again")
+                time.sleep(0.01) # sleep 10ms 
 
                 if LOOP_TRYS == count: # last loop
                     # 3 loops and still no chosen weight => fallback measurement
@@ -172,7 +176,7 @@ def measure_weight(weight_sensor, hx=None):
                 # divergence is OK => skip
                 break
 
-        hx.power_down()
+        #hx.power_down()
 
         # invert weight if flag is set
         if 'invert' in weight_sensor and weight_sensor['invert'] == True and (weight or weight == 0):

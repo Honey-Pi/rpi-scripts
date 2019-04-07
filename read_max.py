@@ -11,6 +11,7 @@ def measure_tc(tc_sensor):
     pin_cs = 26
     pin_clock = 18
     pin_miso = 19
+    max_type = 6675
     try:
         pin_cs = int(tc_sensor["pin_cs"])
         pin_clock = int(tc_sensor["pin_clock"])
@@ -32,7 +33,7 @@ def measure_tc(tc_sensor):
     except Exception as e:
         print("Init MAX6675/MAX31855 failed " + str(e))
 
-    if tc not None:
+    if tc is not None:
         try:
             # get data
             tc_temperature = tc.get()
