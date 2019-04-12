@@ -10,7 +10,7 @@ from time import sleep
 
 import RPi.GPIO as GPIO
 import thingspeak # https://github.com/mchwalisz/thingspeak/
-import requests 
+import requests
 
 from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
@@ -18,7 +18,7 @@ from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log
+from utilities import reboot, error_log, shutdown
 
 class MyRebootException(Exception):
     """Too many ConnectionErrors => Rebooting"""
@@ -28,7 +28,7 @@ def start_measurement(measurement_stop):
     try:
         print("The measurements have started.")
         start_time = time.time()
-        
+
         # load settings
         settings = get_settings()
         # ThingSpeak data
@@ -36,6 +36,8 @@ def start_measurement(measurement_stop):
         write_key = settings["ts_write_key"]
         interval = settings["interval"]
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
+        shutdownAfterTransfer = settings["shutdownAfterTransfer"]
+
         if debug:
             print("Debug-Mode is enabled.")
 
@@ -83,13 +85,13 @@ def start_measurement(measurement_stop):
                 checkIfSensorExistsInArray(sensorIndex)
                 if 'device_id' in sensor:
                     read_unfiltered_temperatur_values(sensorIndex, sensor['device_id'])
-            
+
             # for testing:
             #try:
             #    weight = measure_weight(weightSensors[0])
             #    print("weight: " + str(list(weight.values())[0]))
             #except IOError:
-            #    print "IOError occurred"    
+            #    print "IOError occurred"
             #except TypeError:
             #    print "TypeError occurred"
             #except IndexError:
@@ -110,7 +112,7 @@ def start_measurement(measurement_stop):
                 # measure every sensor with type 0
                 for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                     # if we have at leat one filtered value we can upload
-                    if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor: 
+                    if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
                         ds18b20_temperature = filtered_temperature[sensorIndex].pop() # get last value from array
                         ts_field_ds18b20 = sensor["ts_field"]
                         if ts_field_ds18b20:
@@ -144,9 +146,9 @@ def start_measurement(measurement_stop):
                         print(key + ": " + str(value))
                 except AttributeError:
                     # python3
-                    for key, value in ts_fields.items(): 
+                    for key, value in ts_fields.items():
                         print(key + ": " + str(value))
-                
+
                 try:
                     # update ThingSpeak / transfer values
                     if len(ts_fields) > 0:
@@ -170,11 +172,16 @@ def start_measurement(measurement_stop):
                     error_log(errt, "Timeout Error")
                 except requests.exceptions.RequestException as err:
                     error_log(err, "Something Else")
-                
+
                 # stop measurements after uploading once
                 if interval == 1:
                     print("Only one measurement was set => stop measurements.")
                     measurement_stop.set()
+
+                    if shutdownAfterTransfer:
+                        print("Shutting down was set => Waiting 10seconds and then shutdown.")
+                        sleep(10)
+                        shutdown()
 
             counter += 1
             sleep(0.96)
@@ -183,7 +190,7 @@ def start_measurement(measurement_stop):
         time_taken = end_time - start_time # time_taken is in seconds
         time_taken_s = float("{0:.2f}".format(time_taken)) # remove microseconds
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
-        
+
     except MyRebootException as re:
         error_log(re, "Too many ConnectionErrors in a row => Rebooting")
         if not debug:

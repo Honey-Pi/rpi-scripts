@@ -6,9 +6,10 @@
 import io
 import json
 from pathlib import Path
+from utilities import backendFolder
 
 def get_settings():
-    filename = "/var/www/html/backend/settings.json"
+    filename = backendFolder + '/settings.json'
     my_file = Path(filename)
     settings = {}
 
@@ -40,6 +41,12 @@ def check_vars(settings):
             settings["debug"] = 0
     except:
         settings["debug"] = 0
+
+    try:
+        if not 'shutdownAfterTransfer' in settings:
+            settings["shutdownAfterTransfer"] = 0
+    except:
+        settings["shutdownAfterTransfer"] = 0
 
     try:
         settings["ts_channel_id"]

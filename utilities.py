@@ -6,6 +6,9 @@ import os
 import time
 from datetime import datetime
 
+scriptsFolder = '/home/pi/HoneyPi/rpi-scripts'
+backendFolder = '/var/www/html/backend'
+
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
 
@@ -32,33 +35,38 @@ def blink_led():
     time.sleep(0.25)
     start_led()
 
+def start_wlan():
+    os.system("sudo ifconfig wlan0 up") # aktiviert die WLAN-Schnittstelle
+
+def stop_wlan():
+    os.system("sudo ifconfig wlan0 down") # deaktiviert die WLAN-Schnittstelle
+
 def client_to_ap_mode():
-    # Disable router network
+    # disable the connected network
     os.system("wpa_cli disable_network 0")
-    # pushing the wlan0 interface down
-    os.system("sudo ip link set dev wlan0 down")
+    stop_wlan()
+    # Enable static ip
+    os.system("sudo mv /etc/dhcpcd.conf.disabled /etc/dhcpcd.conf")
     # restart AP Services
     os.system("sudo systemctl restart dnsmasq.service")
     os.system("sudo systemctl restart hostapd.service")
-    # bring up the wi-fi
-    os.system("sudo ifconfig wlan0 up")
+    start_wlan()
 
 def ap_to_client_mode():
+    stop_wlan()
     # Stop AP Services
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
+    # Disable static ip
+    os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled")
+    # activate the wifi connection with Id=0
+    os.system("wpa_cli enable_network 0")
     # Start WPA Daemon
     os.system("sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B")
-    # Start dhclient for IP-Adresses
-    os.system("sudo dhclient wlan0 &") # & will execute command in the background
-    # Enable first router in list
-    os.system("wpa_cli enable_network 0")
-
-def start_wlan():
-    os.system("sudo ifconfig wlan0 down")
-
-def stop_wlan():
-    os.system("sudo ifconfig wlan0 up") 
+    # Restart DHCP server for IP Address
+    #os.system("sudo service dhcpcd restart") # & will execute command in the background
+    #os.system("sudo systemctl daemon-reload")
+    start_wlan()
 
 def reboot():
     os.system("sudo reboot") # reboots the pi
@@ -68,7 +76,7 @@ def shutdown():
 
 def error_log(e=None, printText=None):
     try:
-        file = '/home/pi/rpi-scripts/error.log'
+        file = scriptsFolder + '/error.log'
         # reset file if to big
         if os.path.getsize(file) > 100 * 1024:
             os.remove(file)
@@ -86,6 +94,6 @@ def error_log(e=None, printText=None):
         # write to file
         with open(file, "a") as myfile:
             myfile.write (str(datetime.now()) + " | " + printText + "\n")
-        
-    except Exception: 
+
+    except Exception:
         pass
