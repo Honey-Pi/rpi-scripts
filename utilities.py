@@ -51,7 +51,7 @@ def client_to_ap_mode():
     os.system("sudo service dhcpcd restart && systemctl daemon-reload") # & will execute command in the background
     # restart AP Services
     os.system("sudo systemctl restart dnsmasq.service")
-    os.system("sudo systemctl restart hostapd.service")
+    os.system("sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd)") # if restart fails because service is masked => unmask
     start_wlan()
 
 def ap_to_client_mode():

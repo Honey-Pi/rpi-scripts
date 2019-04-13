@@ -168,7 +168,7 @@ def measure_weight(weight_sensor, hx=None):
                 if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
                     # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
                     # triggerPIN() # debug method
-                    print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again")
+                    print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again ("+str(count)+"/"+str(LOOP_TRYS)+")")
                     time.sleep(0.01) # sleep 10ms
 
                     if LOOP_TRYS == count: # last loop

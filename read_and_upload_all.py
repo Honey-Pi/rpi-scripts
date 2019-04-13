@@ -12,7 +12,7 @@ import RPi.GPIO as GPIO
 import thingspeak # https://github.com/mchwalisz/thingspeak/
 import requests
 
-from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
+from read_bme680 import measure_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
@@ -54,15 +54,11 @@ def start_measurement(measurement_stop):
 
         # -- Run Pre Configuration --
         # if bme680 is configured
+        # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
-            gas_baseline = None
-            if initBME680FromMain():
-                # bme680 sensor must be burned in before use
-                gas_baseline = burn_in_bme680(30)
-
-                # if burning was canceled => exit
-                if gas_baseline is None:
-                    print("gas_baseline can't be None")
+            bme680IsInitialized = initBME680FromMain()
+        else:
+            bme680IsInitialized = 0
 
         # if hx711 is set
         hxInits = []
@@ -119,8 +115,8 @@ def start_measurement(measurement_stop):
                             ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
 
                 # measure BME680 (can only be once) [type 1]
-                if bme680Sensors and len(bme680Sensors) == 1 and gas_baseline:
-                    bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
+                if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
+                    bme680_values = measure_bme680(bme680Sensors[0], 30)
                     ts_fields.update(bme680_values)
 
                 # measure every sensor with type 3 [DHT11/DHT22]
