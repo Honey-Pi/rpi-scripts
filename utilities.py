@@ -42,11 +42,13 @@ def stop_wlan():
     os.system("sudo ifconfig wlan0 down") # deaktiviert die WLAN-Schnittstelle
 
 def client_to_ap_mode():
-    # disable the connected network
-    os.system("wpa_cli disable_network 0")
     stop_wlan()
+    # disable the connected network
+    os.system("wpa_cli -i wlan0 disable_network 0")
     # Enable static ip
     os.system("sudo mv /etc/dhcpcd.conf.disabled /etc/dhcpcd.conf")
+    # Restart DHCP server for IP Address
+    os.system("sudo service dhcpcd restart && systemctl daemon-reload") # & will execute command in the background
     # restart AP Services
     os.system("sudo systemctl restart dnsmasq.service")
     os.system("sudo systemctl restart hostapd.service")
@@ -59,13 +61,12 @@ def ap_to_client_mode():
     os.system("sudo systemctl stop dnsmasq.service")
     # Disable static ip
     os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled")
-    # activate the wifi connection with Id=0
-    os.system("wpa_cli enable_network 0")
+    # Restart DHCP server for IP Address
+    os.system("sudo service dhcpcd restart && systemctl daemon-reload") # & will execute command in the background
     # Start WPA Daemon
     os.system("sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B")
-    # Restart DHCP server for IP Address
-    #os.system("sudo service dhcpcd restart") # & will execute command in the background
-    #os.system("sudo systemctl daemon-reload")
+    # activate the wifi connection with Id=0
+    os.system("wpa_cli -i wlan0 enable_network 0")
     start_wlan()
 
 def reboot():
