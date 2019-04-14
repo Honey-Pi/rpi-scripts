@@ -11,7 +11,7 @@ import json
 
 import RPi.GPIO as GPIO
 
-from read_bme680 import measure_bme680, burn_in_bme680, initBME680FromMain
+from read_bme680 import measure_bme680, initBME680FromMain
 from read_ds18b20 import measure_temperature
 from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
@@ -32,14 +32,9 @@ def measurement():
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
-            gas_baseline = None
-            if initBME680FromMain():
-                # bme680 sensor must be burned in before use
-                gas_baseline = burn_in_bme680(10)
-
-                # if burning was canceled => exit
-                if gas_baseline is None:
-                    print("gas_baseline can't be None")
+            bme680IsInitialized = initBME680FromMain()
+        else:
+            bme680IsInitialized = 0
 
         # dict with all fields and values which will be tranfered to ThingSpeak later
         ts_fields = {}
@@ -54,8 +49,8 @@ def measurement():
                 print("DS18b20 missing param: ts_field or device_id")
 
         # measure BME680 (can only be once) [type 1]
-        if bme680Sensors and len(bme680Sensors) == 1 and gas_baseline:
-            bme680_values = measure_bme680(gas_baseline, bme680Sensors[0])
+        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
+            bme680_values = measure_bme680(bme680Sensors[0], 10)
             ts_fields.update(bme680_values)
 
         # disable warnings for HX711
@@ -78,9 +73,14 @@ def measurement():
             ts_fields.update(weight)
 
         return json.dumps(ts_fields)
-           
+
     except Exception as e:
         print("Measurement: " + str(e))
 
+    # Error occured
+    return {}
 
-print(measurement())
+try:
+    print(measurement())
+except KeyboardInterrupt:
+    pass

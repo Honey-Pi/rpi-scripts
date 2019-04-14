@@ -32,3 +32,4 @@ error.log
 # compiled Python files
 # =========================
 *.pyc
+error.log

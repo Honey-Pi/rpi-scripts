@@ -3,7 +3,7 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 from HX711 import HX711
-import RPi.GPIO as GPIO 
+import RPi.GPIO as GPIO
 import time
 
 # global var
@@ -42,7 +42,7 @@ def get_temp(weight_sensor, ts_fields):
 
     except Exception as e:
         print("Exeption while getting temperature field: " + str(e))
-    
+
     return None
 
 def compensate_temperature(weight_sensor, weight, ts_fields):
@@ -58,9 +58,9 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
                     compensation_temp = float(weight_sensor["compensation_temp"])
                 else:
                     compensation_temp = None
-                
+
                 temp_now = get_temp(weight_sensor, ts_fields)
-                if (temp_now or temp_now == 0) and (weight or weight == 0):
+                if isinstance(temp_now, (int, float)) and isinstance(weight, (int, float)):
                     print("Weight cell temperature compensation is enabled.")
                     print("=> TempCalibration: " + str(compensation_temp) + "C TempNow: " + str(temp_now) + "C WeightBefore: " + str(weight) + "g")
                     # do compensation
@@ -70,7 +70,6 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
                     print("=> TempDelta: " + str(delta) + "C WeightAfter: " + str(weight) + "g")
                 else:
                     print("Temperature Compensation: No temperature in given field.")
-
 
     except Exception as e:
         print("Exeption while temperature compensation: " + str(e))
@@ -82,39 +81,42 @@ def set_ts_field(weight_sensor, weight):
         weight = weight/1000  # gramms to kg
         weight = float("{0:.3f}".format(weight)) # float only 3 decimals
 
-    if 'ts_field' in weight_sensor and (weight or weight == 0):
-        return ({weight_sensor["ts_field"]: weight})
-    else:
-        return {}
+        if 'ts_field' in weight_sensor:
+            return ({weight_sensor["ts_field"]: weight})
+    return {}
 
 def init_hx711(weight_sensor, debug=False):
     # HX711 GPIO
     pin_dt = 5
     pin_sck = 6
     channel = 'A'
+    errorEncountered = False
     try:
         pin_dt = int(weight_sensor["pin_dt"])
         pin_sck = int(weight_sensor["pin_sck"])
-        channel = weight_sensor["channel"]   
+        channel = weight_sensor["channel"]
     except Exception as e:
         print("HX711 missing param: " + str(e))
 
-    try:
-        # setup weight sensor
-        hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, gain_channel_A=128, select_channel=channel)
-        if debug:
-            hx.set_debug_mode(flag=debug)
-        hx.reset() # Before we start, reset the hx711 (not necessary)
+    loops = 0
+    while not errorEncountered and loops < 3:
+        loops += 1
+        try:
+            # setup weight sensor
+            hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, gain_channel_A=128, select_channel=channel)
+            if debug:
+                hx.set_debug_mode(flag=debug)
+            errorEncountered = hx.reset() # Before we start, reset the hx711 (not necessary)
 
-        return hx
-    except Exception as e:
-        print("Initializing HX711 failed: " + str(e))
+            return hx
+        except Exception as e:
+            print("Initializing HX711 failed: " + str(e))
 
     return None
 
 
 def measure_weight(weight_sensor, hx=None):
-    
+
     if 'reference_unit' in weight_sensor:
         reference_unit = float(weight_sensor["reference_unit"])
     else:
@@ -127,60 +129,61 @@ def measure_weight(weight_sensor, hx=None):
     weight = None
     try:
         # init hx711
-        if not hx:
+        if hx is None:
             hx = init_hx711(weight_sensor)
-            time.sleep(0.01) # sleep 10ms 
+            time.sleep(0.01) # sleep 10ms
 
-        hx.power_up()
-        hx.set_scale_ratio(scale_ratio=reference_unit)
-        hx.set_offset(offset=offset)
+        if hx is not None:
+            hx.power_up()
+            hx.set_scale_ratio(scale_ratio=reference_unit)
+            hx.set_offset(offset=offset)
 
-        temp = hx.get_raw_data_mean(6) # measure just for fun
+            temp = hx.get_raw_data_mean(6) # measure just for fun
 
-        count = 0
-        LOOP_TRYS = 3
-        while count < LOOP_TRYS:
-            count += 1
-            # improve weight measurement by doing LOOP_TIMES weight measurements
-            weightMeasures=[]
-            count_avg = 0
-            LOOP_AVG = 3
-            while count_avg < LOOP_AVG and count_avg < 6: # Break after max. 6 loops
-                count_avg += 1
-                # use outliers_filter and do average over 3 measurements
-                hx_weight = hx.get_weight_mean(3)
-                if hx_weight or hx_weight == 0:
-                    weightMeasures.append(hx_weight) 
-                else: # returned False
-                    LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
+            count = 0
+            LOOP_TRYS = 3
+            while count < LOOP_TRYS:
+                count += 1
+                # improve weight measurement by doing LOOP_TIMES weight measurements
+                weightMeasures=[]
+                count_avg = 0
+                LOOP_AVG = 3
+                while count_avg < LOOP_AVG and count_avg < 6: # Break after max. 6 loops
+                    count_avg += 1
+                    # use outliers_filter and do average over 30 measurements
+                    hx_weight = hx.get_weight_mean(30)
+                    if isinstance(hx_weight, (int, float)):
+                        weightMeasures.append(hx_weight)
+                    else: # returned False
+                        LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
 
-            # take "best" measure
-            average_weight = round(average(weightMeasures), 1)
-            weight = round(takeClosest(weightMeasures, average_weight), 1)
-            print("Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
+                # take "best" measure
+                average_weight = round(average(weightMeasures), 1)
+                weight = round(takeClosest(weightMeasures, average_weight), 1)
+                print("Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
 
-            ALLOWED_DIVERGENCE = round((500/reference_unit), 1)
-            # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
-            # bei reference_unit=1 soll ALLOWED_DIVERGENCE=300
-            if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
-                # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
-                # triggerPIN() # debug method
-                print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again")
-                time.sleep(0.01) # sleep 10ms 
+                ALLOWED_DIVERGENCE = round((500/reference_unit), 1)
+                # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
+                # bei reference_unit=1 soll ALLOWED_DIVERGENCE=300
+                if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
+                    # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
+                    # triggerPIN() # debug method
+                    print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again ("+str(count)+"/"+str(LOOP_TRYS)+")")
+                    time.sleep(0.01) # sleep 10ms
 
-                if LOOP_TRYS == count: # last loop
-                    # 3 loops and still no chosen weight => fallback measurement
-                    weight = round(hx.get_weight_mean(30), 1) # average from 30 times
-                    print("Chosen weight: " + str(weight) + "g")
-            else:
-                # divergence is OK => skip
-                break
+                    if LOOP_TRYS == count: # last loop
+                        # 3 loops and still no chosen weight => fallback measurement
+                        weight = round(hx.get_weight_mean(30), 1) # average from 30 times
+                        print("Chosen weight: " + str(weight) + "g")
+                else:
+                    # divergence is OK => skip
+                    break
 
-        #hx.power_down()
+            #hx.power_down()
 
-        # invert weight if flag is set
-        if 'invert' in weight_sensor and weight_sensor['invert'] == True and (weight or weight == 0):
-            weight = weight*-1;
+            # invert weight if flag is set
+            if 'invert' in weight_sensor and weight_sensor['invert'] == True and isinstance(weight, (int, float)):
+                weight = weight*-1;
 
     except Exception as e:
         print("Reading HX711 failed: " + str(e))
