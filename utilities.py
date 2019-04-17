@@ -48,10 +48,10 @@ def client_to_ap_mode():
     # Enable static ip
     os.system("sudo mv /etc/dhcpcd.conf.disabled /etc/dhcpcd.conf")
     # Restart DHCP server for IP Address
-    os.system("sudo service dhcpcd restart && systemctl daemon-reload") # & will execute command in the background
+    os.system("sudo systemctl restart dhcpcd.service && systemctl daemon-reload") # & will execute command in the background
     # restart AP Services
     os.system("sudo systemctl restart dnsmasq.service")
-    os.system("sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd)") # if restart fails because service is masked => unmask
+    os.system("sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd) &") # if restart fails because service is masked => unmask
     start_wlan()
 
 def ap_to_client_mode():
@@ -62,7 +62,7 @@ def ap_to_client_mode():
     # Disable static ip
     os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled")
     # Restart DHCP server for IP Address
-    os.system("sudo service dhcpcd restart && systemctl daemon-reload") # & will execute command in the background
+    os.system("sudo systemctl restart dhcpcd.service && systemctl daemon-reload") # & will execute command in the background
     # Start WPA Daemon
     os.system("sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B")
     # activate the wifi connection with Id=0

@@ -27,7 +27,7 @@ def miliseconds():
 def start_ap():
     global isActive, GPIO_LED
     isActive = 1 # measurement shall start next time
-    print("AccessPoint start")
+    print("Maintenance Mode: START - Connect yourself to HoneyPi-Wifi.")
     start_led()
     GPIO.output(GPIO_LED, GPIO.HIGH)
     t1 = threading.Thread(target=client_to_ap_mode) #client_to_ap_mode()
@@ -36,7 +36,7 @@ def start_ap():
 def stop_ap(boot=0):
     global isActive, GPIO_LED
     isActive = 0 # measurement shall stop next time
-    print("AccessPoint stop")
+    print("Maintenance Mode: STOP")
     stop_led()
     GPIO.output(GPIO_LED, GPIO.LOW)
     t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
@@ -51,14 +51,13 @@ def close_script():
 
 def toggle_measurement():
     global isActive, measurement_stop, measurement
-    print("Button was pressed")
     if isActive == 0:
-        print("Button: Stop measurement")
+        print("Button was pressed: Stop measurement")
         # stop the measurement by event's flag
         measurement_stop.set()
         start_ap() # finally start AP
     else:
-        print("Button: Start measurement")
+        print("Button was pressed: Start measurement")
         if measurement.is_alive():
             print("Warning: Thread should not be active anymore")
         measurement_stop.clear() # reset flag
