@@ -11,10 +11,10 @@ from utilities import scriptsFolder, check_file, error_log
 
 def write_csv(ts_fields):
     try:
-        csv_file = scriptsFolder + '/HoneyPi.csv'
+        csv_file = scriptsFolder + '/offline.csv'
         # Allowed ThingSpeak fields:
         csv_columns = ['datetime','field1','field2','field3','field4','field5','field6','field7','field8','latitude','longitude','elevation','status']
-        check_file(csv_file, 5, 10)
+        check_file(csv_file, 5, 10, 1)
 
         # Create row with data
         row = {}

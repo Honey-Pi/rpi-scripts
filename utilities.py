@@ -79,17 +79,17 @@ def miliseconds():
     return int(round(time.time() * 1000))
 
 # reduce size if file is to big
-def check_file(file, size=5, entries=10):
+def check_file(file, size=5, entries=25, skipFirst=0):
     try:
-        # If bigger than 25MB
+        # If bigger than 5MB
         if os.path.getsize(file) > size * 1024:
             readFile = open(file)
             lines = readFile.readlines()
             readFile.close()
             w = open(file,'w')
             # delete first 25 lines in file
-            # but skip first entry because it is header
-            del lines[1:entries]
+            # When CSV: skip first entry because it is header (skipFirst=1)
+            del lines[skipFirst:entries]
             w.writelines(lines)
             w.close()
     except FileNotFoundError:
@@ -98,7 +98,7 @@ def check_file(file, size=5, entries=10):
 def error_log(e=None, printText=None):
     try:
         file = scriptsFolder + '/error.log'
-        check_file(file, 10, 50) # reset file if it gets to big
+        check_file(file) # reset file if it gets to big
 
         # generate printed text
         if printText and e:
