@@ -147,6 +147,8 @@ def start_measurement(measurement_stop):
                             write_csv(ts_fields)
                             if debug:
                                 error_log("Info: Data succesfully saved to CSV-File.")
+                        except Exception as ex:
+                            error_log(ex, "Exception")
                     else:
                         try:
                             # update ThingSpeak / transfer values
