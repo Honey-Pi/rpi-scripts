@@ -17,7 +17,7 @@ def get_settings():
         my_abs_path = my_file.resolve()
     except OSError: # FileNotFoundError
         # doesn"t exist => default values
-        settings["button_pin"] = 17
+        settings["button_pin"] = 16
         settings["interval"] = 300
 
     else:
@@ -34,7 +34,7 @@ def check_vars(settings):
         if not settings["button_pin"]:
             raise Exception("button_pin is not defined.")
     except:
-        settings["button_pin"] = 17
+        settings["button_pin"] = 16
 
     try:
         if not 'debug' in settings:

@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds
 
 # global vars
 measurement = None
@@ -19,10 +19,7 @@ measurement_stop = threading.Event() # create event to stop measurement
 debug = 0 # will be overriten by settings.json. you need to change the debug-mode in settings.json
 time_start = 0 # will be set by button_pressed event if the button is rised
 GPIO_LED = 21 # GPIO for led
-gpio = 17 # gpio for button, will be overwritten by settings.json
-
-def miliseconds():
-    return int(round(time.time() * 1000))
+gpio = 16 # gpio for button, will be overwritten by settings.json
 
 def start_ap():
     global isActive, GPIO_LED
@@ -36,7 +33,8 @@ def start_ap():
 def stop_ap(boot=0):
     global isActive, GPIO_LED
     isActive = 0 # measurement shall stop next time
-    print("Maintenance Mode: STOP")
+    if not boot:
+        print("Maintenance Mode: STOP")
     stop_led()
     GPIO.output(GPIO_LED, GPIO.LOW)
     t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
