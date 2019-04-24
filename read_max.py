@@ -20,7 +20,7 @@ def measure_tc(tc_sensor):
     except Exception as e:
         print("MAX6675/MAX31855 missing param: " + str(e))
 
-    tc_temperature = 0
+    tc_temperature = None
 
     # setup tc-Sensor
     try:
@@ -46,6 +46,6 @@ def measure_tc(tc_sensor):
         except Exception as e:
             print("Reading MAX6675/MAX31855 failed: " + str(e))
 
-        if 'ts_field' in tc_sensor:
+        if 'ts_field' in tc_sensor and tc_temperature is not None:
             return ({tc_sensor["ts_field"]: tc_temperature})
     return {}

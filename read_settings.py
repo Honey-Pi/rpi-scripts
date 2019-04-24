@@ -55,6 +55,11 @@ def check_vars(settings):
         settings["ts_channel_id"] = None
         settings["ts_write_key"] = None
 
+    try:
+        settings["offline"]
+    except KeyError:
+        settings["offline"] = 0
+
     return settings
 
 # get sensors by type

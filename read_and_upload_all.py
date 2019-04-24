@@ -76,7 +76,9 @@ def start_measurement(measurement_stop):
 
         # start at -6 because we want to get 6 values before we can filter some out
         counter = -6
+        time_measured = 0
         while not measurement_stop.is_set():
+            counter += 1
 
             # read values from sensors every second
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
@@ -84,21 +86,19 @@ def start_measurement(measurement_stop):
                 if 'device_id' in sensor:
                     read_unfiltered_temperatur_values(sensorIndex, sensor['device_id'])
 
-            # for testing:
-            #try:
-            #    weight = measure_weight(weightSensors[0])
-            #    print("weight: " + str(list(weight.values())[0]))
-            #except IOError:
-            #    print "IOError occurred"
-            #except TypeError:
-            #    print "TypeError occurred"
-            #except IndexError:
-            #    print "IndexError occurred"
-
             # wait seconds of interval before next check
             # free ThingSpeak account has an upload limit of 15 seconds
-            if counter%interval == 0 or interval == 1:
-                print("Time over for a new measurement.")
+            time_now = time.time()
+            isTimeToMeasure = (time_now-time_measured >= interval) and counter > 0 # old: counter%interval == 0
+            if isTimeToMeasure or interval == 1:
+                now = time.strftime("%H:%M", time.localtime(time_now))
+                lastMeasurement = time.strftime("%H:%M", time.localtime(time_measured))
+                if time_measured == 0:
+                    print("First time measurement. Now: " + str(now))
+                else:
+                    print("Last measurement was at " + str(lastMeasurement))
+                    print("Time over for a new measurement. Time is now: " + str(now))
+                time_measured = time.time()
 
                 # filter the values out
                 for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
@@ -142,14 +142,14 @@ def start_measurement(measurement_stop):
                     print(key + ": " + str(value))
 
                 if len(ts_fields) > 0:
-                    if offline:
+                    if offline == 1 or offline == 3:
                         try:
                             write_csv(ts_fields)
                             if debug:
                                 error_log("Info: Data succesfully saved to CSV-File.")
                         except Exception as ex:
                             error_log(ex, "Exception")
-                    else:
+                    if offline == 0 or offline == 1 or offline == 2:
                         try:
                             # update ThingSpeak / transfer values
                             channel.update(ts_fields)
@@ -165,13 +165,22 @@ def start_measurement(measurement_stop):
                         except requests.exceptions.ConnectionError as errc:
                             error_log(errc, "Error Connecting " + str(connectionErros))
                             connectionErros += 1
-                            # multiple connectionErrors in a row => Exception
+
+                            # Write to CSV-File if ConnectionError
+                            if offline == 2:
+                                write_csv(ts_fields)
+                                if debug:
+                                    error_log("Info: Data succesfully saved to CSV-File.")
+
+                            # multiple connectionErrors in a row => MyRebootException
                             if connectionErros >= 5:
                                 raise MyRebootException
                         except requests.exceptions.Timeout as errt:
                             error_log(errt, "Timeout Error")
                         except requests.exceptions.RequestException as err:
                             error_log(err, "Something Else")
+                        except Exception as exTs:
+                            error_log(exTs, "ThingSpeak Exception")
 
                 # stop measurements after uploading once
                 if interval == 1:
@@ -183,7 +192,6 @@ def start_measurement(measurement_stop):
                         sleep(10)
                         shutdown()
 
-            counter += 1
             sleep(0.96)
 
         end_time = time.time()
