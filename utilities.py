@@ -48,10 +48,10 @@ def client_to_ap_mode():
     # Enable static ip
     os.system("sudo mv /etc/dhcpcd.conf.disabled /etc/dhcpcd.conf")
     # Restart DHCP server for IP Address
-    os.system("sudo service dhcpcd restart && systemctl daemon-reload") # & will execute command in the background
+    os.system("sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload") # & will execute command in the background
     # restart AP Services
     os.system("sudo systemctl restart dnsmasq.service")
-    os.system("sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd)") # if restart fails because service is masked => unmask
+    os.system("sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd) &") # if restart fails because service is masked => unmask
     start_wlan()
 
 def ap_to_client_mode():
@@ -62,7 +62,7 @@ def ap_to_client_mode():
     # Disable static ip
     os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled")
     # Restart DHCP server for IP Address
-    os.system("sudo service dhcpcd restart && systemctl daemon-reload") # & will execute command in the background
+    os.system("sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload") # & will execute command in the background
     # Start WPA Daemon
     os.system("sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B")
     # activate the wifi connection with Id=0
@@ -75,12 +75,30 @@ def reboot():
 def shutdown():
     os.system("sudo shutdown -h 0")
 
+def miliseconds():
+    return int(round(time.time() * 1000))
+
+# reduce size if file is to big
+def check_file(file, size=5, entries=25, skipFirst=0):
+    try:
+        # If bigger than 5MB
+        if os.path.getsize(file) > size * 1024:
+            readFile = open(file)
+            lines = readFile.readlines()
+            readFile.close()
+            w = open(file,'w')
+            # delete first 25 lines in file
+            # When CSV: skip first entry because it is header (skipFirst=1)
+            del lines[skipFirst:entries]
+            w.writelines(lines)
+            w.close()
+    except FileNotFoundError:
+        pass
+
 def error_log(e=None, printText=None):
     try:
         file = scriptsFolder + '/error.log'
-        # reset file if to big
-        if os.path.getsize(file) > 100 * 1024:
-            os.remove(file)
+        check_file(file) # reset file if it gets to big
 
         # generate printed text
         if printText and e:

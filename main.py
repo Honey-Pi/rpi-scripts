@@ -6,11 +6,11 @@ import sys
 import threading
 import time
 
-import RPi.GPIO as GPIO 
+import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds
 
 # global vars
 measurement = None
@@ -19,23 +19,24 @@ measurement_stop = threading.Event() # create event to stop measurement
 debug = 0 # will be overriten by settings.json. you need to change the debug-mode in settings.json
 time_start = 0 # will be set by button_pressed event if the button is rised
 GPIO_LED = 21 # GPIO for led
-gpio = 17 # gpio for button, will be overwritten by settings.json
+gpio = 16 # gpio for button, will be overwritten by settings.json
 
 def start_ap():
     global isActive, GPIO_LED
     isActive = 1 # measurement shall start next time
-    print("AccessPoint start")
+    print("Maintenance Mode: START - Connect yourself to HoneyPi-Wifi.")
     start_led()
-    GPIO.output(GPIO_LED, GPIO.HIGH) 
+    GPIO.output(GPIO_LED, GPIO.HIGH)
     t1 = threading.Thread(target=client_to_ap_mode) #client_to_ap_mode()
     t1.start()
 
 def stop_ap(boot=0):
     global isActive, GPIO_LED
     isActive = 0 # measurement shall stop next time
-    print("AccessPoint stop")
+    if not boot:
+        print("Maintenance Mode: STOP")
     stop_led()
-    GPIO.output(GPIO_LED, GPIO.LOW) 
+    GPIO.output(GPIO_LED, GPIO.LOW)
     t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
     t2.start()
 
@@ -48,14 +49,13 @@ def close_script():
 
 def toggle_measurement():
     global isActive, measurement_stop, measurement
-    print("Button was pressed")
     if isActive == 0:
-        print("Button: Stop measurement")
+        print("Button was pressed: Stop measurement")
         # stop the measurement by event's flag
         measurement_stop.set()
         start_ap() # finally start AP
     else:
-        print("Button: Start measurement")
+        print("Button was pressed: Start measurement")
         if measurement.is_alive():
             print("Warning: Thread should not be active anymore")
         measurement_stop.clear() # reset flag
@@ -66,22 +66,22 @@ def toggle_measurement():
 
 def button_pressed(channel):
     global gpio
-    if GPIO.input(gpio): # if port == 1  
-        button_pressed_rising()  
-    else: # if port != 1  
-        button_pressed_falling()  
+    if GPIO.input(gpio): # if port == 1
+        button_pressed_rising()
+    else: # if port != 1
+        button_pressed_falling()
 
 def button_pressed_rising():
     global time_start
-    time_start = time.time()
+    time_start = miliseconds()
 
 def button_pressed_falling():
     global time_start, debug
-    time_end = time.time()
+    time_end = miliseconds()
     time_elapsed = time_end-time_start
-    MIN_SECONDS_TO_ELAPSE = 1 # seconds
-    MAX_SECONDS_TO_ELAPSE = 3
-    if time_elapsed >= MIN_SECONDS_TO_ELAPSE and time_elapsed <= MAX_SECONDS_TO_ELAPSE:
+    MIN_TIME_TO_ELAPSE = 500 # miliseconds
+    MAX_TIME_TO_ELAPSE = 3000
+    if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
         time_start = 0 # reset to prevent multiple fallings from the same rising
         toggle_measurement()
     elif debug:
@@ -104,13 +104,13 @@ def main():
 
     # by default is AccessPoint down
     stop_ap(1)
-    
+
     debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
     if not debug:
         # stop HDMI power (save energy)
         print("Shutting down HDMI to save engery.")
         stop_tv()
-        
+
     # start as seperate background thread
     # because Taster pressing was not recognised
     measurement_stop = threading.Event() # create event to stop measurement

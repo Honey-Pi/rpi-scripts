@@ -2,8 +2,8 @@
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
-from MAX6675 import MAX6675
-from MAX31855 import MAX31855
+from sensors.MAX6675 import MAX6675
+from sensors.MAX31855 import MAX31855
 import RPi.GPIO as GPIO
 
 def measure_tc(tc_sensor):
@@ -20,7 +20,7 @@ def measure_tc(tc_sensor):
     except Exception as e:
         print("MAX6675/MAX31855 missing param: " + str(e))
 
-    tc_temperature = 0
+    tc_temperature = None
 
     # setup tc-Sensor
     try:
@@ -46,6 +46,6 @@ def measure_tc(tc_sensor):
         except Exception as e:
             print("Reading MAX6675/MAX31855 failed: " + str(e))
 
-        if 'ts_field' in tc_sensor:
+        if 'ts_field' in tc_sensor and tc_temperature is not None:
             return ({tc_sensor["ts_field"]: tc_temperature})
     return {}
