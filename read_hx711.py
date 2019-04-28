@@ -150,9 +150,9 @@ def init_hx711(weight_sensor, debug=False):
                 print("Could not read any data from HX711 => Try again: " + str(loops) + "/3")
             else:
                 print("Initializing HX711 failed: " + str(e))
-
         time.sleep(1)
-    print("Empty HX711")
+
+    print("Returning empty HX711")
     return None
 
 
@@ -171,17 +171,15 @@ def measure_weight(weight_sensor, hx=None):
         GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
 
         # init hx711
-        if hx is None:
+        if not hx:
+            #print("HX711 was not initialized.")
             hx = init_hx711(weight_sensor)
-            print("HX711 was not initialized.")
-        else:
-            hx = init_hx711(weight_sensor)
-            print("HX711 initialized because we can.")
 
         temp_reading = hx.get_raw_data_mean(6) # measure just for fun
         if not isinstance(temp_reading, (int, float)): # always check if you get correct value or only False
-            hx = init_hx711(weight_sensor)
-            print("HX711 Init again because shit data.")
+            print("Initialized HX711 again because shit data.")
+            hx.reset()
+            hx = init_hx711(weight_sensor, debug=True)
 
         hx.power_up()
         hx.set_scale_ratio(scale_ratio=reference_unit)
