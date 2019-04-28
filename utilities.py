@@ -44,30 +44,32 @@ def stop_wlan():
 def client_to_ap_mode():
     stop_wlan()
     # disable the connected network
-    os.system("wpa_cli -i wlan0 disable_network 0")
+    os.system("wpa_cli -i wlan0 disable_network 0 || wpa_cli -i wlan0 reconfigure")
     # Enable static ip
     os.system("sudo mv /etc/dhcpcd.conf.disabled /etc/dhcpcd.conf")
     # Restart DHCP server for IP Address
-    os.system("(sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload)&") # & will execute command in the background
+    #os.system("(sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload)&") # & will execute command in the background
     # restart AP Services
     os.system("(sudo systemctl restart dnsmasq.service)&")
     os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
     start_wlan()
 
 def ap_to_client_mode():
-    stop_wlan()
+    #stop_wlan()
     # Stop AP Services
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     # Disable static ip
     os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled || echo '> ignor output above: static IP was already disabled.'")
+    # Kill running WPA daemons
+    print("Kill old WPA daemon")
+    os.system("wpa_cli -i wlan0 terminate")
+    os.system("sudo killall wpa_supplicant")
     # Start WPA Daemon
-    os.system("(sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B)&")
-    # Restart DHCP server for IP Address
-    os.system("(sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload)&") # & will execute command in the background
+    os.system("(sudo wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf -B && echo 'wpa_supplicant started' && dhcpcd wlan0 && echo 'dhcpcd started for wlan0')&")
     # activate the wifi connection with Id=0
-    os.system("wpa_cli -i wlan0 enable_network 0")
-    start_wlan()
+    os.system("wpa_cli -i wlan0 enable_network 0 || wpa_cli -i wlan0 reconfigure")
+    #start_wlan()
 
 def reboot():
     os.system("sudo reboot") # reboots the pi
@@ -86,7 +88,7 @@ def normal_nice():
 def start_single(file_path=".isActive"):
     file = scriptsFolder + '/' + file_path
     try:
-        time_to_wait = 5*60
+        time_to_wait = 2*60 # 2 Minutes
         # wait as long as the file exists to block further measurements
         # because there is another HX711 process already running
         # but skip if the file is too old (time_to_wait)
