@@ -73,6 +73,7 @@ def start_measurement(measurement_stop):
         channel = thingspeak.Channel(id=channel_id, write_key=write_key)
 
         # counting connection Errors
+        global connectionErros
         connectionErros = 0
 
         # start at -6 because we want to get 6 values before we can filter some out
@@ -102,6 +103,8 @@ def start_measurement(measurement_stop):
                 time_measured = time.time()
 
                 def measure(q):
+                    global connectionErros
+
                     # filter the values out
                     for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                         filter_temperatur_values(sensorIndex)
@@ -183,8 +186,12 @@ def start_measurement(measurement_stop):
                                 error_log(errt, "Timeout Error")
                             except requests.exceptions.RequestException as err:
                                 error_log(err, "Something Else")
-                            except Exception as exTs:
-                                error_log(exTs, "ThingSpeak Exception")
+                            except Exception as ex:
+                                error_log(ex, "Exception while sending Data")
+
+                    else:
+                        print("No measurement data was send.")
+
 
                 q = Queue()
                 p = Process(target=measure, args=(q,))
@@ -211,10 +218,10 @@ def start_measurement(measurement_stop):
     except MyRebootException as re:
         error_log(re, "Too many ConnectionErrors in a row => Rebooting")
         if not debug:
-            time.sleep(5)
+            time.sleep(4)
             reboot()
     except Exception as e:
         error_log(e, "Unhandled Exception while Measurement")
         if not debug:
-            time.sleep(60)
+            time.sleep(10)
             reboot()
