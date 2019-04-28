@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
@@ -6,7 +6,8 @@ import math
 import threading
 import time
 from pprint import pprint
-from time import sleep
+import multiprocessing as mp
+from multiprocessing import Process, Queue
 
 import RPi.GPIO as GPIO
 import thingspeak # https://github.com/mchwalisz/thingspeak/
@@ -18,8 +19,9 @@ from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown
+from utilities import reboot, error_log, shutdown, start_single, stop_single
 from write_csv import write_csv
+
 
 class MyRebootException(Exception):
     """Too many ConnectionErrors => Rebooting"""
@@ -55,7 +57,6 @@ def start_measurement(measurement_stop):
         tcSensors = get_sensors(settings, 4)
 
         # -- Run Pre Configuration --
-        # if bme680 is configured
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
             bme680IsInitialized = initBME680FromMain()
@@ -100,87 +101,95 @@ def start_measurement(measurement_stop):
                     print("Time over for a new measurement. Time is now: " + str(now))
                 time_measured = time.time()
 
-                # filter the values out
-                for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-                    filter_temperatur_values(sensorIndex)
+                def measure(q):
+                    # filter the values out
+                    for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+                        filter_temperatur_values(sensorIndex)
 
-                # dict with all fields and values which will be tranfered to ThingSpeak later
-                ts_fields = {}
+                    # dict with all fields and values which will be tranfered to ThingSpeak later
+                    ts_fields = {}
 
-                # measure every sensor with type 0
-                for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-                    # if we have at leat one filtered value we can upload
-                    if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
-                        ds18b20_temperature = filtered_temperature[sensorIndex].pop() # get last value from array
-                        ts_field_ds18b20 = sensor["ts_field"]
-                        if ts_field_ds18b20:
-                            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+                    # measure every sensor with type 0
+                    for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+                        # if we have at leat one filtered value we can upload
+                        if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
+                            ds18b20_temperature = filtered_temperature[sensorIndex].pop() # get last value from array
+                            ts_field_ds18b20 = sensor["ts_field"]
+                            if ts_field_ds18b20:
+                                ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
 
-                # measure BME680 (can only be once) [type 1]
-                if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
-                    bme680_values = measure_bme680(bme680Sensors[0], 30)
-                    ts_fields.update(bme680_values)
+                    # measure BME680 (can only be once) [type 1]
+                    if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
+                        bme680_values = measure_bme680(bme680Sensors[0], 30)
+                        ts_fields.update(bme680_values)
 
-                # measure every sensor with type 3 [DHT11/DHT22]
-                for (i, sensor) in enumerate(dhtSensors):
-                    tempAndHum = measure_dht(sensor)
-                    ts_fields.update(tempAndHum)
+                    # measure every sensor with type 3 [DHT11/DHT22]
+                    for (i, sensor) in enumerate(dhtSensors):
+                        tempAndHum = measure_dht(sensor)
+                        ts_fields.update(tempAndHum)
 
-                # measure every sensor with type 4 [MAX6675]
-                for (i, sensor) in enumerate(tcSensors):
-                    tc_temp = measure_tc(sensor)
-                    ts_fields.update(tc_temp)
+                    # measure every sensor with type 4 [MAX6675]
+                    for (i, sensor) in enumerate(tcSensors):
+                        tc_temp = measure_tc(sensor)
+                        ts_fields.update(tc_temp)
 
-                # measure every sensor with type 2 [HX711]
-                for (i, sensor) in enumerate(weightSensors):
-                    weight = measure_weight(sensor, hxInits[i])
-                    weight = compensate_temperature(sensor, weight, ts_fields)
-                    ts_fields.update(weight)
+                    start_single()
+                    # measure every sensor with type 2 [HX711]
+                    for (i, sensor) in enumerate(weightSensors):
+                        weight = measure_weight(sensor, hxInits[i])
+                        weight = compensate_temperature(sensor, weight, ts_fields)
+                        ts_fields.update(weight)
+                    stop_single()
 
-                # print all measurement values stored in ts_fields
-                for key, value in ts_fields.items():
-                    print(key + ": " + str(value))
+                    # print all measurement values stored in ts_fields
+                    for key, value in ts_fields.items():
+                        print(key + ": " + str(value))
 
-                if len(ts_fields) > 0:
-                    if offline == 1 or offline == 3:
-                        try:
-                            write_csv(ts_fields)
-                            if debug:
-                                error_log("Info: Data succesfully saved to CSV-File.")
-                        except Exception as ex:
-                            error_log(ex, "Exception")
-                    if offline == 0 or offline == 1 or offline == 2:
-                        try:
-                            # update ThingSpeak / transfer values
-                            channel.update(ts_fields)
-                            if debug:
-                                error_log("Info: Data succesfully transfered to ThingSpeak.")
-                            if connectionErros > 0:
-                                if debug:
-                                    error_log("Info: Connection Errors (" + str(connectionErros) + ") Counting resetet.")
-                                # reset connectionErros because transfer succeded
-                                connectionErros = 0
-                        except requests.exceptions.HTTPError as errh:
-                            error_log(errh, "Http Error")
-                        except requests.exceptions.ConnectionError as errc:
-                            error_log(errc, "Error Connecting " + str(connectionErros))
-                            connectionErros += 1
-
-                            # Write to CSV-File if ConnectionError
-                            if offline == 2:
+                    if len(ts_fields) > 0:
+                        if offline == 1 or offline == 3:
+                            try:
                                 write_csv(ts_fields)
                                 if debug:
                                     error_log("Info: Data succesfully saved to CSV-File.")
+                            except Exception as ex:
+                                error_log(ex, "Exception")
+                        if offline == 0 or offline == 1 or offline == 2:
+                            try:
+                                # update ThingSpeak / transfer values
+                                channel.update(ts_fields)
+                                if debug:
+                                    error_log("Info: Data succesfully transfered to ThingSpeak.")
+                                if connectionErros > 0:
+                                    if debug:
+                                        error_log("Info: Connection Errors (" + str(connectionErros) + ") Counting resetet.")
+                                    # reset connectionErros because transfer succeded
+                                    connectionErros = 0
+                            except requests.exceptions.HTTPError as errh:
+                                error_log(errh, "Http Error")
+                            except requests.exceptions.ConnectionError as errc:
+                                connectionErros += 1
+                                error_log(errc, "Error Connecting " + str(connectionErros))
 
-                            # multiple connectionErrors in a row => MyRebootException
-                            if connectionErros >= 5:
-                                raise MyRebootException
-                        except requests.exceptions.Timeout as errt:
-                            error_log(errt, "Timeout Error")
-                        except requests.exceptions.RequestException as err:
-                            error_log(err, "Something Else")
-                        except Exception as exTs:
-                            error_log(exTs, "ThingSpeak Exception")
+                                # Write to CSV-File if ConnectionError
+                                if offline == 2:
+                                    write_csv(ts_fields)
+                                    if debug:
+                                        error_log("Info: Data succesfully saved to CSV-File.")
+
+                                # multiple connectionErrors in a row => MyRebootException
+                                if connectionErros >= 5:
+                                    raise MyRebootException
+                            except requests.exceptions.Timeout as errt:
+                                error_log(errt, "Timeout Error")
+                            except requests.exceptions.RequestException as err:
+                                error_log(err, "Something Else")
+                            except Exception as exTs:
+                                error_log(exTs, "ThingSpeak Exception")
+
+                q = Queue()
+                p = Process(target=measure, args=(q,))
+                p.start()
+                p.join()
 
                 # stop measurements after uploading once
                 if interval == 1:
@@ -189,10 +198,10 @@ def start_measurement(measurement_stop):
 
                     if shutdownAfterTransfer:
                         print("Shutting down was set => Waiting 10seconds and then shutdown.")
-                        sleep(10)
+                        time.sleep(10)
                         shutdown()
 
-            sleep(0.96)
+            time.sleep(6) # wait 6 seconds
 
         end_time = time.time()
         time_taken = end_time - start_time # time_taken is in seconds
@@ -202,7 +211,7 @@ def start_measurement(measurement_stop):
     except MyRebootException as re:
         error_log(re, "Too many ConnectionErrors in a row => Rebooting")
         if not debug:
-            time.sleep(1)
+            time.sleep(5)
             reboot()
     except Exception as e:
         error_log(e, "Unhandled Exception while Measurement")

@@ -72,6 +72,8 @@ def burn_in_bme680(sensor, burn_in_time):
                 #print("Burning BME680 in for " + str(int(round(burn_in_time - (curr_time - start_time)))) + "s.")
                 #print('Gas: {0:.2f}Ohms'.format(gas))
                 time.sleep(1)
+            else:
+                time.sleep(0.4) # wait 400ms for heat_stable
         gas_baseline = sum(burn_in_data[-burn_in_time:]) / burn_in_time
         #print('Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
         return gas_baseline
@@ -151,9 +153,8 @@ def measure_bme680(ts_sensor, burn_in_time=300):
                     fields[ts_sensor["ts_field_air_quality"]] = int(round(air_quality_score, 0))
 
             return fields
-        else:
-            # Waiting for heat_stable
-            time.sleep(0.5)
+        # Waiting for heat_stable
+        time.sleep(0.4)
 
     # error
     return {}

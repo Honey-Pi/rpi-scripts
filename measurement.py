@@ -17,7 +17,7 @@ from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot
+from utilities import reboot, start_single, stop_single
 
 def measurement():
     try:
@@ -53,9 +53,6 @@ def measurement():
             bme680_values = measure_bme680(bme680Sensors[0], 10)
             ts_fields.update(bme680_values)
 
-        # disable warnings for HX711
-        GPIO.setwarnings(False)
-
         # measure every sensor with type 3 [DHT11/DHT22]
         for (i, sensor) in enumerate(dhtSensors):
             tempAndHum = measure_dht(sensor)
@@ -66,11 +63,13 @@ def measurement():
             tc_temp = measure_tc(sensor)
             ts_fields.update(tc_temp)
 
+        start_single()
         # measure every sensor with type 2 [HX711]
         for (i, sensor) in enumerate(weightSensors):
             weight = measure_weight(sensor)
             weight = compensate_temperature(sensor, weight, ts_fields)
             ts_fields.update(weight)
+        stop_single()
 
         return json.dumps(ts_fields)
 

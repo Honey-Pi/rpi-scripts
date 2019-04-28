@@ -48,10 +48,10 @@ def client_to_ap_mode():
     # Enable static ip
     os.system("sudo mv /etc/dhcpcd.conf.disabled /etc/dhcpcd.conf")
     # Restart DHCP server for IP Address
-    os.system("sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload") # & will execute command in the background
+    os.system("(sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload)&") # & will execute command in the background
     # restart AP Services
-    os.system("sudo systemctl restart dnsmasq.service")
-    os.system("sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd) &") # if restart fails because service is masked => unmask
+    os.system("(sudo systemctl restart dnsmasq.service)&")
+    os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
     start_wlan()
 
 def ap_to_client_mode():
@@ -60,11 +60,11 @@ def ap_to_client_mode():
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     # Disable static ip
-    os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled")
-    # Restart DHCP server for IP Address
-    os.system("sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload") # & will execute command in the background
+    os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled || echo '> ignor output above: static IP was already disabled.'")
     # Start WPA Daemon
-    os.system("sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B")
+    os.system("(sudo wpa_supplicant -i wlan0 -D wext -c /etc/wpa_supplicant/wpa_supplicant.conf -B)&")
+    # Restart DHCP server for IP Address
+    os.system("(sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload)&") # & will execute command in the background
     # activate the wifi connection with Id=0
     os.system("wpa_cli -i wlan0 enable_network 0")
     start_wlan()
@@ -75,6 +75,54 @@ def reboot():
 def shutdown():
     os.system("sudo shutdown -h 0")
 
+def decrease_nice():
+    pid = os.getpid()
+    os.system("sudo renice -n -19 -p " + str(pid) + " >/dev/null")
+
+def normal_nice():
+    pid = os.getpid()
+    os.system("sudo renice -n 0 -p " + str(pid) + " >/dev/null")
+
+def start_single(file_path=".isActive"):
+    file = scriptsFolder + '/' + file_path
+    try:
+        time_to_wait = 5*60
+        # wait as long as the file exists to block further measurements
+        # because there is another HX711 process already running
+        # but skip if the file is too old (time_to_wait)
+        while os.path.exists(file):
+            # skip waiting if file is older than 5minutes
+            # this is because the last routine could be canceled irregular
+            # and the file could be still existing
+            filetime = os.stat(file).st_mtime
+            if filetime < time.time()-time_to_wait:
+                print("Skiped waiting because the measurement process we are waiting for was likely not properly finished.")
+                os.remove(file) # remove the old file
+                break
+            time.sleep(1)
+            print("Measurement waits for a process to finish. Another measurement job is running at the moment.")
+        # create file to stop other HX711 readings
+        f = open(file, "x")
+    except Exception as ex:
+        print("start_single:" + str(ex))
+        pass
+    finally:
+        decrease_nice()
+
+def stop_single(file_path=".isActive"):
+    file = scriptsFolder + '/' + file_path
+    try:
+        # remove file because reading HX711 finished
+        if os.path.exists(file):
+            os.remove(file)
+        else:
+            print('stop_single: File does not exists.')
+    except Exception as ex:
+        print("stop_single:" + str(ex))
+        pass
+    finally:
+        normal_nice()
+
 def miliseconds():
     return int(round(time.time() * 1000))
 
@@ -82,7 +130,7 @@ def miliseconds():
 def check_file(file, size=5, entries=25, skipFirst=0):
     try:
         # If bigger than 5MB
-        if os.path.getsize(file) > size * 1024:
+        if os.path.getsize(file) > size * 1024 * 1024:
             readFile = open(file)
             lines = readFile.readlines()
             readFile.close()

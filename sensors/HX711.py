@@ -3,7 +3,7 @@ This file holds HX711 class
 """
 #!/usr/bin/env python3
 
-# https://github.com/gandalf15/HX711/blob/master/HX711_Python3/simple_example.py
+# https://github.com/gandalf15/HX711/blob/master/HX711_Python3/hx711.py
 
 import statistics as stat
 import time
@@ -92,10 +92,10 @@ class HX711:
     def set_gain_A(self, gain):
         """
         set_gain_A method sets gain for channel A.
-        
+
         Args:
             gain(int): Gain for channel A (128 || 64)
-        
+
         Raises:
             ValueError: if gain is different than 128 or 64
         """
@@ -163,12 +163,12 @@ class HX711:
         set offset method sets desired offset for specific
         channel and gain. Optional, by default it sets offset for current
         channel and gain.
-        
+
         Args:
             offset(int): specific offset for channel
             channel(str): Optional, by default it is the current channel.
                 Or use these options ('A' || 'B')
-        
+
         Raises:
             ValueError: if channel is not ('A' || 'B' || '')
             TypeError: if offset is not int type
@@ -253,7 +253,7 @@ class HX711:
         Args:
             data_filter(data_filter): Data filter that takes list of int numbers and
                 returns a list of filtered int numbers.
-        
+
         Raises:
             TypeError: if filter is not a function.
         """
@@ -267,10 +267,10 @@ class HX711:
         """
         set_debug_mode method is for turning on and off
         debug mode.
-        
+
         Args:
             flag(bool): True turns on the debug mode. False turns it off.
-        
+
         Raises:
             ValueError: if fag is not bool type
         """
@@ -289,7 +289,7 @@ class HX711:
     def _save_last_raw_data(self, channel, gain_A, data):
         """
         _save_last_raw_data saves the last raw data for specific channel and gain.
-        
+
         Args:
             channel(str):
             gain_A(int):
@@ -309,7 +309,7 @@ class HX711:
         """
         _ready method check if data is prepared for reading from HX711
 
-        Returns: bool True if ready else False when not ready        
+        Returns: bool True if ready else False when not ready
         """
         # if DOUT pin is low data is ready for reading
         if GPIO.input(self._dout) == 0:
@@ -326,7 +326,7 @@ class HX711:
         Args:
             num(int): how many ones it sends to HX711
                 options (1 || 2 || 3)
-        
+
         Returns: bool True if HX711 is ready for the next reading
             False if HX711 is not ready for the next reading
         """
@@ -353,7 +353,7 @@ class HX711:
         """
         _read method reads bits from hx711, converts to INT
         and validate the data.
-        
+
         Returns: (bool || int) if it returns False then it is false reading.
             if it returns int then the reading was correct
         """
@@ -539,7 +539,7 @@ class HX711:
         Args:
             channel(str): select channel ('A' || 'B'). If not then it returns the current one.
             gain_A(int): select gain (128 || 64). If not then it returns the current one.
-        
+
         Raises:
             ValueError: if channel is not ('A' || 'B' || '') or gain_A is not (128 || 64 || 0)
                 '' and 0 is default value.
@@ -574,7 +574,7 @@ class HX711:
         Args:
             channel(str): select for which channel ('A' || 'B')
             gain_A(int): select for which gain (128 || 64)
-        
+
         Raises:
             ValueError: if channel is not ('A' || 'B' || '') or gain_A is not (128 || 64 || 0)
                 '' and 0 is default value.
@@ -670,7 +670,7 @@ def outliers_filter(data_list):
 
     Args:
         data_list([int]): List of int. It can contain Bool False that is removed.
-    
+
     Returns: list of filtered data. Excluding outliers.
     """
     data = []

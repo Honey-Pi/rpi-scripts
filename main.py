@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown
 
 # global vars
 measurement = None
@@ -84,6 +84,9 @@ def button_pressed_falling():
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
         time_start = 0 # reset to prevent multiple fallings from the same rising
         toggle_measurement()
+    elif time_elapsed >= 5000 and time_elapsed <= 10000:
+        time_start = 0 # reset to prevent multiple fallings from the same rising
+        shutdown()
     elif debug:
         error_log("Info: Too short Button press, Too long Button press OR inteference occured.")
 
@@ -94,7 +97,7 @@ def main():
 
     # setup gpio
     gpio = settings["button_pin"] # read pin from settings
-    GPIO.setwarnings(False) # Ignore warning for now
+    #GPIO.setwarnings(False) # Ignore warning for now
     GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine
     GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 17 to be an input pin and set initial value to be pulled low (off)
     GPIO.setup(GPIO_LED, GPIO.OUT) # Set pin 21 to led output
@@ -123,7 +126,7 @@ def main():
 
     # Main Lopp: Cancel with STRG+C
     while True:
-        time.sleep(0.01)  # wait 10 ms to give CPU chance to do other things
+        time.sleep(0.2)  # wait 200 ms to give CPU chance to do other things
         pass
 
     print("This text will never be printed.")
