@@ -29,6 +29,8 @@ def measurement():
         weightSensors = get_sensors(settings, 2)
         dhtSensors = get_sensors(settings, 3)
         tcSensors = get_sensors(settings, 4)
+        bme280Sensors = get_sensors(settings, 5)
+
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
@@ -48,7 +50,7 @@ def measurement():
             else:
                 print("DS18b20 missing param: ts_field or device_id")
 
-        # measure BME680 (can only be once) [type 1]
+        # measure BME680 (can only be one) [type 1]
         if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
             bme680_values = measure_bme680(bme680Sensors[0], 10)
             ts_fields.update(bme680_values)
@@ -62,6 +64,11 @@ def measurement():
         for (i, sensor) in enumerate(tcSensors):
             tc_temp = measure_tc(sensor)
             ts_fields.update(tc_temp)
+
+        # measure BME280 (can only be one) [type 5]
+        if bme280Sensors and len(bme280Sensors) == 1:
+            bme280_values = measure_bme280(bme280Sensors[0])
+            ts_fields.update(bme280_values)
 
         start_single()
         # measure every sensor with type 2 [HX711]
