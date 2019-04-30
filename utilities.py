@@ -69,6 +69,8 @@ def ap_to_client_mode():
     os.system("(sudo wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf -B && echo 'wpa_supplicant started' && dhcpcd wlan0 && echo 'dhcpcd started for wlan0')&")
     # activate the wifi connection with Id=0
     os.system("wpa_cli -i wlan0 enable_network 0 || wpa_cli -i wlan0 reconfigure")
+    # Start dhclient for IP-Adresses
+    os.system("sudo dhclient wlan0")
     #start_wlan()
 
 def reboot():
