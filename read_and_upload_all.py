@@ -55,6 +55,8 @@ def start_measurement(measurement_stop):
         weightSensors = get_sensors(settings, 2)
         dhtSensors = get_sensors(settings, 3)
         tcSensors = get_sensors(settings, 4)
+        bme280Sensors = get_sensors(settings, 5)
+
 
         # -- Run Pre Configuration --
         # if bme680 is configured
@@ -121,7 +123,7 @@ def start_measurement(measurement_stop):
                             if ts_field_ds18b20:
                                 ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
 
-                    # measure BME680 (can only be once) [type 1]
+                    # measure BME680 (can only be one) [type 1]
                     if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
                         bme680_values = measure_bme680(bme680Sensors[0], 30)
                         ts_fields.update(bme680_values)
@@ -135,6 +137,11 @@ def start_measurement(measurement_stop):
                     for (i, sensor) in enumerate(tcSensors):
                         tc_temp = measure_tc(sensor)
                         ts_fields.update(tc_temp)
+
+                    # measure BME280 (can only be one) [type 5]
+                    if bme280Sensors and len(bme280Sensors) == 1:
+                        bme280_values = measure_bme280(bme280Sensors[0])
+                        ts_fields.update(bme280_values)
 
                     start_single()
                     # measure every sensor with type 2 [HX711]
