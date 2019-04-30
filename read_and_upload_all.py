@@ -73,7 +73,6 @@ def start_measurement(measurement_stop):
         channel = thingspeak.Channel(id=channel_id, write_key=write_key)
 
         # counting connection Errors
-        global connectionErros
         connectionErros = 0
 
         # start at -6 because we want to get 6 values before we can filter some out
