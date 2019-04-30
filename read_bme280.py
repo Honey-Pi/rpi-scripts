@@ -15,15 +15,12 @@ def measure_bme280(ts_sensor):
         # ThingSpeak fields
         # Create returned dict if ts-field is defined
         if 'ts_field_temperature' in ts_sensor:
-            fields[ts_sensor["ts_field_temperature"]] = temperature
+            fields[ts_sensor["ts_field_temperature"]] = round(temperature,1)
         if 'ts_field_humidity' in ts_sensor:
-            fields[ts_sensor["ts_field_humidity"]] = humidity
+            fields[ts_sensor["ts_field_humidity"]] = round(humidity,1)
         if 'ts_field_air_pressure' in ts_sensor:
-            fields[ts_sensor["ts_field_air_pressure"]] = pressure
+            fields[ts_sensor["ts_field_air_pressure"]] = round(pressure,1)
     except OSError:
         print('No BME280 Sensor connected')
 
     return fields
-if __name__ == '__main__':
-    while True:
-        time.sleep(0.5)
