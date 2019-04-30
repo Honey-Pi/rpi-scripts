@@ -14,6 +14,7 @@ import thingspeak # https://github.com/mchwalisz/thingspeak/
 import requests
 
 from read_bme680 import measure_bme680, initBME680FromMain
+from read_bme280 import measure_bme280
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
