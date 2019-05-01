@@ -70,7 +70,7 @@ def ap_to_client_mode():
     # activate the wifi connection with Id=0
     os.system("wpa_cli -i wlan0 enable_network 0 || wpa_cli -i wlan0 reconfigure")
     # Start dhclient for IP-Adresses
-    os.system("sudo dhclient wlan0")
+    os.system("(sudo dhclient wlan0)&")
     #start_wlan()
 
 def reboot():
