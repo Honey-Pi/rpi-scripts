@@ -40,16 +40,18 @@ def initBME680():
 
         return 1
     except IOError as ex:
-        print("Reading BME680 failed: IOError Exception: " + str(ex))
-        print("In case of \"[Errno 121] Remote I/O error\": Maybe SD0 is not connected to GND")
+        if str(ex) == "[Errno 121] Remote I/O error":
+            print("Initializing BME680 failed: Most likely wrong Sensor Chip-ID")
+        else:
+            print("Initializing BME680 failed: " + str(ex))
     return 0
 
 def initBME680FromMain():
     if isSMBusConnected():
-        print("BME680 is connected to SMBus")
+        print("A Sensor (eg. BME680/WittyPi) is connected to SMBus.")
         return initBME680()
     else:
-        print("BME680 is not connected")
+        print("SMBus is not connected.")
         return 0
 
 def burn_in_bme680(sensor, burn_in_time):

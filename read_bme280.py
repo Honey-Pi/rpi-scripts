@@ -3,7 +3,7 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 import time
-from sensors.bme280 import readBME280All #http://bit.ly/bme280py
+from sensors.bme280 import readBME280All # Source: http://bit.ly/bme280py
 
 def measure_bme280(ts_sensor):
     fields = {}

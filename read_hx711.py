@@ -147,7 +147,7 @@ def init_hx711(weight_sensor, debug=False):
                 return hx
         except Exception as e:
             if str(e) == "no median for empty data":
-                print("Could not read any data from HX711 => Try again: " + str(loops) + "/3")
+                print("Could not read enough data from HX711 => Try again: " + str(loops) + "/3")
             else:
                 print("Initializing HX711 failed: " + str(e))
         time.sleep(1)
@@ -166,6 +166,7 @@ def measure_weight(weight_sensor, hx=None):
     else:
         offset = 0
 
+    temp_reading = None
     weight = None
     try:
         GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
@@ -175,10 +176,13 @@ def measure_weight(weight_sensor, hx=None):
             #print("HX711 was not initialized.")
             hx = init_hx711(weight_sensor)
 
-        temp_reading = hx.get_raw_data_mean(6) # measure just for fun
+        if hx:
+            temp_reading = hx.get_raw_data_mean(6) # measure just for fun
+
         if not isinstance(temp_reading, (int, float)): # always check if you get correct value or only False
             print("Initialized HX711 again because shit data.")
-            hx.reset()
+            if hx:
+                hx.reset()
             hx = init_hx711(weight_sensor, debug=True)
 
         hx.power_up()
@@ -233,7 +237,10 @@ def measure_weight(weight_sensor, hx=None):
                 weight = weight*-1;
 
     except Exception as e:
-        print("Reading HX711 failed: " + str(e))
+        if str(e) == "no median for empty data":
+            print("Could not read enough data from HX711")
+        else:
+            print("Reading HX711 failed: " + str(e))
     finally:
         pass
 

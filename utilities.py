@@ -5,6 +5,7 @@
 import os
 import time
 from datetime import datetime
+import urllib
 
 scriptsFolder = '/home/pi/HoneyPi/rpi-scripts'
 backendFolder = '/var/www/html/backend'
@@ -70,7 +71,7 @@ def ap_to_client_mode():
     # activate the wifi connection with Id=0
     os.system("wpa_cli -i wlan0 enable_network 0 || wpa_cli -i wlan0 reconfigure")
     # Start dhclient for IP-Adresses
-    os.system("(sudo dhclient wlan0)&")
+    os.system("sudo dhclient &") # dont be too specific (wlan0, eth0)
     #start_wlan()
 
 def reboot():
@@ -95,7 +96,7 @@ def start_single(file_path=".isActive"):
         # because there is another HX711 process already running
         # but skip if the file is too old (time_to_wait)
         while os.path.exists(file):
-            # skip waiting if file is older than 5minutes
+            # skip waiting if file is older than 2 minutes
             # this is because the last routine could be canceled irregular
             # and the file could be still existing
             filetime = os.stat(file).st_mtime
@@ -168,3 +169,23 @@ def error_log(e=None, printText=None):
 
     except Exception:
         pass
+
+def wait_for_internet_connection(maxTime=10):
+    i = 0
+    while i < maxTime:
+        i+=1
+        try:
+            response = urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read()
+
+            if response == "Microsoft NCSI":
+                print("Success: Connection established after " + str(i) + " seconds.")
+                return True
+        except:
+            pass
+        finally:
+            time.sleep(1)
+
+    return False
+
+def delete_settings():
+    os.remove(backendFolder + '/settings.json')

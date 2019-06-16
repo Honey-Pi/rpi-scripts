@@ -30,7 +30,9 @@ def write_csv(ts_fields):
                 writer.writeheader()  # file doesn't exist yet, write a header
             writer.writerow(row)
 
+        return True
     except IOError as ex1:
         error_log(ex1, "Write-CSV IOError")
     except Exception as ex:
         error_log(ex, "Write-CSV Exception")
+    return False
