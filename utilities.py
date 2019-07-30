@@ -36,13 +36,16 @@ def blink_led():
     start_led()
 
 def client_to_ap_mode():
+    os.system("ifup uap0")
     os.system("sudo systemctl restart dnsmasq.service")
     os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
 
 def ap_to_client_mode():
     # Stop AP Services
+    os.system("ifdown uap0")
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
+    os.system("ifup wlan0")
 
 def reboot():
     os.system("sudo reboot") # reboots the pi
