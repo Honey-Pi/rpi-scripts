@@ -6,11 +6,10 @@ import math
 import threading
 import time
 from pprint import pprint
-import multiprocessing as mp
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Value
 
 import RPi.GPIO as GPIO
-import thingspeak # https://github.com/mchwalisz/thingspeak/
+import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import requests
 
 from read_bme680 import measure_bme680, initBME680FromMain
@@ -20,15 +19,11 @@ from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown, start_single, stop_single
+from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection
 from write_csv import write_csv
 
-
-class MyRebootException(Exception):
-    """Too many ConnectionErrors => Rebooting"""
-    pass
-
-def measure(connectionErros, offline, debug, channel, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits):
+def measure(offline, debug, channel, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+    measurementIsRunning.value = 1 # set flag
 
     # filter the values out
     for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
@@ -81,51 +76,76 @@ def measure(connectionErros, offline, debug, channel, filtered_temperature, ds18
     if len(ts_fields) > 0:
         if offline == 1 or offline == 3:
             try:
-                write_csv(ts_fields)
-                if debug:
+                s = write_csv(ts_fields)
+                if s and debug:
                     error_log("Info: Data succesfully saved to CSV-File.")
             except Exception as ex:
                 error_log(ex, "Exception")
+
+        # if transfer to thingspeak is set
         if offline == 0 or offline == 1 or offline == 2:
-            try:
-                # update ThingSpeak / transfer values
-                channel.update(ts_fields)
-                if debug:
-                    error_log("Info: Data succesfully transfered to ThingSpeak.")
-                if connectionErros > 0:
-                    if debug:
-                        error_log("Info: Connection Errors (" + str(connectionErros) + ") Counting resetet.")
-                    # reset connectionErros because transfer succeded
-                    connectionErros = 0
-            except requests.exceptions.HTTPError as errh:
-                error_log(errh, "Http Error")
-            except requests.exceptions.ConnectionError as errc:
-                connectionErros += 1
-                error_log(errc, "Error Connecting " + str(connectionErros))
 
-                # Write to CSV-File if ConnectionError
+            # do-while to retry failed transfer
+            retries = 0
+            connectionError = True
+            while True:
+                try:
+                    # update ThingSpeak / transfer values
+                    channel.update(ts_fields)
+                    if debug:
+                        error_log("Info: Data succesfully transfered to ThingSpeak.")
+                    if connectionErrors.value > 0:
+                        if debug:
+                            error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet.")
+                        # reset connectionErrors because transfer succeded
+                        connectionErrors.value = 0
+                    # break do-while because transfer succeded
+                    connectionError = False
+                    break
+                except requests.exceptions.HTTPError as errh:
+                    error_log(errh, "Http Error")
+                except requests.exceptions.ConnectionError as errc:
+                    pass
+                except requests.exceptions.Timeout as errt:
+                    error_log(errt, "Timeout Error")
+                except requests.exceptions.RequestException as err:
+                    error_log(err, "Something Else")
+                except Exception as ex:
+                    error_log(ex, "Exception while sending Data")
+                finally:
+                    if connectionError:
+                        print("Warning: Waiting for internet connection to try transfer again...")
+                        wait_for_internet_connection(15) # wait before next try
+                        retries+=1
+                        # Maximum 3 retries
+                        if retries >= 3:
+                            break # break do-while
+
+            if connectionError:
+                # Write to CSV-File if ConnectionError occured
                 if offline == 2:
-                    write_csv(ts_fields)
-                    if debug:
+                    s = write_csv(ts_fields)
+                    if s and debug:
                         error_log("Info: Data succesfully saved to CSV-File.")
+                # Do Rebooting if to many connectionErrors in a row
+                connectionErrors.value +=1
+                error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value))
+                if connectionErrors.value >= 5:
+                    if not debug:
+                        error_log("Info: Too many ConnectionErrors in a row => Rebooting")
+                        time.sleep(4)
+                        reboot()
+                    else:
+                        error_log("Info: Did not reboot because debug mode is enabled.")
 
-                # multiple connectionErrors in a row => MyRebootException
-                if connectionErros >= 5:
-                    raise MyRebootException
-            except requests.exceptions.Timeout as errt:
-                error_log(errt, "Timeout Error")
-            except requests.exceptions.RequestException as err:
-                error_log(err, "Something Else")
-            except Exception as ex:
-                error_log(ex, "Exception while sending Data")
+    elif debug:
+        error_log("Info: No measurement data to send.")
 
-    else:
-        print("No measurement data was send.")
+    measurementIsRunning.value = 0 # clear flag
 
 
 def start_measurement(measurement_stop):
     try:
-        print("The measurements have started.")
         start_time = time.time()
 
         # load settings
@@ -140,9 +160,14 @@ def start_measurement(measurement_stop):
 
         if debug:
             print("Debug-Mode is enabled.")
+            error_log("Info: The measurements have started.")
+
+        # with process shared variables
+        connectionErrors = Value('i',0)
+        measurementIsRunning = Value('i',0)
 
         if interval and not isinstance(interval, int) or interval == 0 or not channel_id or not write_key:
-            print("ThingSpeak settings are not complete or interval is 0")
+            error_log("Info: No measurement because ThingSpeak settings are not complete or measurement interval is null.")
             measurement_stop.set()
 
         # read configured sensors from settings.json
@@ -170,9 +195,6 @@ def start_measurement(measurement_stop):
         # ThingSpeak channel
         channel = thingspeak.Channel(id=channel_id, write_key=write_key)
 
-        # counting connection Errors
-        connectionErros = 0
-
         # start at -6 because we want to get 6 values before we can filter some out
         counter = -6
         time_measured = 0
@@ -199,10 +221,13 @@ def start_measurement(measurement_stop):
                     print("Time over for a new measurement. Time is now: " + str(now))
                 time_measured = time.time()
 
-                q = Queue()
-                p = Process(target=measure, args=(connectionErros, offline, debug, channel, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits))
-                p.start()
-                p.join()
+                if measurementIsRunning.value == 0:
+                    q = Queue()
+                    p = Process(target=measure, args=(offline, debug, channel, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p.start()
+                    p.join()
+                else:
+                    error_log("Warning: Forerun measurement is not finished yet. Consider increasing interval.")
 
                 # stop measurements after uploading once
                 if interval == 1:
@@ -214,18 +239,13 @@ def start_measurement(measurement_stop):
                         time.sleep(10)
                         shutdown()
 
-            time.sleep(6) # wait 6 seconds
+            time.sleep(6) # wait 6 seconds before next measurement check
 
         end_time = time.time()
         time_taken = end_time - start_time # time_taken is in seconds
         time_taken_s = float("{0:.2f}".format(time_taken)) # remove microseconds
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
 
-    except MyRebootException as re:
-        error_log(re, "Too many ConnectionErrors in a row => Rebooting")
-        if not debug:
-            time.sleep(4)
-            reboot()
     except Exception as e:
         error_log(e, "Unhandled Exception while Measurement")
         if not debug:

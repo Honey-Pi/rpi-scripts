@@ -10,14 +10,14 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings
 
 # global vars
 measurement = None
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
 debug = 0 # will be overriten by settings.json. you need to change the debug-mode in settings.json
-time_start = 0 # will be set by button_pressed event if the button is rised
+time_rising = 0 # will be set by button_pressed event if the button is rised
 GPIO_LED = 21 # GPIO for led
 gpio = 16 # gpio for button, will be overwritten by settings.json
 
@@ -57,7 +57,7 @@ def toggle_measurement():
     else:
         print("Button was pressed: Start measurement")
         if measurement.is_alive():
-            print("Warning: Thread should not be active anymore")
+            error_log("Warning: Thread should not be active anymore")
         measurement_stop.clear() # reset flag
         measurement_stop = threading.Event() # create event to stop measurement
         measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
@@ -72,47 +72,51 @@ def button_pressed(channel):
         button_pressed_falling()
 
 def button_pressed_rising():
-    global time_start
-    time_start = miliseconds()
+    global time_rising
+    time_rising = miliseconds()
 
 def button_pressed_falling():
-    global time_start, debug
-    time_end = miliseconds()
-    time_elapsed = time_end-time_start
+    global time_rising, debug
+    time_falling = miliseconds()
+    time_elapsed = time_falling-time_rising
     MIN_TIME_TO_ELAPSE = 500 # miliseconds
     MAX_TIME_TO_ELAPSE = 3000
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
-        time_start = 0 # reset to prevent multiple fallings from the same rising
+        time_rising = 0 # reset to prevent multiple fallings from the same rising
         toggle_measurement()
     elif time_elapsed >= 5000 and time_elapsed <= 10000:
-        time_start = 0 # reset to prevent multiple fallings from the same rising
+        time_rising = 0 # reset to prevent multiple fallings from the same rising
+        shutdown()
+    elif time_elapsed >= 10000 and time_elapsed <= 15000:
+        time_rising = 0 # reset to prevent multiple fallings from the same rising
+        delete_settings()
         shutdown()
     elif debug:
-        error_log("Info: Too short Button press, Too long Button press OR inteference occured.")
+        error_log("Info: Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed) + "ms elapsed.")
 
 def main():
     global isActive, measurement_stop, measurement, debug, gpio, GPIO_LED
 
-    settings = get_settings() # read settings for number of GPIO pin
-
-    # setup gpio
-    gpio = settings["button_pin"] # read pin from settings
+    # setup LED
     #GPIO.setwarnings(False) # Ignore warning for now
     GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine
-    GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 17 to be an input pin and set initial value to be pulled low (off)
     GPIO.setup(GPIO_LED, GPIO.OUT) # Set pin 21 to led output
-
-    # blink with LED on startup
-    blink_led()
 
     # by default is AccessPoint down
     stop_ap(1)
 
+    # blink with LED on startup
+    blink_led()
+
+    settings = get_settings() # read settings for number of GPIO pin
     debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
     if not debug:
         # stop HDMI power (save energy)
-        print("Shutting down HDMI to save engery.")
+        print("Shutting down HDMI to save energy.")
         stop_tv()
+
+    if debug:
+        error_log("Info: Raspberry Pi has been powered on.")
 
     # start as seperate background thread
     # because Taster pressing was not recognised
@@ -120,6 +124,9 @@ def main():
     measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
     measurement.start() # start measurement
 
+    # setup Button
+    gpio = settings["button_pin"] # read pin from settings
+    GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
     bouncetime = 300 # ignoring further edges for 300ms for switch bounce handling
     # register button press event
     GPIO.add_event_detect(gpio, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)

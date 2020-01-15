@@ -11,16 +11,23 @@ unfiltered_values = [[]] # here we keep all the unfilteres values
 filtered_temperature = [[]] # here we keep the temperature values after removing outliers
 
 def measure_temperature(device_id):
-    # read 1-wire slave file
-    file = open('/sys/bus/w1/devices/' + device_id + '/w1_slave')
-    file_content = file.read()
-    file.close()
+    try:
+        
+        # read 1-wire slave file
+        with open('/sys/bus/w1/devices/' + device_id + '/w1_slave', 'r') as file:
+            file_content = file.read()
+            file.close()
 
-    # read temperature and convert temperature
-    string_value = file_content.split("\n")[1].split(" ")[9]
-    temperature = float(string_value[2:]) / 1000
+            # read temperature and convert temperature
+            string_value = file_content.split("\n")[1].split(" ")[9]
+            temperature = float(string_value[2:]) / 1000
+            temperature = float('%6.2f' % temperature)
 
-    return float('%6.2f' % temperature)
+            return temperature
+
+    except FileNotFoundError:
+        print("FileNotFoundError: Cannot find Device-ID")
+        return None
 
 # function for reading the value from sensor
 def read_unfiltered_temperatur_values(sensorIndex, device_id):
