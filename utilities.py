@@ -36,10 +36,18 @@ def blink_led():
     time.sleep(0.25)
     start_led()
 
+def create_ap():
+    os.system("sudo sh /home/pi/HoneyPi/create_uap.sh")
+    os.system("ifdown uap0")
+
 def client_to_ap_mode():
+    os.system("ifdown wlan0")
+    os.system("ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0") #dhcpcd not working
     os.system("ifup uap0")
-    os.system("sudo systemctl restart dnsmasq.service")
+    os.system("sudo systemctl stop dnsmasq.service")
     os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
+    os.system("ifup wlan0")
+    os.system("sudo systemctl start dnsmasq.service")
 
 def ap_to_client_mode():
     # Stop AP Services
@@ -49,6 +57,10 @@ def ap_to_client_mode():
     os.system("ifup wlan0")
 
 def reboot():
+    os.system("sudo systemctl stop hostapd.service")
+    os.system("sudo systemctl disable hostapd.service")
+    os.system("sudo systemctl stop dnsmasq.service")
+    os.system("sudo systemctl disable dnsmasq.service")
     os.system("sudo reboot") # reboots the pi
 
 def shutdown():
