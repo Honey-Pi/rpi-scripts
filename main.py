@@ -116,7 +116,8 @@ def main():
         stop_tv()
 
     if debug:
-        error_log("Info: Raspberry Pi has been powered on.")
+        error_log("Info: Raspberry Pi has been powered on.") 
+        
     # Create virtual uap0 for WLAN
     create_ap()
     # start as seperate background thread
