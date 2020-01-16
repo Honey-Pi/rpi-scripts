@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings
 
 # global vars
 measurement = None
@@ -117,7 +117,8 @@ def main():
 
     if debug:
         error_log("Info: Raspberry Pi has been powered on.")
-
+    # Create virtual uap0 for WLAN
+    create_ap()
     # start as seperate background thread
     # because Taster pressing was not recognised
     measurement_stop = threading.Event() # create event to stop measurement
