@@ -74,21 +74,21 @@ def button_pressed(channel):
 def button_pressed_rising():
     global time_rising
     time_rising = miliseconds()
+    start_led()
 
 def button_pressed_falling():
     global time_rising, debug
     time_falling = miliseconds()
     time_elapsed = time_falling-time_rising
+    time_rising = 0 # reset to prevent multiple fallings from the same rising
     MIN_TIME_TO_ELAPSE = 500 # miliseconds
     MAX_TIME_TO_ELAPSE = 3000
+    stop_led()
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
-        time_rising = 0 # reset to prevent multiple fallings from the same rising
         toggle_measurement()
     elif time_elapsed >= 5000 and time_elapsed <= 10000:
-        time_rising = 0 # reset to prevent multiple fallings from the same rising
         shutdown()
     elif time_elapsed >= 10000 and time_elapsed <= 15000:
-        time_rising = 0 # reset to prevent multiple fallings from the same rising
         delete_settings()
         shutdown()
     elif debug:
@@ -116,8 +116,8 @@ def main():
         stop_tv()
 
     if debug:
-        error_log("Info: Raspberry Pi has been powered on.") 
-        
+        error_log("Info: Raspberry Pi has been powered on.")
+
     # Create virtual uap0 for WLAN
     create_ap()
     # start as seperate background thread
