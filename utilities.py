@@ -36,48 +36,38 @@ def blink_led():
     time.sleep(0.25)
     start_led()
 
-def start_wlan():
-    os.system("sudo ifconfig wlan0 up") # aktiviert die WLAN-Schnittstelle
-
-def stop_wlan():
-    os.system("sudo ifconfig wlan0 down") # deaktiviert die WLAN-Schnittstelle
+def create_ap():
+    os.system("sudo sh /home/pi/HoneyPi/create_uap.sh")
+    os.system("sudo ifdown uap0")
 
 def client_to_ap_mode():
-    stop_wlan()
-    # disable the connected network
-    os.system("wpa_cli -i wlan0 disable_network 0 || wpa_cli -i wlan0 reconfigure")
-    # Enable static ip
-    os.system("sudo mv /etc/dhcpcd.conf.disabled /etc/dhcpcd.conf")
-    # Restart DHCP server for IP Address
-    #os.system("(sudo systemctl restart dhcpcd.service && sudo systemctl daemon-reload)&") # & will execute command in the background
-    # restart AP Services
-    os.system("(sudo systemctl restart dnsmasq.service)&")
-    os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl enable hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
-    start_wlan()
+    os.system("sudo ifdown wlan0")
+    os.system("ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0") #dhcpcd not working
+    os.system("sudo ifup uap0")
+    os.system("sudo systemctl stop dnsmasq.service")
+    os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
+    os.system("sudo ifup wlan0")
+    os.system("sudo systemctl start dnsmasq.service")
 
 def ap_to_client_mode():
-    #stop_wlan()
     # Stop AP Services
+    os.system("sudo ifdown uap0")
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
-    # Disable static ip
-    os.system("sudo mv /etc/dhcpcd.conf /etc/dhcpcd.conf.disabled || echo '> ignor output above: static IP was already disabled.'")
-    # Kill running WPA daemons
-    print("Kill old WPA daemon")
-    os.system("wpa_cli -i wlan0 terminate")
-    os.system("sudo killall wpa_supplicant")
-    # Start WPA Daemon
-    os.system("(sudo wpa_supplicant -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf -B && echo 'wpa_supplicant started' && dhcpcd wlan0 && echo 'dhcpcd started for wlan0')&")
-    # activate the wifi connection with Id=0
-    os.system("wpa_cli -i wlan0 enable_network 0 || wpa_cli -i wlan0 reconfigure")
-    # Start dhclient for IP-Adresses
-    os.system("sudo dhclient &") # dont be too specific (wlan0, eth0)
-    #start_wlan()
+    os.system("sudo ifup wlan0")
 
 def reboot():
+    os.system("sudo systemctl stop hostapd.service")
+    os.system("sudo systemctl disable hostapd.service")
+    os.system("sudo systemctl stop dnsmasq.service")
+    os.system("sudo systemctl disable dnsmasq.service")
     os.system("sudo reboot") # reboots the pi
 
 def shutdown():
+    os.system("sudo systemctl stop hostapd.service")
+    os.system("sudo systemctl disable hostapd.service")
+    os.system("sudo systemctl stop dnsmasq.service")
+    os.system("sudo systemctl disable dnsmasq.service") 
     os.system("sudo shutdown -h 0")
 
 def decrease_nice():
@@ -169,6 +159,7 @@ def error_log(e=None, printText=None):
 
     except Exception:
         pass
+
 
 def wait_for_internet_connection(maxTime=10):
     i = 0
