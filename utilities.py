@@ -43,10 +43,10 @@ def create_ap():
 
 def client_to_ap_mode():
     os.system("sudo ifdown wlan0")
-    os.system("ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0") #dhcpcd not working
+    os.system("sudo ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0") #dhcpcd not working
     os.system("sudo ifup uap0")
     os.system("sudo systemctl stop dnsmasq.service")
-    os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
+    os.system("(sudo systemctl restart hostapd.service || (sudo systemctl unmask hostapd && sudo systemctl start hostapd))&") # if restart fails because service is masked => unmask
     os.system("sudo ifup wlan0")
     os.system("sudo systemctl start dnsmasq.service")
 
