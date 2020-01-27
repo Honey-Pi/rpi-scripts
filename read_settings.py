@@ -15,7 +15,7 @@ def get_settings():
 
     try:
         my_abs_path = my_file.resolve()
-    except OSError: # FileNotFoundError
+    except: # FileNotFoundError
         # doesn"t exist => default values
         settings["button_pin"] = 16
         settings["interval"] = 300
@@ -49,11 +49,10 @@ def check_vars(settings):
         settings["shutdownAfterTransfer"] = 0
 
     try:
-        settings["ts_channel_id"]
-        settings["ts_write_key"]
-    except KeyError:
-        settings["ts_channel_id"] = None
-        settings["ts_write_key"] = None
+        settings['ts_channels'][0]["ts_channel_id"]
+        settings['ts_channels'][0]["ts_write_key"]
+    except:
+        settings["ts_channels"] = None
 
     try:
         settings["offline"]
