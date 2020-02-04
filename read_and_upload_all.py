@@ -22,7 +22,95 @@ from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection
 from write_csv import write_csv
 
-def measure(offline, debug, channel, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+
+def send_ts_data(ts_channels, ts_fields, offline, debug):
+    # update ThingSpeak / transfer values
+    connectionErrorHappened = transfer_channels_to_ts(ts_channels, ts_fields, debug)
+
+    if connectionErrorHappened:
+        # Write to CSV-File if ConnectionError occured
+        if offline == 2:
+            s = write_csv(ts_fields)
+            if s and debug:
+                error_log("Info: Data succesfully saved to CSV-File.")
+        # Do Rebooting if to many connectionErrors in a row
+        connectionErrors.value +=1
+        error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value))
+        if connectionErrors.value >= 5:
+            if not debug:
+                error_log("Info: Too many ConnectionErrors in a row => Rebooting")
+                time.sleep(4)
+                reboot()
+            else:
+                error_log("Info: Did not reboot because debug mode is enabled.")
+
+def clean_fields(ts_fields, countChannels):
+    ts_fields_cleaned = {}
+    for field in ts_fields:
+        fieldNumber = int(field.replace('field',''))
+        if fieldNumber > 8:
+            fieldNumber = fieldNumber/countChannels
+        fieldNew['field' + fieldNumber] = ts_fields[key]
+        ts_fields_cleaned.update(fieldNew)
+    return ts_fields_cleaned
+
+def transfer_channels_to_ts(ts_channels, ts_fields, debug):
+    connectionErrorWithinAnyChannel = []
+    for (channelIndex, channel) in enumerate(ts_channels):
+        channel_id = ts_channels[channelIndex]["channel_id"]
+        write_key = ts_channels[channelIndex]["write_key"]
+        if channel_id and write_key:
+            ts_instance = thingspeak.Channel(id=channel_id, write_key=write_key)
+            ts_fields_cleaned = clean_fields(ts_fields, count(ts_channels))
+            connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, debug)
+            connectionErrorWithinAnyChannel += connectionError
+        else:
+            error_log("Info: No ThingSpeak upload for this channel ("+channelIndex+") because because channel_id or write_key is None.")
+
+    return any(c == True for c in connectionErrorWithinAnyChannel)
+
+def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, debug):
+    # do-while to retry failed transfer
+    retries = 0
+    connectionError = True
+    while connectionError:
+        try:
+            if ts_fields_cleaned:
+                ts_instance.update(ts_fields_cleaned)
+                if debug:
+                    error_log("Info: Data succesfully transfered to ThingSpeak.")
+            else:
+                error_log("Info: No ThingSpeak data transfer because no fields defined.")
+
+            if connectionErrors.value > 0:
+                if debug:
+                    error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet.")
+                # reset connectionErrors because transfer succeded
+                connectionErrors.value = 0
+            # break do-while because transfer succeded
+            connectionError = False
+            break
+        except requests.exceptions.HTTPError as errh:
+            error_log(errh, "Http Error")
+        except requests.exceptions.ConnectionError as errc:
+            pass
+        except requests.exceptions.Timeout as errt:
+            error_log(errt, "Timeout Error")
+        except requests.exceptions.RequestException as err:
+            error_log(err, "Something Else")
+        except Exception as ex:
+            error_log(ex, "Exception while sending Data")
+        finally:
+            if connectionError:
+                print("Warning: Waiting for internet connection to try transfer again...")
+                wait_for_internet_connection(15) # wait before next try
+                retries+=1
+                # Maximum 3 retries
+                if retries >= 3:
+                    break # break do-while
+    return connectionError
+
+def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
 
     # filter the values out
@@ -83,60 +171,9 @@ def measure(offline, debug, channel, filtered_temperature, ds18b20Sensors, bme68
                 error_log(ex, "Exception")
 
         # if transfer to thingspeak is set
-        if offline == 0 or offline == 1 or offline == 2:
-
-            # do-while to retry failed transfer
-            retries = 0
-            connectionError = True
-            while True:
-                try:
-                    # update ThingSpeak / transfer values
-                    channel.update(ts_fields)
-                    if debug:
-                        error_log("Info: Data succesfully transfered to ThingSpeak.")
-                    if connectionErrors.value > 0:
-                        if debug:
-                            error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet.")
-                        # reset connectionErrors because transfer succeded
-                        connectionErrors.value = 0
-                    # break do-while because transfer succeded
-                    connectionError = False
-                    break
-                except requests.exceptions.HTTPError as errh:
-                    error_log(errh, "Http Error")
-                except requests.exceptions.ConnectionError as errc:
-                    pass
-                except requests.exceptions.Timeout as errt:
-                    error_log(errt, "Timeout Error")
-                except requests.exceptions.RequestException as err:
-                    error_log(err, "Something Else")
-                except Exception as ex:
-                    error_log(ex, "Exception while sending Data")
-                finally:
-                    if connectionError:
-                        print("Warning: Waiting for internet connection to try transfer again...")
-                        wait_for_internet_connection(15) # wait before next try
-                        retries+=1
-                        # Maximum 3 retries
-                        if retries >= 3:
-                            break # break do-while
-
-            if connectionError:
-                # Write to CSV-File if ConnectionError occured
-                if offline == 2:
-                    s = write_csv(ts_fields)
-                    if s and debug:
-                        error_log("Info: Data succesfully saved to CSV-File.")
-                # Do Rebooting if to many connectionErrors in a row
-                connectionErrors.value +=1
-                error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value))
-                if connectionErrors.value >= 5:
-                    if not debug:
-                        error_log("Info: Too many ConnectionErrors in a row => Rebooting")
-                        time.sleep(4)
-                        reboot()
-                    else:
-                        error_log("Info: Did not reboot because debug mode is enabled.")
+        if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
+            # update ThingSpeak / transfer values
+            send_ts_data(ts_channels, ts_fields, offline, debug)
 
     elif debug:
         error_log("Info: No measurement data to send.")
@@ -150,9 +187,7 @@ def start_measurement(measurement_stop):
 
         # load settings
         settings = get_settings()
-        # ThingSpeak data
-        channel_id = settings["ts_channel_id"]
-        write_key = settings["ts_write_key"]
+        ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
         interval = settings["interval"]
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
         shutdownAfterTransfer = settings["shutdownAfterTransfer"]
@@ -166,8 +201,9 @@ def start_measurement(measurement_stop):
         connectionErrors = Value('i',0)
         measurementIsRunning = Value('i',0)
 
-        if interval and not isinstance(interval, int) or interval == 0 or not channel_id or not write_key:
-            error_log("Info: No measurement because ThingSpeak settings are not complete or measurement interval is null.")
+        if interval and not isinstance(interval, int) or interval == 0:
+            interval = 0
+            error_log("Info: Stop measurement because interval is null.")
             measurement_stop.set()
 
         # read configured sensors from settings.json
@@ -191,9 +227,6 @@ def start_measurement(measurement_stop):
         for (i, sensor) in enumerate(weightSensors):
             _hx = init_hx711(sensor, debug)
             hxInits.append(_hx)
-
-        # ThingSpeak channel
-        channel = thingspeak.Channel(id=channel_id, write_key=write_key)
 
         # start at -6 because we want to get 6 values before we can filter some out
         counter = -6
@@ -223,7 +256,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(offline, debug, channel, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join()
                 else:

@@ -7,7 +7,8 @@ import time
 from datetime import datetime
 import urllib
 
-scriptsFolder = '/home/pi/HoneyPi/rpi-scripts'
+honeypiFolder = '/home/pi/HoneyPi'
+scriptsFolder = honeypiFolder + '/rpi-scripts'
 backendFolder = '/var/www/html/backend'
 
 def stop_tv():
@@ -37,15 +38,15 @@ def blink_led():
     start_led()
 
 def create_ap():
-    os.system("sudo sh /home/pi/HoneyPi/create_uap.sh")
+    os.system("sudo sh " + honeypiFolder + "/create_uap.sh")
     os.system("sudo ifdown uap0")
 
 def client_to_ap_mode():
     os.system("sudo ifdown wlan0")
-    os.system("ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0") #dhcpcd not working
+    os.system("sudo ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0") #dhcpcd not working
     os.system("sudo ifup uap0")
     os.system("sudo systemctl stop dnsmasq.service")
-    os.system("(sudo systemctl restart hostapd.service || (systemctl unmask hostapd && systemctl start hostapd))&") # if restart fails because service is masked => unmask
+    os.system("(sudo systemctl restart hostapd.service || (sudo systemctl unmask hostapd && sudo systemctl start hostapd))&") # if restart fails because service is masked => unmask
     os.system("sudo ifup wlan0")
     os.system("sudo systemctl start dnsmasq.service")
 
@@ -67,7 +68,7 @@ def shutdown():
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
-    os.system("sudo systemctl disable dnsmasq.service") 
+    os.system("sudo systemctl disable dnsmasq.service")
     os.system("sudo shutdown -h 0")
 
 def decrease_nice():

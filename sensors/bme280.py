@@ -26,8 +26,34 @@ from ctypes import c_ubyte
 
 DEVICE = 0x76 # Default device I2C address
 
+def pi_SMBus(): # Source: https://github.com/adafruit/Adafruit_Python_GPIO/blob/master/Adafruit_GPIO/Platform.py
+    """ Detect the version of the Raspberry Pi.  Returns the SMBus number.
+        Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
+        Rev 1 Pi uses bus 0
+    """
+    import re
+    # Check /proc/cpuinfo for the Hardware field value.
+    # 2708 is pi 1
+    # 2709 is pi 2
+    # 2835 is pi 3 on 4.9.x kernel
+    # Anything else is not a pi.
+    with open('/proc/cpuinfo', 'r') as infile:
+        cpuinfo = infile.read()
+    # Match a line like 'Hardware   : BCM2709'
+    match = re.search('^Hardware\s+:\s+(\w+)$', cpuinfo,
+                      flags=re.MULTILINE | re.IGNORECASE)
+    if not match:
+        # Couldn't find the hardware, assume it isn't a pi.
+        return None
+    if match.group(1) == 'BCM2708':
+        # Pi 1
+        return 0
+    else:
+        # Something else
+        return 1
 
-bus = smbus.SMBus(1) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
+smbusNumber = pi_SMBus()
+bus = smbus.SMBus(smbusNumber) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
                      # Rev 1 Pi uses bus 0
 
 def getShort(data, index):
@@ -115,7 +141,7 @@ def readBME280All(addr=DEVICE):
 
   # Wait in ms (Datasheet Appendix B: Measurement time and current calculation)
   wait_time = 1.25 + (2.3 * OVERSAMPLE_TEMP) + ((2.3 * OVERSAMPLE_PRES) + 0.575) + ((2.3 * OVERSAMPLE_HUM)+0.575)
-  time.sleep(wait_time/1000)  # Wait the required time  
+  time.sleep(wait_time/1000)  # Wait the required time
 
   # Read temperature/pressure/humidity
   data = bus.read_i2c_block_data(addr, REG_DATA, 8)

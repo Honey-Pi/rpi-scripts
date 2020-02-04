@@ -4,9 +4,12 @@ This file holds HX711 class
 #!/usr/bin/env python3
 
 # Source: https://github.com/gandalf15/HX711/blob/master/HX711_Python3/hx711.py
+# Changelog:
+# 2020-01-04: added readLock like https://github.com/tatobari/hx711py/blob/master/hx711.py
 
 import statistics as stat
 import time
+import threading
 
 import RPi.GPIO as GPIO
 
@@ -63,6 +66,10 @@ class HX711:
         GPIO.setup(self._dout, GPIO.IN)  # pin _dout is input only
         self.select_channel(select_channel)
         self.set_gain_A(gain_channel_A)
+
+        # Mutex for reading from the HX711, in case multiple threads in client
+        # software try to access get values from the class at the same time.
+        self.readLock = threading.Lock()
 
     def select_channel(self, channel):
         """
@@ -331,10 +338,19 @@ class HX711:
             False if HX711 is not ready for the next reading
         """
         for _ in range(num):
+            # Wait for and get the Read Lock, incase another thread is already
+            # driving the HX711 serial interface.
+            self.readLock.acquire()
+
             start_counter = time.perf_counter()
             GPIO.output(self._pd_sck, True)
             GPIO.output(self._pd_sck, False)
             end_counter = time.perf_counter()
+
+            # Release the Read Lock, now that we've finished driving the HX711
+            # serial interface.
+            self.readLock.release()
+
             # check if hx 711 did not turn off...
             if end_counter - start_counter >= 0.00006:
                 # if pd_sck pin is HIGH for 60 us and more than the HX 711 enters power down mode.
@@ -370,11 +386,20 @@ class HX711:
         # read first 24 bits of data
         data_in = 0  # 2's complement data from hx 711
         for _ in range(24):
+            # Wait for and get the Read Lock, incase another thread is already
+            # driving the HX711 serial interface.
+            self.readLock.acquire()
+
             start_counter = time.perf_counter()
             # request next bit from hx 711
             GPIO.output(self._pd_sck, True)
             GPIO.output(self._pd_sck, False)
             end_counter = time.perf_counter()
+
+            # Release the Read Lock, now that we've finished driving the HX711
+            # serial interface.
+            self.readLock.release()
+
             if end_counter - start_counter >= 0.00006:  # check if the hx 711 did not turn off...
                 # if pd_sck pin is HIGH for 60 us and more than the HX 711 enters power down mode.
                 if self._debug_mode:
