@@ -20,7 +20,7 @@ from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection
+from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields
 from write_csv import write_csv
 
 
@@ -31,7 +31,7 @@ def send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug):
     if connectionErrorHappened:
         # Write to CSV-File if ConnectionError occured
         if offline == 2:
-            s = write_csv(ts_fields)
+            s = write_csv(ts_fields, ts_channels)
             if s and debug:
                 error_log("Info: Data succesfully saved to CSV-File.")
         # Do Rebooting if to many connectionErrors in a row
@@ -44,29 +44,6 @@ def send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug):
                 reboot()
             else:
                 error_log("Info: Did not reboot because debug mode is enabled.")
-
-def clean_fields(ts_fields, countChannels, debug):
-    if debug :
-       print('Dictionary to be converted:')
-       print(json.dumps(ts_fields))
-    ts_fields_cleaned = {}
-    fieldNew = {};
-    for field in ts_fields:
-        fieldNumber = int(field.replace('field',''))
-        fieldNumberNew = fieldNumber - (8 * countChannels)
-        if fieldNumberNew <= 8 and fieldNumberNew > 0 :
-            if debug :
-                print('Data to be converted:')
-                print(ts_fields['field' + str(fieldNumber)])
-               
-            ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
-            if debug :
-                print('Field ' + str(fieldNumberNew) + ' written')
-                print(json.dumps(ts_fields_cleaned['field' + str(fieldNumberNew)]))
-    if debug :
-        print('Cleaned dictionary:')
-        print(json.dumps(ts_fields_cleaned))
-    return ts_fields_cleaned
 
 def transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug):
     connectionErrorWithinAnyChannel = []
@@ -180,7 +157,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
     if len(ts_fields) > 0:
         if offline == 1 or offline == 3:
             try:
-                s = write_csv(ts_fields)
+                s = write_csv(ts_fields, ts_channels)
                 if s and debug:
                     error_log("Info: Data succesfully saved to CSV-File.")
             except Exception as ex:
