@@ -24,9 +24,9 @@ from utilities import reboot, error_log, shutdown, start_single, stop_single, wa
 from write_csv import write_csv
 
 
-def send_ts_data(ts_channels, ts_fields, offline, debug):
+def send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug):
     # update ThingSpeak / transfer values
-    connectionErrorHappened = transfer_channels_to_ts(ts_channels, ts_fields, debug)
+    connectionErrorHappened = transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug)
 
     if connectionErrorHappened:
         # Write to CSV-File if ConnectionError occured
@@ -68,7 +68,7 @@ def clean_fields(ts_fields, countChannels, debug):
         print(json.dumps(ts_fields_cleaned))
     return ts_fields_cleaned
 
-def transfer_channels_to_ts(ts_channels, ts_fields, debug):
+def transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug):
     connectionErrorWithinAnyChannel = []
     for (channelIndex, channel) in enumerate(ts_channels, 0):
         channel_id = channel["ts_channel_id"]
@@ -78,14 +78,14 @@ def transfer_channels_to_ts(ts_channels, ts_fields, debug):
                 print('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
             ts_instance = thingspeak.Channel(id=channel_id, write_key=write_key)
             ts_fields_cleaned = clean_fields(ts_fields, channelIndex, debug)
-            connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, debug)
+            connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, debug)
             connectionErrorWithinAnyChannel.append(connectionError)
         else:
             error_log("Info: No ThingSpeak upload for this channel ("+channelIndex+") because because channel_id or write_key is None.")
 
     return any(c == True for c in connectionErrorWithinAnyChannel)
 
-def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, debug):
+def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, debug):
     # do-while to retry failed transfer
     retries = 0
     connectionError = True
@@ -189,7 +189,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
         # if transfer to thingspeak is set
         if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
             # update ThingSpeak / transfer values
-            send_ts_data(ts_channels, ts_fields, offline, debug)
+            send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug)
 
     elif debug:
         error_log("Info: No measurement data to send.")
