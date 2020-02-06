@@ -11,6 +11,7 @@ from multiprocessing import Process, Queue, Value
 import RPi.GPIO as GPIO
 import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import requests
+import json
 
 from read_bme680 import measure_bme680, initBME680FromMain
 from read_bme280 import measure_bme280
@@ -44,26 +45,41 @@ def send_ts_data(ts_channels, ts_fields, offline, debug):
             else:
                 error_log("Info: Did not reboot because debug mode is enabled.")
 
-def clean_fields(ts_fields, countChannels):
+def clean_fields(ts_fields, countChannels, debug):
+    if debug :
+       print('Dictionary to be converted:')
+       print(json.dumps(ts_fields))
     ts_fields_cleaned = {}
+    fieldNew = {};
     for field in ts_fields:
         fieldNumber = int(field.replace('field',''))
-        if fieldNumber > 8:
-            fieldNumber = fieldNumber/countChannels
-        fieldNew['field' + fieldNumber] = ts_fields[key]
-        ts_fields_cleaned.update(fieldNew)
+        fieldNumberNew = fieldNumber - (8 * countChannels)
+        if fieldNumberNew <= 8 and fieldNumberNew > 0 :
+            if debug :
+                print('Data to be converted:')
+                print(ts_fields['field' + str(fieldNumber)])
+               
+            ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
+            if debug :
+                print('Field ' + str(fieldNumberNew) + ' written')
+                print(json.dumps(ts_fields_cleaned['field' + str(fieldNumberNew)]))
+    if debug :
+        print('Cleaned dictionary:')
+        print(json.dumps(ts_fields_cleaned))
     return ts_fields_cleaned
 
 def transfer_channels_to_ts(ts_channels, ts_fields, debug):
     connectionErrorWithinAnyChannel = []
-    for (channelIndex, channel) in enumerate(ts_channels):
-        channel_id = ts_channels[channelIndex]["channel_id"]
-        write_key = ts_channels[channelIndex]["write_key"]
+    for (channelIndex, channel) in enumerate(ts_channels, 0):
+        channel_id = channel["ts_channel_id"]
+        write_key = channel["ts_write_key"]
         if channel_id and write_key:
+            if debug :
+                print('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
             ts_instance = thingspeak.Channel(id=channel_id, write_key=write_key)
-            ts_fields_cleaned = clean_fields(ts_fields, count(ts_channels))
+            ts_fields_cleaned = clean_fields(ts_fields, channelIndex, debug)
             connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, debug)
-            connectionErrorWithinAnyChannel += connectionError
+            connectionErrorWithinAnyChannel.append(connectionError)
         else:
             error_log("Info: No ThingSpeak upload for this channel ("+channelIndex+") because because channel_id or write_key is None.")
 
