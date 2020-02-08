@@ -24,6 +24,11 @@ class HX711:
                  pd_sck_pin,
                  gain_channel_A=128,
                  select_channel='A'):
+
+        # Mutex for reading from the HX711, in case multiple threads in client
+        # software try to access get values from the class at the same time.
+        self.readLock = threading.Lock()
+
         """
         Init a new instance of HX711
 
@@ -66,10 +71,6 @@ class HX711:
         GPIO.setup(self._dout, GPIO.IN)  # pin _dout is input only
         self.select_channel(select_channel)
         self.set_gain_A(gain_channel_A)
-
-        # Mutex for reading from the HX711, in case multiple threads in client
-        # software try to access get values from the class at the same time.
-        self.readLock = threading.Lock()
 
     def select_channel(self, channel):
         """
