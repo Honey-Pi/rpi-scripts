@@ -11,6 +11,7 @@ from multiprocessing import Process, Queue, Value
 import RPi.GPIO as GPIO
 import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import requests
+import json
 
 from read_bme680 import measure_bme680, initBME680FromMain
 from read_bme280 import measure_bme280
@@ -19,18 +20,18 @@ from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection
+from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields
 from write_csv import write_csv
 
 
-def send_ts_data(ts_channels, ts_fields, offline, debug):
+def send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug):
     # update ThingSpeak / transfer values
-    connectionErrorHappened = transfer_channels_to_ts(ts_channels, ts_fields, debug)
+    connectionErrorHappened = transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug)
 
     if connectionErrorHappened:
         # Write to CSV-File if ConnectionError occured
         if offline == 2:
-            s = write_csv(ts_fields)
+            s = write_csv(ts_fields, ts_channels)
             if s and debug:
                 error_log("Info: Data succesfully saved to CSV-File.")
         # Do Rebooting if to many connectionErrors in a row
@@ -44,32 +45,24 @@ def send_ts_data(ts_channels, ts_fields, offline, debug):
             else:
                 error_log("Info: Did not reboot because debug mode is enabled.")
 
-def clean_fields(ts_fields, countChannels):
-    ts_fields_cleaned = {}
-    for field in ts_fields:
-        fieldNumber = int(field.replace('field',''))
-        if fieldNumber > 8:
-            fieldNumber = fieldNumber/countChannels
-        fieldNew['field' + fieldNumber] = ts_fields[key]
-        ts_fields_cleaned.update(fieldNew)
-    return ts_fields_cleaned
-
-def transfer_channels_to_ts(ts_channels, ts_fields, debug):
+def transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug):
     connectionErrorWithinAnyChannel = []
-    for (channelIndex, channel) in enumerate(ts_channels):
-        channel_id = ts_channels[channelIndex]["channel_id"]
-        write_key = ts_channels[channelIndex]["write_key"]
+    for (channelIndex, channel) in enumerate(ts_channels, 0):
+        channel_id = channel["ts_channel_id"]
+        write_key = channel["ts_write_key"]
         if channel_id and write_key:
+            if debug :
+                print('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
             ts_instance = thingspeak.Channel(id=channel_id, write_key=write_key)
-            ts_fields_cleaned = clean_fields(ts_fields, count(ts_channels))
-            connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, debug)
-            connectionErrorWithinAnyChannel += connectionError
+            ts_fields_cleaned = clean_fields(ts_fields, channelIndex, debug)
+            connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, debug)
+            connectionErrorWithinAnyChannel.append(connectionError)
         else:
             error_log("Info: No ThingSpeak upload for this channel ("+channelIndex+") because because channel_id or write_key is None.")
 
     return any(c == True for c in connectionErrorWithinAnyChannel)
 
-def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, debug):
+def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, debug):
     # do-while to retry failed transfer
     retries = 0
     connectionError = True
@@ -164,7 +157,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
     if len(ts_fields) > 0:
         if offline == 1 or offline == 3:
             try:
-                s = write_csv(ts_fields)
+                s = write_csv(ts_fields, ts_channels)
                 if s and debug:
                     error_log("Info: Data succesfully saved to CSV-File.")
             except Exception as ex:
@@ -173,7 +166,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
         # if transfer to thingspeak is set
         if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
             # update ThingSpeak / transfer values
-            send_ts_data(ts_channels, ts_fields, offline, debug)
+            send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug)
 
     elif debug:
         error_log("Info: No measurement data to send.")

@@ -6,6 +6,7 @@ import os
 import time
 from datetime import datetime
 import urllib
+import json
 
 honeypiFolder = '/home/pi/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
@@ -181,3 +182,26 @@ def wait_for_internet_connection(maxTime=10):
 
 def delete_settings():
     os.remove(backendFolder + '/settings.json')
+    
+def clean_fields(ts_fields, countChannels, debug):
+    if debug :
+       print('Dictionary to be converted:')
+       print(json.dumps(ts_fields))
+    ts_fields_cleaned = {}
+    fieldNew = {};
+    for field in ts_fields:
+        fieldNumber = int(field.replace('field',''))
+        fieldNumberNew = fieldNumber - (8 * countChannels)
+        if fieldNumberNew <= 8 and fieldNumberNew > 0 :
+            if debug :
+                print('Data to be converted:')
+                print(ts_fields['field' + str(fieldNumber)])
+               
+            ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
+            if debug :
+                print('Field ' + str(fieldNumberNew) + ' written')
+                print(json.dumps(ts_fields_cleaned['field' + str(fieldNumberNew)]))
+    if debug :
+        print('Cleaned dictionary:')
+        print(json.dumps(ts_fields_cleaned))
+    return ts_fields_cleaned

@@ -7,11 +7,18 @@ import time
 import os, sys
 import io
 from datetime import datetime
-from utilities import scriptsFolder, check_file, error_log
+from utilities import scriptsFolder, check_file, error_log, clean_fields
 
-def write_csv(ts_fields):
+def write_csv(ts_fields, ts_channels):
+    writeerror = True
+    for (channelIndex, channel) in enumerate(ts_channels, 0):
+        ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
+        writeerror = write_singlechannel_csv(ts_fields_cleaned, channelIndex)
+    return writeerror
+   
+def write_singlechannel_csv(ts_fields_cleaned, channelnumber):
     try:
-        csv_file = scriptsFolder + '/offline.csv'
+        csv_file = scriptsFolder + '/offline' + str(channelnumber) + '.csv'
         # Allowed ThingSpeak fields:
         csv_columns = ['datetime','field1','field2','field3','field4','field5','field6','field7','field8','latitude','longitude','elevation','status']
         check_file(csv_file, 5, 10, 1)
@@ -19,7 +26,7 @@ def write_csv(ts_fields):
         # Create row with data
         row = {}
         row['datetime']=datetime.now()
-        for key, value in ts_fields.items():
+        for key, value in ts_fields_cleaned.items():
             row[key]=str(value)
 
         # Write to CSV File
