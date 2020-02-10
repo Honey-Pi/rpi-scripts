@@ -58,7 +58,7 @@ def transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug):
             connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, debug)
             connectionErrorWithinAnyChannel.append(connectionError)
         else:
-            error_log("Info: No ThingSpeak upload for this channel ("+channelIndex+") because because channel_id or write_key is None.")
+            error_log("Info: No ThingSpeak upload for this channel (" + str(channelIndex) + ") because because channel_id or write_key is None.")
 
     return any(c == True for c in connectionErrorWithinAnyChannel)
 
