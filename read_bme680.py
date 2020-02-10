@@ -10,7 +10,6 @@ import smbus
 sensor = None
 bme680IsConnected = 0
 gas_baseline = 0
-offset = -1
 
 def isSMBusConnected():
     try:
@@ -20,7 +19,7 @@ def isSMBusConnected():
         pass #print("No BME680 connected: " + str(ex))
     return 0
 
-def initBME680():
+def initBME680(ts_sensor):
     global sensor
     try:
         # setup BME680 sensor
@@ -28,6 +27,12 @@ def initBME680():
             sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
         except IOError:
             sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
+        try:
+            offset = ts_sensor[0]["offset"]
+            print('BME680 Temperature Offset ' + str(offset) + ' read from settings')
+        except:
+            offset = -1.5
+            print('BME680 Temperature Offset ' + str(offset) + ' set from default value')
 
         # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
         sensor.set_humidity_oversample(bme680.OS_2X)
@@ -48,10 +53,10 @@ def initBME680():
             print("Initializing BME680 failed: " + str(ex))
     return 0
 
-def initBME680FromMain():
+def initBME680FromMain(ts_sensor):
     if isSMBusConnected():
         print("A Sensor (eg. BME680/WittyPi) is connected to SMBus.")
-        return initBME680()
+        return initBME680(ts_sensor)
     else:
         print("SMBus is not connected.")
         return 0
