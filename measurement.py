@@ -35,7 +35,7 @@ def measurement():
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
-            bme680IsInitialized = initBME680FromMain()
+            bme680IsInitialized = initBME680FromMain(bme680Sensors)
         else:
             bme680IsInitialized = 0
 
