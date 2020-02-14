@@ -23,38 +23,11 @@ import time
 from ctypes import c_short
 from ctypes import c_byte
 from ctypes import c_ubyte
+from sensor_utilities import get_smbus
 
 DEVICE = 0x76 # Default device I2C address
 
-def pi_SMBus(): # Source: https://github.com/adafruit/Adafruit_Python_GPIO/blob/master/Adafruit_GPIO/Platform.py
-    """ Detect the version of the Raspberry Pi.  Returns the SMBus number.
-        Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-        Rev 1 Pi uses bus 0
-    """
-    import re
-    # Check /proc/cpuinfo for the Hardware field value.
-    # 2708 is pi 1
-    # 2709 is pi 2
-    # 2835 is pi 3 on 4.9.x kernel
-    # Anything else is not a pi.
-    with open('/proc/cpuinfo', 'r') as infile:
-        cpuinfo = infile.read()
-    # Match a line like 'Hardware   : BCM2709'
-    match = re.search('^Hardware\s+:\s+(\w+)$', cpuinfo,
-                      flags=re.MULTILINE | re.IGNORECASE)
-    if not match:
-        # Couldn't find the hardware, assume it isn't a pi.
-        return None
-    if match.group(1) == 'BCM2708':
-        # Pi 1
-        return 0
-    else:
-        # Something else
-        return 1
-
-smbusNumber = pi_SMBus()
-bus = smbus.SMBus(smbusNumber) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-                     # Rev 1 Pi uses bus 0
+bus = smbus.SMBus(get_smbus())
 
 def getShort(data, index):
   # return two bytes from data as a signed 16-bit value
