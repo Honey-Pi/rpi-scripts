@@ -15,6 +15,7 @@ import json
 
 from read_bme680 import measure_bme680, initBME680FromMain
 from read_bme280 import measure_bme280
+from read_pfc8591 import measure_voltage
 from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import measure_weight, compensate_temperature, init_hx711
 from read_dht import measure_dht
@@ -103,7 +104,7 @@ def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, deb
                     break # break do-while
     return connectionError
 
-def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
 
     # filter the values out
@@ -141,6 +142,11 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
     if bme280Sensors and len(bme280Sensors) == 1:
         bme280_values = measure_bme280(bme280Sensors[0])
         ts_fields.update(bme280_values)
+
+    # measure YL-40 PFC8591 (can only be one) [type 6]
+    if voltageSensors and len(voltageSensors) == 1:
+        voltage = measure_voltage(voltageSensors[0])
+        ts_fields.update(voltage)
 
     start_single()
     # measure every sensor with type 2 [HX711]
@@ -206,7 +212,7 @@ def start_measurement(measurement_stop):
         dhtSensors = get_sensors(settings, 3)
         tcSensors = get_sensors(settings, 4)
         bme280Sensors = get_sensors(settings, 5)
-
+        voltageSensors = get_sensors(settings, 6)
 
         # -- Run Pre Configuration --
         # if bme680 is configured
@@ -249,7 +255,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join()
                 else:
