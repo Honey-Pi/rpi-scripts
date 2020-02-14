@@ -27,6 +27,7 @@ def initBME680(ts_sensor):
             sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
         except IOError:
             sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
+            
         try:
             offset = ts_sensor[0]["offset"]
             print('BME680 Temperature Offset ' + str(offset) + ' read from settings')
