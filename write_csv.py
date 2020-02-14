@@ -13,12 +13,12 @@ def write_csv(ts_fields, ts_channels):
     writeerror = True
     for (channelIndex, channel) in enumerate(ts_channels, 0):
         ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
-        writeerror = write_singlechannel_csv(ts_fields_cleaned, channelIndex)
+        writeerror = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'])
     return writeerror
-   
-def write_singlechannel_csv(ts_fields_cleaned, channelnumber):
+
+def write_singlechannel_csv(ts_fields_cleaned, channelId):
     try:
-        csv_file = scriptsFolder + '/offline' + str(channelnumber) + '.csv'
+        csv_file = scriptsFolder + '/offline-' + str(channelId) + '.csv'
         # Allowed ThingSpeak fields:
         csv_columns = ['datetime','field1','field2','field3','field4','field5','field6','field7','field8','latitude','longitude','elevation','status']
         check_file(csv_file, 5, 10, 1)
