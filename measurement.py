@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 
 from read_bme680 import measure_bme680, initBME680FromMain
 from read_bme280 import measure_bme280
-from read_pfc8591 import measure_voltage
+from read_pcf8591 import measure_voltage
 from read_ds18b20 import measure_temperature
 from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht

@@ -4,6 +4,7 @@
 
 import smbus
 import time
+from sensors.sensor_utilities import get_smbus
 
 # Main Source: http://www.diyblueprints.net/measuring-voltage-with-raspberry-pi/#Measure_Voltage_Python
 
@@ -15,10 +16,10 @@ def measure_voltage(ts_sensor):
 
     try:
         # Create I2C instance and open the bus
-        PFC8591 = smbus.SMBus(1)
+        PCF8591 = smbus.SMBus(get_smbus())
 
-        # Configure PFC8591
-        PFC8591.write_byte(address, 0x03) # set channel to AIN3 | = i2cset -y 1 0x48 0x03
+        # Configure PCF8591
+        PCF8591.write_byte(address, 0x03) # set channel to AIN3 | = i2cset -y 1 0x48 0x03
 
         Voltage_8bit = PFC8591.read_byte(address) # = i2cget -y 1 0x48
         voltage = Voltage_8bit*0.064453125 # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
@@ -29,6 +30,6 @@ def measure_voltage(ts_sensor):
         return fields
 
     except Exception as e:
-        print('Error while reading PFC8591 (Voltage): ' + str(e))
+        print('Error while reading PCF8591 (Voltage): ' + str(e))
 
     return None
