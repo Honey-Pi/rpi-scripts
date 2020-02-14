@@ -5,7 +5,7 @@
 import io
 import json
 from pathlib import Path
-from utilities import backendFolder, settingsFile
+from utilities import settingsFile
 
 # read settings.json which is created by rpi-webinterface
 def get_settings():

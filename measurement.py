@@ -19,7 +19,7 @@ from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import reboot, start_single, stop_single
+from utilities import start_single, stop_single
 
 def measurement():
     try:
