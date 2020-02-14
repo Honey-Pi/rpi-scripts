@@ -19,14 +19,13 @@ measurement_stop = threading.Event() # create event to stop measurement
 debug = 0 # will be overriten by settings.json. you need to change the debug-mode in settings.json
 time_rising = 0 # will be set by button_pressed event if the button is rised
 GPIO_LED = 21 # GPIO for led
-gpio = 16 # gpio for button, will be overwritten by settings.json
+GPIO_BTN = 16 # GPIO_BTN for button, will be overwritten by settings.json
 
 def start_ap():
     global isActive, GPIO_LED
     isActive = 1 # measurement shall start next time
     print("Maintenance Mode: START - Connect yourself to HoneyPi-Wifi.")
-    start_led()
-    GPIO.output(GPIO_LED, GPIO.HIGH)
+    start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode) #client_to_ap_mode()
     t1.start()
 
@@ -35,8 +34,7 @@ def stop_ap(boot=0):
     isActive = 0 # measurement shall stop next time
     if not boot:
         print("Maintenance Mode: STOP")
-    stop_led()
-    GPIO.output(GPIO_LED, GPIO.LOW)
+    stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
     t2.start()
 
@@ -65,51 +63,53 @@ def toggle_measurement():
         stop_ap() # finally stop AP
 
 def button_pressed(channel):
-    global gpio
-    if GPIO.input(gpio): # if port == 1
+    global GPIO_BTN
+    if GPIO.input(GPIO_BTN): # if port == 1
         button_pressed_rising()
     else: # if port != 1
         button_pressed_falling()
 
 def button_pressed_rising():
-    global time_rising
+    global time_rising, GPIO_LED
     time_rising = miliseconds()
-    start_led()
+    start_led(GPIO_LED)
 
 def button_pressed_falling():
-    global time_rising, debug
+    global time_rising, debug, GPIO_LED
     time_falling = miliseconds()
     time_elapsed = time_falling-time_rising
     time_rising = 0 # reset to prevent multiple fallings from the same rising
     MIN_TIME_TO_ELAPSE = 500 # miliseconds
     MAX_TIME_TO_ELAPSE = 3000
-    stop_led()
+    stop_led(GPIO_LED)
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
         toggle_measurement()
     elif time_elapsed >= 5000 and time_elapsed <= 10000:
+        blink_led(GPIO_LED, 0.5)
         shutdown()
     elif time_elapsed >= 10000 and time_elapsed <= 15000:
+        blink_led(GPIO_LED, 0.5)
         delete_settings()
         shutdown()
     elif debug:
         error_log("Info: Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed) + "ms elapsed.")
 
 def main():
-    global isActive, measurement_stop, measurement, debug, gpio, GPIO_LED
+    global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
 
-    # setup LED
-    #GPIO.setwarnings(False) # Ignore warning for now
-    GPIO.setmode(GPIO.BCM) # Zaehlweise der GPIO-PINS auf der Platine
-    GPIO.setup(GPIO_LED, GPIO.OUT) # Set pin 21 to led output
+    # Zaehlweise der GPIO-PINS auf der Platine
+    GPIO.setmode(GPIO.BCM)
+
+    settings = get_settings() # read settings for number of GPIO pin
+    debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
+    GPIO_BTN = settings["button_pin"] # read pin from settings
+
+    # blink with LED on startup
+    blink_led(GPIO_LED)
 
     # by default is AccessPoint down
     stop_ap(1)
 
-    # blink with LED on startup
-    blink_led()
-
-    settings = get_settings() # read settings for number of GPIO pin
-    debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
     if not debug:
         # stop HDMI power (save energy)
         print("Shutting down HDMI to save energy.")
@@ -127,11 +127,10 @@ def main():
     measurement.start() # start measurement
 
     # setup Button
-    gpio = settings["button_pin"] # read pin from settings
-    GPIO.setup(gpio, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
+    GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
     bouncetime = 300 # ignoring further edges for 300ms for switch bounce handling
     # register button press event
-    GPIO.add_event_detect(gpio, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
+    GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
 
     # Main Lopp: Cancel with STRG+C
     while True:

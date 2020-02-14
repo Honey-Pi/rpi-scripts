@@ -11,32 +11,45 @@ import json
 honeypiFolder = '/home/pi/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
 backendFolder = '/var/www/html/backend'
+settingsFile = backendFolder + '/settings.json'
 
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
 
-def stop_led():
-    os.system("sudo bash -c \"echo 0 > /sys/class/leds/led0/brightness\"") #Turn off
+def stop_led(gpio=21):
+    # Turn Raspi-LED off
+    os.system("sudo bash -c 'echo 0 > /sys/class/leds/led0/brightness'") # green LED
+    os.system("sudo bash -c 'echo 0 > /sys/class/leds/led1/brightness'") # red LED
+    # Setup GPIO LED
+    GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+    GPIO.setup(gpio, GPIO.OUT) # Set pin as output
+    GPIO.output(gpio, GPIO.LOW)
 
-def start_led():
-    os.system("sudo bash -c \"echo 1 > /sys/class/leds/led0/brightness\"") #Turn on
+def start_led(gpio=21):
+    # Turn Raspi-LED on
+    os.system("sudo bash -c 'echo 1 > /sys/class/leds/led0/brightness'") # green LED
+    os.system("sudo bash -c 'echo 1 > /sys/class/leds/led1/brightness'") # red LED
+    # Setup GPIO LED
+    GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+    GPIO.setup(gpio, GPIO.OUT) # Set pin as output
+    GPIO.output(gpio, GPIO.HIGH)
 
-def blink_led():
-    stop_led()
-    time.sleep(0.25)
-    start_led()
-    time.sleep(0.25)
-    stop_led()
-    time.sleep(0.25)
-    start_led()
-    time.sleep(0.25)
-    stop_led()
-    time.sleep(0.25)
-    start_led()
-    time.sleep(0.25)
-    stop_led()
-    time.sleep(0.25)
-    start_led()
+def blink_led(gpio=21, duration=0.25):
+    stop_led(gpio)
+    time.sleep(duration)
+    start_led(gpio)
+    time.sleep(duration)
+    stop_led(gpio)
+    time.sleep(duration)
+    start_led(gpio)
+    time.sleep(duration)
+    stop_led(gpio)
+    time.sleep(duration)
+    start_led(gpio)
+    time.sleep(duration)
+    stop_led(gpio)
+    time.sleep(duration)
+    start_led(gpio)
 
 def create_ap():
     os.system("sudo sh " + honeypiFolder + "/create_uap.sh")
@@ -63,7 +76,7 @@ def reboot():
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     os.system("sudo systemctl disable dnsmasq.service")
-    os.system("sudo reboot") # reboots the pi
+    os.system("sudo reboot")
 
 def shutdown():
     os.system("sudo systemctl stop hostapd.service")
@@ -181,8 +194,8 @@ def wait_for_internet_connection(maxTime=10):
     return False
 
 def delete_settings():
-    os.remove(backendFolder + '/settings.json')
-    
+    os.remove(settingsFile)
+
 def clean_fields(ts_fields, countChannels, debug):
     if debug :
        print('Dictionary to be converted:')
@@ -196,7 +209,7 @@ def clean_fields(ts_fields, countChannels, debug):
             if debug :
                 print('Data to be converted:')
                 print(ts_fields['field' + str(fieldNumber)])
-               
+
             ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
             if debug :
                 print('Field ' + str(fieldNumberNew) + ' written')
