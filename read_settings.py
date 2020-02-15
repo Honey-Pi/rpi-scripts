@@ -109,8 +109,9 @@ def get_sensors(settings, type):
 def write_settings(settings):
     try:
         # write values to file
-        data_file =  open(settingsFile, "w")
-        json.dump(settings, data_file)
+        outfile = open(settingsFile, "w")
+        outfile.write(json.dumps(settings, indent=4, sort_keys=True))
+        outfile.close()
         return True
     except Exception as ex:
         print("write_settings " + str(ex))
