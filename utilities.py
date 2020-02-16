@@ -57,7 +57,7 @@ def blink_led(gpio=21, duration=0.25):
     start_led(gpio)
 
 def create_ap():
-    os.system("sudo sh ./shell-scripts/create_uap.sh")
+    os.system("sudo sh " + scriptsFolder + "/shell-scripts/create_uap.sh")
     os.system("sudo ifdown uap0")
 
 def client_to_ap_mode():
