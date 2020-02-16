@@ -27,9 +27,19 @@ def get_settings():
 
     else:
         # File exists => read values from file
-        with io.open(settingsFile, encoding="utf-8") as data_file:
-            settings = json.loads(data_file.read())
-
+        try:
+            with io.open(settingsFile, encoding="utf-8") as data_file:
+                settings = json.loads(data_file.read())
+        except:
+        # FileReadError / json.loads Error  => default values
+            settings["button_pin"] = 16
+            settings["w1gpio"] = 11
+            settings["interval"] = 0
+            settings["debug"] = True
+            settings["offline"] = 0
+            settings["shutdownAfterTransfer"] = False
+            # Write these settings to file
+            write_settings(settings)
     settings = validate_settings(settings)
     return settings
 
