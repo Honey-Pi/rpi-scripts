@@ -23,7 +23,9 @@ def stop_led(gpio=21):
     os.system("sudo bash -c 'echo 0 > /sys/class/leds/led1/brightness'") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+    GPIO.setwarnings(False)
     GPIO.setup(gpio, GPIO.OUT) # Set pin as output
+    GPIO.setwarnings(True)
     GPIO.output(gpio, GPIO.LOW)
 
 def start_led(gpio=21):
@@ -32,7 +34,9 @@ def start_led(gpio=21):
     os.system("sudo bash -c 'echo 1 > /sys/class/leds/led1/brightness'") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+    GPIO.setwarnings(False)
     GPIO.setup(gpio, GPIO.OUT) # Set pin as output
+    GPIO.setwarnings(True)
     GPIO.output(gpio, GPIO.HIGH)
 
 def blink_led(gpio=21, duration=0.25):
@@ -53,24 +57,14 @@ def blink_led(gpio=21, duration=0.25):
     start_led(gpio)
 
 def create_ap():
-    os.system("sudo sh " + honeypiFolder + "/create_uap.sh")
+    os.system("sudo sh ./shell-scripts/create_uap.sh")
     os.system("sudo ifdown uap0")
 
 def client_to_ap_mode():
-    os.system("sudo ifdown wlan0")
-    os.system("sudo ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0") #dhcpcd not working
-    os.system("sudo ifup uap0")
-    os.system("sudo systemctl stop dnsmasq.service")
-    os.system("(sudo systemctl restart hostapd.service || (sudo systemctl unmask hostapd && sudo systemctl start hostapd))&") # if restart fails because service is masked => unmask
-    os.system("sudo ifup wlan0")
-    os.system("sudo systemctl start dnsmasq.service")
+    os.system("sudo sh ./shell-scripts/client_to_ap_mode.sh")
 
 def ap_to_client_mode():
-    # Stop AP Services
-    os.system("sudo ifdown uap0")
-    os.system("sudo systemctl stop hostapd.service")
-    os.system("sudo systemctl stop dnsmasq.service")
-    os.system("sudo ifup wlan0")
+    os.system("sudo sh ./shell-scripts/ap_to_client_mode.sh")
 
 def reboot():
     os.system("sudo systemctl stop hostapd.service")

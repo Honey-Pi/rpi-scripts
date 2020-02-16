@@ -7,7 +7,9 @@ import time
 
 def setup_gpio(GPIO_PIN):
     GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
+    GPIO.setwarnings(False)
     GPIO.setup(GPIO_PIN, GPIO.OUT) # Set pin 20 to led output
+    GPIO.setwarnings(True)
     # Output to pin GPIO_PIN
     GPIO.output(GPIO_PIN, 1)
 
