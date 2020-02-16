@@ -23,7 +23,7 @@ import time
 from ctypes import c_short
 from ctypes import c_byte
 from ctypes import c_ubyte
-from sensor_utilities import get_smbus
+from sensors.sensor_utilities import get_smbus
 
 DEVICE = 0x76 # Default device I2C address
 

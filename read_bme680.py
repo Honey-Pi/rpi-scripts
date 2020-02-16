@@ -5,7 +5,7 @@
 import time
 import bme680
 import smbus
-from sensor_utilities import get_smbus
+from sensors.sensor_utilities import get_smbus
 
 # global vars
 sensor = None

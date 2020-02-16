@@ -7,6 +7,7 @@ import time
 from datetime import datetime
 import urllib
 import json
+import RPi.GPIO as GPIO
 
 honeypiFolder = '/home/pi/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
