@@ -61,10 +61,10 @@ def create_ap():
     os.system("sudo ifdown uap0")
 
 def client_to_ap_mode():
-    os.system("sudo sh ./shell-scripts/client_to_ap_mode.sh")
+    os.system("sudo sh " + scriptsFolder + "/shell-scripts/client_to_ap_mode.sh")
 
 def ap_to_client_mode():
-    os.system("sudo sh ./shell-scripts/ap_to_client_mode.sh")
+    os.system("sudo sh " + scriptsFolder + "/shell-scripts/ap_to_client_mode.sh")
 
 def reboot():
     os.system("sudo systemctl stop hostapd.service")
