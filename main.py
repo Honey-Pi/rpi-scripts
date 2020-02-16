@@ -92,7 +92,8 @@ def button_pressed_falling():
         delete_settings()
         shutdown()
     elif debug:
-        error_log("Info: Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed) + "ms elapsed.")
+        time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s
+        error_log("Info: Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed_s) + "s elapsed.")
 
 def main():
     global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
