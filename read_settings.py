@@ -103,12 +103,7 @@ def validate_settings(settings):
             ts_channels.append(ts_channel)
             settings['ts_channels'] = ts_channels
         except:
-            ts_channel = {}
-            ts_channel['ts_channel_id']= None
-            ts_channel['ts_write_key'] = None
-            ts_channels = []
-            ts_channels.append(ts_channel)
-            settings['ts_channels'] = ts_channels
+            settings['ts_channels'] = get_defaults()["ts_channels"]
 
 
     if updateSettingsFile:
