@@ -16,10 +16,11 @@ from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap
 measurement = None
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
-debug = 0 # will be overriten by settings.json. you need to change the debug-mode in settings.json
 time_rising = 0 # will be set by button_pressed event if the button is rised
 GPIO_LED = 21 # GPIO for led
-GPIO_BTN = 16 # GPIO_BTN for button, will be overwritten by settings.json
+# the following will be overwritten by settings.json:
+debug = 0
+GPIO_BTN = 16
 
 def start_ap():
     global isActive, GPIO_LED
@@ -85,10 +86,10 @@ def button_pressed_falling():
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
         toggle_measurement()
     elif time_elapsed >= 5000 and time_elapsed <= 10000:
-        blink_led(GPIO_LED, 0.5)
+        blink_led(GPIO_LED, 0.1)
         shutdown()
     elif time_elapsed >= 10000 and time_elapsed <= 15000:
-        blink_led(GPIO_LED, 0.5)
+        blink_led(GPIO_LED, 0.1)
         delete_settings()
         shutdown()
     elif debug:

@@ -7,6 +7,35 @@ import json
 from pathlib import Path
 from utilities import settingsFile
 
+def get_defaults():
+    settings = {}
+    settings["button_pin"] = 16
+    settings["w1gpio"] = 11
+    settings["interval"] = 0
+    settings["debug"] = True
+    settings["offline"] = 0
+    settings["shutdownAfterTransfer"] = False
+    router = {}
+    router['enabled'] = False
+    router['ssid'] = None
+    router['password'] = None
+    honeypi = {}
+    honeypi['ssid'] = "HoneyPi"
+    honeypi['password'] = "HoneyPi!"
+    internet = {}
+    internet['router'] = router
+    internet['honeypi'] = honeypi
+    settings["internet"] = internet
+    settings["ts_channels"] = []
+    ts_channel = {}
+    ts_channel['ts_channel_id'] = None
+    ts_channel['ts_write_key'] = None
+    settings["ts_channels"].append(ts_channel)
+    settings["sensors"] = []
+    settings["wittyPi_enabled"] = False
+
+    return settings
+
 # read settings.json which is created by rpi-webinterface
 def get_settings():
     settings = {}
@@ -14,32 +43,15 @@ def get_settings():
     try:
         my_file = Path(settingsFile)
         my_abs_path = my_file.resolve()
+
+        with io.open(settingsFile, encoding="utf-8") as data_file:
+            settings = json.loads(data_file.read())
     except:
         # FileNotFoundError: doesn't exist => default values
-        settings["button_pin"] = 16
-        settings["w1gpio"] = 11
-        settings["interval"] = 0
-        settings["debug"] = True
-        settings["offline"] = 0
-        settings["shutdownAfterTransfer"] = False
-        # Write these settings to file
+        # FileReadError / json.loads Error => default values
+        settings = get_defaults()
         write_settings(settings)
 
-    else:
-        # File exists => read values from file
-        try:
-            with io.open(settingsFile, encoding="utf-8") as data_file:
-                settings = json.loads(data_file.read())
-        except:
-        # FileReadError / json.loads Error  => default values
-            settings["button_pin"] = 16
-            settings["w1gpio"] = 11
-            settings["interval"] = 0
-            settings["debug"] = True
-            settings["offline"] = 0
-            settings["shutdownAfterTransfer"] = False
-            # Write these settings to file
-            write_settings(settings)
     settings = validate_settings(settings)
     return settings
 
@@ -52,27 +64,25 @@ def validate_settings(settings):
         if not settings["button_pin"]:
             raise Exception("button_pin is not defined.")
     except:
-        settings["button_pin"] = 16
+        settings["button_pin"] = get_defaults()["button_pin"]
         updateSettingsFile = True
 
     try:
-        if not 'debug' in settings:
-            settings["debug"] = False
+        settings["debug"]
     except:
-        settings["debug"] = False
+        settings["debug"] = get_defaults()["debug"]
         updateSettingsFile = True
 
     try:
-        if not 'shutdownAfterTransfer' in settings:
-            settings["shutdownAfterTransfer"] = 0
+        settings["shutdownAfterTransfer"]
     except:
-        settings["shutdownAfterTransfer"] = 0
+        settings["shutdownAfterTransfer"] = get_defaults()["shutdownAfterTransfer"]
         updateSettingsFile = True
 
     try:
         settings["offline"]
-    except KeyError:
-        settings["offline"] = 0
+    except:
+        settings["offline"] = get_defaults()["offline"]
         updateSettingsFile = True
 
     # Migrate v0.1.1 to v1.0 (Multi-Channel)
@@ -80,6 +90,7 @@ def validate_settings(settings):
         settings['ts_channels'][0]["ts_channel_id"]
         settings['ts_channels'][0]["ts_write_key"]
     except:
+        updateSettingsFile = True
         try:
             settings["ts_channel_id"]
             print("Old Channel ID to be imported " + str(settings["ts_channel_id"]))
@@ -91,9 +102,14 @@ def validate_settings(settings):
             ts_channels = []
             ts_channels.append(ts_channel)
             settings['ts_channels'] = ts_channels
-            updateSettingsFile = True
         except:
-            settings["ts_channels"] = None
+            ts_channel = {}
+            ts_channel['ts_channel_id']= None
+            ts_channel['ts_write_key'] = None
+            ts_channels = []
+            ts_channels.append(ts_channel)
+            settings['ts_channels'] = ts_channels
+
 
     if updateSettingsFile:
         print("Info: Settings have been changed because of version migration.")

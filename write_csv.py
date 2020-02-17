@@ -10,11 +10,11 @@ from datetime import datetime
 from utilities import scriptsFolder, check_file, error_log, clean_fields
 
 def write_csv(ts_fields, ts_channels):
-    writeerror = True
+    success = True
     for (channelIndex, channel) in enumerate(ts_channels, 0):
         ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
-        writeerror = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'])
-    return writeerror
+        success = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'])
+    return success
 
 def write_singlechannel_csv(ts_fields_cleaned, channelId):
     try:
