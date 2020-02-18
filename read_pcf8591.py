@@ -11,7 +11,7 @@ from sensors.sensor_utilities import get_smbus
 def measure_voltage(ts_sensor):
     fields = {}
 
-    # I2C-address of YL-40 PFC8591
+    # I2C-address of YL-40 PCF8591
     address = 0x48
 
     try:
@@ -21,7 +21,7 @@ def measure_voltage(ts_sensor):
         # Configure PCF8591
         PCF8591.write_byte(address, 0x03) # set channel to AIN3 | = i2cset -y 1 0x48 0x03
 
-        Voltage_8bit = PFC8591.read_byte(address) # = i2cget -y 1 0x48
+        Voltage_8bit = PCF8591.read_byte(address) # = i2cget -y 1 0x48
         voltage = Voltage_8bit*0.064453125 # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
 
         if 'ts_field' in ts_sensor and isinstance(voltage, (int, float)):
