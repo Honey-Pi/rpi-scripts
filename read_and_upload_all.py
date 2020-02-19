@@ -106,79 +106,82 @@ def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, deb
 
 def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
+    try:
+        # filter the values out
+        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+            filter_temperatur_values(sensorIndex)
 
-    # filter the values out
-    for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-        filter_temperatur_values(sensorIndex)
+        # dict with all fields and values which will be tranfered to ThingSpeak later
+        ts_fields = {}
 
-    # dict with all fields and values which will be tranfered to ThingSpeak later
-    ts_fields = {}
+        # measure every sensor with type 0
+        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+            # if we have at leat one filtered value we can upload
+            if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
+                ds18b20_temperature = filtered_temperature[sensorIndex].pop() # get last value from array
+                ts_field_ds18b20 = sensor["ts_field"]
+                if ts_field_ds18b20:
+                    ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
 
-    # measure every sensor with type 0
-    for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-        # if we have at leat one filtered value we can upload
-        if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
-            ds18b20_temperature = filtered_temperature[sensorIndex].pop() # get last value from array
-            ts_field_ds18b20 = sensor["ts_field"]
-            if ts_field_ds18b20:
-                ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+        # measure BME680 (can only be one) [type 1]
+        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
+            bme680_values = measure_bme680(bme680Sensors[0], 30)
+            ts_fields.update(bme680_values)
 
-    # measure BME680 (can only be one) [type 1]
-    if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
-        bme680_values = measure_bme680(bme680Sensors[0], 30)
-        ts_fields.update(bme680_values)
+        # measure every sensor with type 3 [DHT11/DHT22]
+        for (i, sensor) in enumerate(dhtSensors):
+            tempAndHum = measure_dht(sensor)
+            ts_fields.update(tempAndHum)
 
-    # measure every sensor with type 3 [DHT11/DHT22]
-    for (i, sensor) in enumerate(dhtSensors):
-        tempAndHum = measure_dht(sensor)
-        ts_fields.update(tempAndHum)
+        # measure every sensor with type 4 [MAX6675]
+        for (i, sensor) in enumerate(tcSensors):
+            tc_temp = measure_tc(sensor)
+            ts_fields.update(tc_temp)
 
-    # measure every sensor with type 4 [MAX6675]
-    for (i, sensor) in enumerate(tcSensors):
-        tc_temp = measure_tc(sensor)
-        ts_fields.update(tc_temp)
+        # measure BME280 (can only be one) [type 5]
+        if bme280Sensors and len(bme280Sensors) == 1:
+            bme280_values = measure_bme280(bme280Sensors[0])
+            ts_fields.update(bme280_values)
 
-    # measure BME280 (can only be one) [type 5]
-    if bme280Sensors and len(bme280Sensors) == 1:
-        bme280_values = measure_bme280(bme280Sensors[0])
-        ts_fields.update(bme280_values)
+        # measure YL-40 PFC8591 (can only be one) [type 6]
+        if voltageSensors and len(voltageSensors) == 1:
+            voltage = measure_voltage(voltageSensors[0])
+            ts_fields.update(voltage)
 
-    # measure YL-40 PFC8591 (can only be one) [type 6]
-    if voltageSensors and len(voltageSensors) == 1:
-        voltage = measure_voltage(voltageSensors[0])
-        ts_fields.update(voltage)
+        start_single()
+        # measure every sensor with type 2 [HX711]
+        for (i, sensor) in enumerate(weightSensors):
+            weight = measure_weight(sensor, hxInits[i])
+            weight = compensate_temperature(sensor, weight, ts_fields)
+            ts_fields.update(weight)
+        stop_single()
 
-    start_single()
-    # measure every sensor with type 2 [HX711]
-    for (i, sensor) in enumerate(weightSensors):
-        weight = measure_weight(sensor, hxInits[i])
-        weight = compensate_temperature(sensor, weight, ts_fields)
-        ts_fields.update(weight)
-    stop_single()
+        # print all measurement values stored in ts_fields
+        for key, value in ts_fields.items():
+            print(key + ": " + str(value))
+        
+        if len(ts_fields) > 0:
+            if offline == 1 or offline == 3:
+                try:
+                    s = write_csv(ts_fields, ts_channels)
+                    if s and debug:
+                        error_log("Info: Data succesfully saved to CSV-File.")
+                except Exception as ex:
+                    error_log(ex, "Exception")
 
-    # print all measurement values stored in ts_fields
-    for key, value in ts_fields.items():
-        print(key + ": " + str(value))
+            # if transfer to thingspeak is set
+            if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
+                # update ThingSpeak / transfer values
+                send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug)
 
-    if len(ts_fields) > 0:
-        if offline == 1 or offline == 3:
-            try:
-                s = write_csv(ts_fields, ts_channels)
-                if s and debug:
-                    error_log("Info: Data succesfully saved to CSV-File.")
-            except Exception as ex:
-                error_log(ex, "Exception")
+        elif debug:
+            error_log("Info: No measurement data to send.")
 
-        # if transfer to thingspeak is set
-        if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
-            # update ThingSpeak / transfer values
-            send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug)
-
-    elif debug:
-        error_log("Info: No measurement data to send.")
-
-    measurementIsRunning.value = 0 # clear flag
-
+        measurementIsRunning.value = 0 # clear flag
+        
+    except Exception as ex:
+        error_log(ex, "Exception during measurement")
+        measurementIsRunning.value = 0 # clear flag
 
 def start_measurement(measurement_stop):
     try:
