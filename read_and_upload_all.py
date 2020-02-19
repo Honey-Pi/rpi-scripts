@@ -118,7 +118,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
         for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
             # if we have at leat one filtered value we can upload
             if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
-                ds18b20_temperature = filtered_temperature[sensorIndex].pop() # get last value from array
+                ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
                 ts_field_ds18b20 = sensor["ts_field"]
                 if ts_field_ds18b20:
                     ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
@@ -159,7 +159,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
         # print all measurement values stored in ts_fields
         for key, value in ts_fields.items():
             print(key + ": " + str(value))
-        
+
         if len(ts_fields) > 0:
             if offline == 1 or offline == 3:
                 try:
@@ -178,7 +178,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
             error_log("Info: No measurement data to send.")
 
         measurementIsRunning.value = 0 # clear flag
-        
+
     except Exception as ex:
         error_log(ex, "Exception during measurement")
         measurementIsRunning.value = 0 # clear flag
