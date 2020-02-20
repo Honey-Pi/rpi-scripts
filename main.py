@@ -17,10 +17,10 @@ measurement = None
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
 time_rising = 0 # will be set by button_pressed event if the button is rised
-GPIO_LED = 21 # GPIO for led
 # the following will be overwritten by settings.json:
 debug = 0
 GPIO_BTN = 16
+GPIO_LED = 21 # GPIO for led
 
 def start_ap():
     global isActive, GPIO_LED
@@ -102,9 +102,11 @@ def main():
     # Zaehlweise der GPIO-PINS auf der Platine
     GPIO.setmode(GPIO.BCM)
 
-    settings = get_settings() # read settings for number of GPIO pin
+    # read settings for number of GPIO pin
+    settings = get_settings()
     debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
-    GPIO_BTN = settings["button_pin"] # read pin from settings
+    GPIO_BTN = settings["button_pin"]
+    GPIO_LED = settings["led_pin"]
 
     # blink with LED on startup
     blink_led(GPIO_LED)

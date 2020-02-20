@@ -10,6 +10,7 @@ from utilities import settingsFile
 def get_defaults():
     settings = {}
     settings["button_pin"] = 16
+    settings["led_pin"] = 21
     settings["w1gpio"] = 11
     settings["interval"] = 0
     settings["debug"] = True
@@ -65,6 +66,14 @@ def validate_settings(settings):
             raise Exception("button_pin is not defined.")
     except:
         settings["button_pin"] = get_defaults()["button_pin"]
+        updateSettingsFile = True
+
+    try:
+        settings["led_pin"] = int(settings["led_pin"])
+        if not settings["led_pin"]:
+            raise Exception("led_pin is not defined.")
+    except:
+        settings["led_pin"] = get_defaults()["led_pin"]
         updateSettingsFile = True
 
     try:
