@@ -129,7 +129,7 @@ if __name__ == '__main__':
     try:
         print(measurement())
 
-        except (KeyboardInterrupt, SystemExit):
+    except (KeyboardInterrupt, SystemExit):
         pass
 
     except Exception as e:
