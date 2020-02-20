@@ -163,9 +163,12 @@ def error_log(e=None, printText=None):
 
         print(printText)
 
+        dt = datetime.now()
+        timestamp = dt.replace(microsecond=0)
+        
         # write to file
         with open(file, "a") as myfile:
-            myfile.write (str(datetime.now()) + " | " + printText + "\n")
+            myfile.write (str(timestamp) + " | " + printText + "\n")
 
     except Exception:
         pass
