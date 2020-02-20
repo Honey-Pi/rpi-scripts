@@ -23,7 +23,7 @@ from read_max import measure_tc
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields
 from write_csv import write_csv
-
+from measurement import measure_all_sensors
 
 def send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug):
     # update ThingSpeak / transfer values
@@ -103,64 +103,6 @@ def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, deb
                 if retries >= 3:
                     break # break do-while
     return connectionError
-
-def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits):
-    # dict with all fields and values which will be tranfered to ThingSpeak later
-    ts_fields = {}
-    try:
-        # filter the values out
-        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-            filter_temperatur_values(sensorIndex)
-
-        # measure every sensor with type 0
-        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-            # if we have at leat one filtered value we can upload
-            if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
-                ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
-                ts_field_ds18b20 = sensor["ts_field"]
-                if ts_field_ds18b20:
-                    ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-
-        # measure BME680 (can only be one) [type 1]
-        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
-            bme680_values = measure_bme680(bme680Sensors[0], 30)
-            ts_fields.update(bme680_values)
-
-        # measure every sensor with type 3 [DHT11/DHT22]
-        for (i, sensor) in enumerate(dhtSensors):
-            tempAndHum = measure_dht(sensor)
-            ts_fields.update(tempAndHum)
-
-        # measure every sensor with type 4 [MAX6675]
-        for (i, sensor) in enumerate(tcSensors):
-            tc_temp = measure_tc(sensor)
-            ts_fields.update(tc_temp)
-
-        # measure BME280 (can only be one) [type 5]
-        if bme280Sensors and len(bme280Sensors) == 1:
-            bme280_values = measure_bme280(bme280Sensors[0])
-            ts_fields.update(bme280_values)
-
-        # measure YL-40 PFC8591 (can only be one) [type 6]
-        if voltageSensors and len(voltageSensors) == 1:
-            voltage = measure_voltage(voltageSensors[0])
-            ts_fields.update(voltage)
-
-        start_single()
-        # measure every sensor with type 2 [HX711]
-        for (i, sensor) in enumerate(weightSensors):
-            weight = measure_weight(sensor, hxInits[i])
-            weight = compensate_temperature(sensor, weight, ts_fields)
-            ts_fields.update(weight)
-        stop_single()
-
-        # print all measurement values stored in ts_fields
-        for key, value in ts_fields.items():
-            print(key + ": " + str(value))
-        return ts_fields
-    except Exception as ex:
-        error_log(ex, "Exception during measurement")
-        return ts_fields
 
 def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
