@@ -87,8 +87,9 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         stop_single()
 
         # print all measurement values stored in ts_fields
-        for key, value in ts_fields.items():
-            print(key + ": " + str(value))
+        if debug:
+            for key, value in ts_fields.items():
+                print(key + ": " + str(value))
         return ts_fields
     except Exception as ex:
         error_log(ex, "Exception during measurement")
