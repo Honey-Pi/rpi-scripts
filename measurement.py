@@ -93,7 +93,12 @@ def measurement():
     # Error occured
     return {}
 
-try:
-    print(measurement())
-except KeyboardInterrupt:
-    pass
+if __name__ == '__main__':
+    try:
+        print(measurement())
+
+        except (KeyboardInterrupt, SystemExit):
+        pass
+
+    except Exception as e:
+        error_log(e, "Unhandled Exception in Main")
