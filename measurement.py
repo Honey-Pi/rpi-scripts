@@ -30,13 +30,22 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         # dict with all fields and values which will be tranfered to ThingSpeak later
 
         # measure every sensor with type 0
-        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-            # if we have at leat one filtered value we can upload
-            if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
-                ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
-                ts_field_ds18b20 = sensor["ts_field"]
-                if ts_field_ds18b20:
+        if filtered_temperature is not None:
+            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+                # if we have at leat one filtered value we can upload
+                if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
+                    ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
+                    ts_field_ds18b20 = sensor["ts_field"]
+                    if ts_field_ds18b20:
+                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+        else:
+            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+                if 'ts_field' in sensor and 'device_id' in sensor:
+                    ts_field_ds18b20 = sensor["ts_field"]
+                    ds18b20_temperature = float("{0:.2f}".format(measure_temperature(sensor["device_id"])))
                     ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+                else:
+                    print("DS18b20 missing param: ts_field or device_id")
 
         # measure BME680 (can only be one) [type 1]
         if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
@@ -65,10 +74,16 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         start_single()
         # measure every sensor with type 2 [HX711]
-        for (i, sensor) in enumerate(weightSensors):
-            weight = measure_weight(sensor, hxInits[i])
-            weight = compensate_temperature(sensor, weight, ts_fields)
-            ts_fields.update(weight)
+        if hxInits is not None:
+            for (i, sensor) in enumerate(weightSensors):
+                weight = measure_weight(sensor, hxInits[i])
+                weight = compensate_temperature(sensor, weight, ts_fields)
+                ts_fields.update(weight)
+        else:
+            for (i, sensor) in enumerate(weightSensors):
+                weight = measure_weight(sensor)
+                weight = compensate_temperature(sensor, weight, ts_fields)
+                ts_fields.update(weight)
         stop_single()
 
         # print all measurement values stored in ts_fields
@@ -80,6 +95,8 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         return ts_fields
 
 def measurement():
+    # dict with all fields and values which will be tranfered to ThingSpeak later
+    ts_fields = {}
     try:
         # load settings
         settings = get_settings()
@@ -98,51 +115,7 @@ def measurement():
         else:
             bme680IsInitialized = 0
 
-        # dict with all fields and values which will be tranfered to ThingSpeak later
-        ts_fields = {}
-
-        # measure every sensor with type 0
-        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-            if 'ts_field' in sensor and 'device_id' in sensor:
-                ts_field_ds18b20 = sensor["ts_field"]
-                ds18b20_temperature = measure_temperature(sensor["device_id"])
-                ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-            else:
-                print("DS18b20 missing param: ts_field or device_id")
-
-        # measure BME680 (can only be one) [type 1]
-        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
-            bme680_values = measure_bme680(bme680Sensors[0], 10)
-            ts_fields.update(bme680_values)
-
-        # measure every sensor with type 3 [DHT11/DHT22]
-        for (i, sensor) in enumerate(dhtSensors):
-            tempAndHum = measure_dht(sensor)
-            ts_fields.update(tempAndHum)
-
-        # measure every sensor with type 4 [MAX6675]
-        for (i, sensor) in enumerate(tcSensors):
-            tc_temp = measure_tc(sensor)
-            ts_fields.update(tc_temp)
-
-        # measure BME280 (can only be one) [type 5]
-        if bme280Sensors and len(bme280Sensors) == 1:
-            bme280_values = measure_bme280(bme280Sensors[0])
-            ts_fields.update(bme280_values)
-
-        # measure YL-40 PFC8591 (can only be one) [type 6]
-        if voltageSensors and len(voltageSensors) == 1:
-            voltage = measure_voltage(voltageSensors[0])
-            ts_fields.update(voltage)
-
-        start_single()
-        # measure every sensor with type 2 [HX711]
-        for (i, sensor) in enumerate(weightSensors):
-            weight = measure_weight(sensor)
-            weight = compensate_temperature(sensor, weight, ts_fields)
-            ts_fields.update(weight)
-        stop_single()
-
+        ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, None)
         return json.dumps(ts_fields)
 
     except Exception as e:
