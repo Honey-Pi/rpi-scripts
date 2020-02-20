@@ -104,15 +104,13 @@ def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, deb
                     break # break do-while
     return connectionError
 
-def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
-    measurementIsRunning.value = 1 # set flag
+def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits):
+    # dict with all fields and values which will be tranfered to ThingSpeak later
+    ts_fields = {}
     try:
         # filter the values out
         for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
             filter_temperatur_values(sensorIndex)
-
-        # dict with all fields and values which will be tranfered to ThingSpeak later
-        ts_fields = {}
 
         # measure every sensor with type 0
         for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
@@ -159,6 +157,16 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
         # print all measurement values stored in ts_fields
         for key, value in ts_fields.items():
             print(key + ": " + str(value))
+        return ts_fields
+    except Exception as ex:
+        error_log(ex, "Exception during measurement")
+        return ts_fields
+
+def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+    measurementIsRunning.value = 1 # set flag
+    ts_fields = {}
+    try:
+        ts_fields = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits)
 
         if len(ts_fields) > 0:
             if offline == 1 or offline == 3:
