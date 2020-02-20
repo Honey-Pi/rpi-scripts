@@ -22,30 +22,26 @@ from read_settings import get_settings, get_sensors
 from utilities import start_single, stop_single
 
 def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits):
-    ts_fields = {}
+
+    ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     try:
         for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
             filter_temperatur_values(sensorIndex)
 
-        # dict with all fields and values which will be tranfered to ThingSpeak later
-
         # measure every sensor with type 0
-        if filtered_temperature is not None:
-            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+            if filtered_temperature is not None:
                 # if we have at leat one filtered value we can upload
                 if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
                     ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
                     ts_field_ds18b20 = sensor["ts_field"]
                     if ts_field_ds18b20:
                         ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-        else:
-            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+            else:
                 if 'ts_field' in sensor and 'device_id' in sensor:
                     ts_field_ds18b20 = sensor["ts_field"]
-                    ds18b20_temperature = float("{0:.2f}".format(measure_temperature(sensor["device_id"])))
+                    ds18b20_temperature = measure_temperature(sensor["device_id"])
                     ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-                else:
-                    print("DS18b20 missing param: ts_field or device_id")
 
         # measure BME680 (can only be one) [type 1]
         if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
@@ -72,15 +68,14 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             voltage = measure_voltage(voltageSensors[0])
             ts_fields.update(voltage)
 
-        start_single()
         # measure every sensor with type 2 [HX711]
-        if hxInits is not None:
-            for (i, sensor) in enumerate(weightSensors):
+        start_single()
+        for (i, sensor) in enumerate(weightSensors):
+            if hxInits is not None:
                 weight = measure_weight(sensor, hxInits[i])
                 weight = compensate_temperature(sensor, weight, ts_fields)
                 ts_fields.update(weight)
-        else:
-            for (i, sensor) in enumerate(weightSensors):
+            else:
                 weight = measure_weight(sensor)
                 weight = compensate_temperature(sensor, weight, ts_fields)
                 ts_fields.update(weight)
@@ -133,4 +128,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as e:
-        error_log(e, "Unhandled Exception in Main")
+        error_log(e, "Unhandled Exception in Measurement")
