@@ -14,7 +14,7 @@ import requests
 import json
 
 from read_bme680 import initBME680FromMain
-rom read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
+from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields
