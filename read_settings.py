@@ -33,7 +33,17 @@ def get_defaults():
     ts_channel['ts_write_key'] = None
     settings["ts_channels"].append(ts_channel)
     settings["sensors"] = []
-    settings["wittyPi_enabled"] = False
+    settings["wittyPi_enabled"] = False #To be removed once Webinterface is updated
+    wittyPi = {}
+    wittyPi["wittyPi_enabled"] = False
+    wittyPi["wittyPi_voltagecheck_enabled"] = False
+    wittyPi["wittyPi_enabled_normal"] = False
+    wittyPi["wittyPi_script_normal"] = ""
+    wittyPi["wittyPi_voltage_normal"] = 13.2
+    wittyPi["wittyPi_enabled_undervoltage"] = False
+    wittyPi["wittyPi_script_undervoltage"] = ""
+    wittyPi["wittyPi_voltage_undervoltage"] = 11.9
+    settings['wittyPi'] = wittyPi
 
     return settings
 
@@ -114,6 +124,29 @@ def validate_settings(settings):
         except:
             settings['ts_channels'] = get_defaults()["ts_channels"]
 
+    # Migrate v0.1.1 to v1.0 (WittyPi)
+    try:
+        settings['wittyPi']["wittyPi_enabled"]
+        settings['wittyPi']["wittyPi_script_normal"]
+    except:
+        updateSettingsFile = True
+        try:
+            settings["wittyPi_enabled"]
+            print("Old WittyPi Status to be imported: '" + str(settings["wittyPi_enabled"]) + "'")
+            settings["wittyPi_script"]
+            print("Old WittyPi Script to be imported: '" + settings["wittyPi_script"] + "'")
+            wittyPi = {}
+            wittyPi['wittyPi_enabled']= settings["wittyPi_enabled"]
+            wittyPi['wittyPi_enabled_normal']= settings["wittyPi_enabled"]
+            wittyPi['wittyPi_script_normal'] = settings["wittyPi_script"]
+            wittyPi["wittyPi_voltage_normal"] = 13.2
+            wittyPi["wittyPi_enabled_undervoltage"] = False
+            wittyPi["wittyPi_script_undervoltage"] = ""
+            wittyPi["wittyPi_voltage_undervoltage"] = 11.9
+            wittyPi["wittyPi_voltagecheck_enabled"] = False
+            settings['wittyPi'] = wittyPi
+        except:
+            settings['wittyPi'] = get_defaults()["wittyPi"]
 
     if updateSettingsFile:
         print("Info: Settings have been changed because of version migration.")

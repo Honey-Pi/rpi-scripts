@@ -13,6 +13,7 @@ import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import requests
 import json
 
+from read_pcf8591 import measure_voltage, get_raw_voltage
 from read_bme680 import initBME680FromMain
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
@@ -137,6 +138,9 @@ def start_measurement(measurement_stop):
         settings = get_settings()
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
         interval = settings["interval"]
+        intervalVoltageCheck = 60
+        wittyPisettings = settings["wittyPi"]
+        VoltageCheckUnderVoltage = False
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
         shutdownAfterTransfer = settings["shutdownAfterTransfer"]
         offline = settings["offline"] # flag to enable offline csv storage
@@ -179,6 +183,9 @@ def start_measurement(measurement_stop):
         # start at -6 because we want to get 6 values before we can filter some out
         counter = -6
         time_measured = 0
+        time_measured_Voltage = 0
+        if voltageSensors and len(voltageSensors) == 1:
+            voltage = get_raw_voltage(0) #initial measurement as first measurement is always wrong
         while not measurement_stop.is_set():
             counter += 1
 
@@ -191,6 +198,34 @@ def start_measurement(measurement_stop):
             # wait seconds of interval before next check
             # free ThingSpeak account has an upload limit of 15 seconds
             time_now = time.time()
+            if wittyPisettings["wittyPi_voltagecheck_enabled"]: 
+                isTimeToCheckVoltage = (time_now-time_measured_Voltage >= intervalVoltageCheck)
+                if isTimeToCheckVoltage:
+                    if voltageSensors and len(voltageSensors) == 1:
+                        voltage = get_raw_voltage(0)
+                        now = time.strftime("%H:%M", time.localtime(time_now))
+                        print("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
+                        if voltage <= wittyPisettings["wittyPi_voltage_undervoltage"]:
+                            print("Running on low voltage")
+                            if not VoltageCheckUnderVoltage:
+                                #update wittypi settings to undervoltage
+                                VoltageCheckUnderVoltage = True
+                        elif voltage < wittyPisettings["wittyPi_voltage_normal"]:
+                            print("No longer low voltage but recovery voltage not reached")
+                            #no update to wittyPi settings
+                        elif voltage >= wittyPisettings["wittyPi_voltage_normal"]:
+                            print("Running on normal voltage")
+                            if VoltageCheckUnderVoltage:
+                                #update wittypi settings to normal
+                                VoltageCheckUnderVoltage = False
+                        else:
+                            error_log("Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
+                    else:
+                        error_log("WittyPi Voltage checks enabled but no VoltageSensors configured")
+                    time_measured_Voltage = time.time()
+                else:
+                    print("No Voltage Check due")
+
             isTimeToMeasure = (time_now-time_measured >= interval) and counter > 0 # old: counter%interval == 0
             if isTimeToMeasure or interval == 1:
                 now = time.strftime("%H:%M", time.localtime(time_now))
