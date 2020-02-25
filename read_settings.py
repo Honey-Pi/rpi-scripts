@@ -135,7 +135,7 @@ def validate_settings(settings):
     # Migrate v0.1.1 to v1.0 (WittyPi)
     try:
         settings['wittyPi']["enabled"]
-        settings['wittyPi']["script_normal"]
+        settings['wittyPi']["normal"]
     except:
         updateSettingsFile = True
         try:
