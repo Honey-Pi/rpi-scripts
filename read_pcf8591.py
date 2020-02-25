@@ -18,8 +18,22 @@ def measure_voltage(ts_sensor):
         # Create I2C instance and open the bus
         PCF8591 = smbus.SMBus(get_smbus())
 
+        # read pin from ts_sensor settings
+        if 'pin' in ts_sensor:
+            pin = int(ts_sensor['pin'])
+        else:
+            pin = 2
+
+        # AIN0 => Pin 0
+        # AIN1 => Pin 1
+        # AIN2 => Pin 2 (default)
+        # AIN3 => Pin 3
+
         # Configure PCF8591
-        PCF8591.write_byte(address, 0x03) # set channel to AIN3 | = i2cset -y 1 0x48 0x03
+        PCF8591.write_byte(address, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
+
+        # measure once just for fun
+        _v = PCF8591.read_byte(address)
 
         Voltage_8bit = PCF8591.read_byte(address) # = i2cget -y 1 0x48
         voltage = Voltage_8bit*0.064453125 # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
@@ -34,7 +48,7 @@ def measure_voltage(ts_sensor):
 
     return None
 
-def get_raw_voltage(pin):
+def get_raw_voltage(pin=2):
     # I2C-address of YL-40 PCF8591
     address = 0x48
 
@@ -54,6 +68,6 @@ def get_raw_voltage(pin):
         return voltage
 
     except Exception as e:
-        print("Exeption while getting temperature field: " + str(e))
+        print("get_raw_voltage: " + str(e))
 
-    return None   
+    return None
