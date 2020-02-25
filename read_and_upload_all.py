@@ -18,7 +18,7 @@ from read_bme680 import initBME680FromMain
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields, update_wittypi_schedule
+from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage
 from write_csv import write_csv
 from measurement import measure_all_sensors
 
@@ -140,7 +140,7 @@ def start_measurement(measurement_stop):
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
         wittyPi = settings["wittyPi"]
         intervalVoltageCheck = 60
-        isLowVoltage = False
+        isLowVoltage = getStateFromStorage('isLowVoltage', False)
         interval = wittyPi["normal"]["interval"]
         shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
         offline = settings["offline"] # flag to enable offline csv storage
@@ -214,7 +214,7 @@ def start_measurement(measurement_stop):
                                     update_wittypi_schedule("")
                                 interval = wittyPi["low"]["interval"]
                                 shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
-                                isLowVoltage = True
+                                isLowVoltage = setStateToStorage('isLowVoltage', True)
                         elif voltage < wittyPi["normal"]["voltage"]:
                             print("No longer low voltage but recovery voltage not reached")
                         elif voltage >= wittyPi["voltage_normal"]:
@@ -226,7 +226,7 @@ def start_measurement(measurement_stop):
                                     update_wittypi_schedule("")
                                     interval = wittyPi["normal"]["interval"]
                                     shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
-                                isLowVoltage = False
+                                isLowVoltage = setStateToStorage('isLowVoltage', False)
                         else:
                             error_log("Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
                     else:

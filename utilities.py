@@ -8,6 +8,7 @@ from datetime import datetime
 import urllib
 import json
 import RPi.GPIO as GPIO
+from pathlib import Path
 
 honeypiFolder = '/home/pi/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
@@ -241,7 +242,7 @@ def update_wittypi_schedule(schedule):
         outfile.close()
         if os.path.isfile('/home/pi/wittyPi/wittyPi.sh') and os.path.isfile('/home/pi/wittyPi/syncTime.sh') and os.path.isfile('/home/pi/wittyPi/runScript.sh'):
             # WittyPi 2
-            print("Wittypi 2 or Wittypi Mini detected.")
+            print("wittyPi 2 or wittyPi Mini detected.")
             if len(schedule) > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
@@ -249,7 +250,7 @@ def update_wittypi_schedule(schedule):
             return True
         elif os.path.isfile('/home/pi/wittypi/wittyPi.sh') and os.path.isfile('/home/pi/wittypi/syncTime.sh') and os.path.isfile('/home/pi/wittypi/runScript.sh'):
             # WittyPi 3
-            print("Wittypi 3 or 3 Mini detected.")
+            print("wittypi 3 or 3 Mini detected.")
             if len(schedule) > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
@@ -258,6 +259,29 @@ def update_wittypi_schedule(schedule):
         else:
             error_log("WittyPi installation missing or incomplete")
     except Exception as ex:
-        print("Error in function update_wittypi_schedule: " + str(ex))
+        error_log("Error in function update_wittypi_schedule: " + str(ex))
 
     return False
+
+def getStateFromStorage(variable, default_value=False):
+    file = scriptsFolder + '/.' + variable
+    try:
+        if os.path.exists(file):
+            content = Path(file).read_text()
+            return content
+        else:
+            print('getStateFromStorage: ' + variable + ' does not exists. default_value=' + default_value)
+    except Exception as ex:
+        print("getStateFromStorage:" + str(ex))
+        pass
+    return default_value
+
+def setStateToStorage(variable, value):
+    file = scriptsFolder + '/.' + variable
+    try:
+        with open(file, 'w') as f:
+            print(value, file=f)
+    except Exception as ex:
+        print("setStateToStorage:" + str(ex))
+        pass
+    return value
