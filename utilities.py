@@ -241,14 +241,20 @@ def update_wittypi_settings(wittypi_settings):
         outfile.close()
         if os.path.isfile('/home/pi/wittyPi/wittyPi.sh') and os.path.isfile('/home/pi/wittyPi/syncTime.sh') and os.path.isfile('/home/pi/wittyPi/runScript.sh'):
             #WittyPi 1
+            print("Wittypi 2 or Wittypi Mini")
+            if len(wittypi_settings) > 1:
+                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
+            else:
+                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
+            return True
         elif os.path.isfile('/home/pi/wittypi/wittyPi.sh') and os.path.isfile('/home/pi/wittypi/syncTime.sh') and os.path.isfile('/home/pi/wittypi/runScript.sh'):
             #WittyPi 3
-
-            #if len(wittypi_settings) > 1:
-                #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
-            #else:
-                #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
-            #return True
+            print("Wittypi 2 or Wittypi Mini")
+            if len(wittypi_settings) > 1:
+                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
+            else:
+                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
+            return True
         else:
             error_log("WittyPI installation missing or incomplete")
             return False
