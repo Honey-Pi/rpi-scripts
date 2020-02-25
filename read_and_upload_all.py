@@ -18,7 +18,7 @@ from read_bme680 import initBME680FromMain
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields
+from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields, update_wittypi_settings
 from write_csv import write_csv
 from measurement import measure_all_sensors
 
