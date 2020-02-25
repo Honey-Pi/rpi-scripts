@@ -208,14 +208,20 @@ def start_measurement(measurement_stop):
                         if voltage <= wittyPi["low"]["voltage"]:
                             print("Running on low voltage")
                             if not isLowVoltage:
-                                update_wittypi_schedule(wittyPi["low"]["schedule"])
+                                if wittyPi["low"]["enabled"]:
+                                    update_wittypi_schedule(wittyPi["low"]["schedule"])
+                                else:
+                                    update_wittypi_schedule("")
                                 isLowVoltage = True
                         elif voltage < wittyPi["normal"]["voltage"]:
                             print("No longer low voltage but recovery voltage not reached")
                         elif voltage >= wittyPi["voltage_normal"]:
                             print("Running on normal voltage")
                             if isLowVoltage:
-                                update_wittypi_schedule(wittyPi["normal"]["schedule"])
+                                if wittyPi["normal"]["enabled"]:
+                                    update_wittypi_schedule(wittyPi["normal"]["schedule"])
+                                else:
+                                    update_wittypi_schedule("")
                                 isLowVoltage = False
                         else:
                             error_log("Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
