@@ -13,6 +13,8 @@ def measure_bme280(ts_sensor):
         # ThingSpeak fields
         # Create returned dict if ts-field is defined
         if 'ts_field_temperature' in ts_sensor and isinstance(temperature, (int, float)):
+            if 'offset' in ts_sensor and isinstance(ts_sensor["offset"], (int, float)):
+                temperature = temperature-ts_sensor["offset"]
             fields[ts_sensor["ts_field_temperature"]] = round(temperature, 2)
         if 'ts_field_humidity' in ts_sensor and isinstance(humidity, (int, float)):
             fields[ts_sensor["ts_field_humidity"]] = round(humidity, 2)
