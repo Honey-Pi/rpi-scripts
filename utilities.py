@@ -165,7 +165,7 @@ def error_log(e=None, printText=None):
 
         dt = datetime.now()
         timestamp = dt.replace(microsecond=0)
-        
+
         # write to file
         with open(file, "a") as myfile:
             myfile.write (str(timestamp) + " | " + printText + "\n")
@@ -231,34 +231,33 @@ def blockPrinting(func):
 
     return func_wrapper
 
-def update_wittypi_settings(wittypi_settings):
+def update_wittypi_schedule(wittypi_schedule):
     try:
-        wittypi_settingsFile = backendFolder + "/schedule.wpi"
+        wittypi_scheduleFile = backendFolder + "/schedule.wpi"
         # write values to file
-        outfile = open(wittypi_settingsFile, "w")
+        outfile = open(wittypi_scheduleFile, "w")
         outfile.truncate(0)
-        outfile.write(wittypi_settings)
+        outfile.write(wittypi_schedule)
         outfile.close()
         if os.path.isfile('/home/pi/wittyPi/wittyPi.sh') and os.path.isfile('/home/pi/wittyPi/syncTime.sh') and os.path.isfile('/home/pi/wittyPi/runScript.sh'):
-            #WittyPi 1
-            print("Wittypi 2 or Wittypi Mini")
-            if len(wittypi_settings) > 1:
+            # WittyPi 2
+            print("Wittypi 2 or Wittypi Mini detected.")
+            if len(wittypi_schedule) > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         elif os.path.isfile('/home/pi/wittypi/wittyPi.sh') and os.path.isfile('/home/pi/wittypi/syncTime.sh') and os.path.isfile('/home/pi/wittypi/runScript.sh'):
-            #WittyPi 3
-            print("Wittypi 2 or Wittypi Mini")
-            if len(wittypi_settings) > 1:
+            # WittyPi 3
+            print("Wittypi 3 or 3 Mini detected.")
+            if len(wittypi_schedule) > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         else:
-            error_log("WittyPI installation missing or incomplete")
-            return False
+            error_log("WittyPi installation missing or incomplete")
     except Exception as ex:
-        print("Error in function update_wittypi_settings: " + str(ex))
+        print("Error in function update_wittypi_schedule: " + str(ex))
 
     return False

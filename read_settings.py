@@ -35,22 +35,22 @@ def get_defaults():
     settings["sensors"] = []
     settings["wittyPi_enabled"] = False #To be removed once Webinterface is updated
     wittyPi = {}
-    wittyPi["wittyPi_enabled"] = False
-    wittyPi["wittyPi_voltagecheck_enabled"] = False
-    wittyPilowvoltagesettings = {}
-    wittyPilowvoltagesettings["wittyPi_enabled"] = False
-    wittyPilowvoltagesettings["wittyPi_script"] = "BEGIN 2015-08-01 06:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   H23 M55"
-    wittyPilowvoltagesettings["voltage"] = 11.9
-    wittyPilowvoltagesettings["shutdownAfterTransfer"] = True
-    wittyPilowvoltagesettings["interval"] = 1
-    wittyPi["low"] = wittyPilowvoltagesettings
-    wittyPinormalvoltagesettings = {}
-    wittyPinormalvoltagesettings["wittyPi_enabled"] = False
-    wittyPinormalvoltagesettings["wittyPi_script"] = "BEGIN 2015-08-01 00:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   M10"
-    wittyPinormalvoltagesettings["voltage"] = 13.2
-    wittyPinormalvoltagesettings["shutdownAfterTransfer"] = False
-    wittyPinormalvoltagesettings["interval"] = 0
-    wittyPi["normal"] = wittyPinormalvoltagesettings
+    wittyPi["enabled"] = False
+    wittyPi["voltagecheck_enabled"] = False
+    lowVoltage = {}
+    lowVoltage["enabled"] = False
+    lowVoltage["schedule"] = "BEGIN 2015-08-01 06:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   H23 M55"
+    lowVoltage["voltage"] = 11.9
+    lowVoltage["shutdownAfterTransfer"] = True
+    lowVoltage["interval"] = 1
+    wittyPi["low"] = lowVoltage
+    normalVoltage = {}
+    normalVoltage["enabled"] = False
+    normalVoltage["schedule"] = "BEGIN 2015-08-01 00:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   M10"
+    normalVoltage["voltage"] = 13.2
+    normalVoltage["shutdownAfterTransfer"] = False
+    normalVoltage["interval"] = 0
+    wittyPi["normal"] = normalVoltage
     settings['wittyPi'] = wittyPi
 
     return settings
@@ -134,25 +134,25 @@ def validate_settings(settings):
 
     # Migrate v0.1.1 to v1.0 (WittyPi)
     try:
-        settings['wittyPi']["wittyPi_enabled"]
-        settings['wittyPi']["wittyPi_script_normal"]
+        settings['wittyPi']["enabled"]
+        settings['wittyPi']["script_normal"]
     except:
         updateSettingsFile = True
         try:
             settings["wittyPi_enabled"]
-            print("Old WittyPi Status to be imported: '" + str(settings["wittyPi_enabled"]) + "'")
+            print("Old wittyPi_enabled to be imported: '" + str(settings["wittyPi_enabled"]) + "'")
             settings["wittyPi_script"]
-            print("Old WittyPi Script to be imported: '" + settings["wittyPi_script"] + "'")
+            print("Old wittyPi_script to be imported: '" + settings["wittyPi_script"] + "'")
             wittyPi = {}
-            wittyPinormalvoltagesettings = {}
-            wittyPi['wittyPi_enabled']= settings["wittyPi_enabled"]
-            wittyPi["wittyPi_voltagecheck_enabled"] = False
-            wittyPinormalvoltagesettings["wittyPi_enabled"] = settings["wittyPi_enabled"]
-            wittyPinormalvoltagesettings["wittyPi_script"] = settings["wittyPi_script"]
-            wittyPinormalvoltagesettings["shutdownAfterTransfer"] = settings["shutdownAfterTransfer"]
-            wittyPinormalvoltagesettings["interval"] = settings["interval"]
-            wittyPinormalvoltagesettings["voltage"] = get_defaults()["wittyPi"]["normal"]["voltage"]
-            wittyPi["normal"] = wittyPinormalvoltagesettings
+            normalVoltage = {}
+            wittyPi['enabled']= settings["wittyPi_enabled"]
+            wittyPi["voltagecheck_enabled"] = False
+            normalVoltage["enabled"] = settings["wittyPi_enabled"]
+            normalVoltage["schedule"] = settings["wittyPi_script"]
+            normalVoltage["shutdownAfterTransfer"] = settings["shutdownAfterTransfer"]
+            normalVoltage["interval"] = settings["interval"]
+            normalVoltage["voltage"] = get_defaults()["wittyPi"]["normal"]["voltage"]
+            wittyPi["normal"] = normalVoltage
             wittyPi["low"] = get_defaults()["wittyPi"]["low"]
             settings['wittyPi'] = wittyPi
         except:

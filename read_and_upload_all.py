@@ -18,7 +18,7 @@ from read_bme680 import initBME680FromMain
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields, update_wittypi_settings
+from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields, update_wittypi_schedule
 from write_csv import write_csv
 from measurement import measure_all_sensors
 
@@ -137,12 +137,12 @@ def start_measurement(measurement_stop):
         # load settings
         settings = get_settings()
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
-        interval = settings["wittyPi"]["normal"]["interval"]
-        intervalVoltageCheck = 60
-        wittyPisettings = settings["wittyPi"]
-        VoltageCheckUnderVoltage = False
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
-        shutdownAfterTransfer = settings["wittyPi"]["normal"]["shutdownAfterTransfer"]
+        wittyPi = settings["wittyPi"]
+        intervalVoltageCheck = 60
+        isLowVoltage = False
+        interval = wittyPi["normal"]["interval"]
+        shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
         offline = settings["offline"] # flag to enable offline csv storage
 
         if debug:
@@ -198,28 +198,25 @@ def start_measurement(measurement_stop):
             # wait seconds of interval before next check
             # free ThingSpeak account has an upload limit of 15 seconds
             time_now = time.time()
-            if wittyPisettings["wittyPi_voltagecheck_enabled"]: 
+            if wittyPi["voltagecheck_enabled"]:
                 isTimeToCheckVoltage = (time_now-time_measured_Voltage >= intervalVoltageCheck)
                 if isTimeToCheckVoltage:
                     if voltageSensors and len(voltageSensors) == 1:
                         voltage = get_raw_voltage(0)
                         now = time.strftime("%H:%M", time.localtime(time_now))
                         print("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
-                        if voltage <= wittyPisettings["low"]["voltage"]:
+                        if voltage <= wittyPi["low"]["voltage"]:
                             print("Running on low voltage")
-                            if not VoltageCheckUnderVoltage:
-                                #update wittypi settings to undervoltage
-                                update_wittypi_settings(wittyPisettings["low"]["wittyPi_script"])
-                                VoltageCheckUnderVoltage = True
-                        elif voltage < wittyPisettings["normal"]["voltage"]:
+                            if not isLowVoltage:
+                                update_wittypi_schedule(wittyPi["low"]["schedule"])
+                                isLowVoltage = True
+                        elif voltage < wittyPi["normal"]["voltage"]:
                             print("No longer low voltage but recovery voltage not reached")
-                            #no update to wittyPi settings
-                        elif voltage >= wittyPisettings["wittyPi_voltage_normal"]:
+                        elif voltage >= wittyPi["voltage_normal"]:
                             print("Running on normal voltage")
-                            if VoltageCheckUnderVoltage:
-                                #update wittypi settings to normal
-                                update_wittypi_settings(wittyPisettings["normal"]["wittyPi_script"])
-                                VoltageCheckUnderVoltage = False
+                            if isLowVoltage:
+                                update_wittypi_schedule(wittyPi["normal"]["schedule"])
+                                isLowVoltage = False
                         else:
                             error_log("Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
                     else:
