@@ -12,10 +12,10 @@ def get_defaults():
     settings["button_pin"] = 16
     settings["led_pin"] = 21
     settings["w1gpio"] = 11
-    settings["interval"] = 0
+    # settings["interval"] = 0
     settings["debug"] = True
     settings["offline"] = 0
-    settings["shutdownAfterTransfer"] = False
+    # settings["shutdownAfterTransfer"] = False
     router = {}
     router['enabled'] = False
     router['ssid'] = None
@@ -37,12 +37,20 @@ def get_defaults():
     wittyPi = {}
     wittyPi["wittyPi_enabled"] = False
     wittyPi["wittyPi_voltagecheck_enabled"] = False
-    wittyPi["wittyPi_enabled_normal"] = False
-    wittyPi["wittyPi_script_normal"] = ""
-    wittyPi["wittyPi_voltage_normal"] = 13.2
-    wittyPi["wittyPi_enabled_undervoltage"] = False
-    wittyPi["wittyPi_script_undervoltage"] = ""
-    wittyPi["wittyPi_voltage_undervoltage"] = 11.9
+    wittyPilowvoltagesettings = {}
+    wittyPilowvoltagesettings["wittyPi_enabled"] = False
+    wittyPilowvoltagesettings["wittyPi_script"] = "BEGIN 2015-08-01 06:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   H23 M55"
+    wittyPilowvoltagesettings["voltage"] = 11.9
+    wittyPilowvoltagesettings["shutdownAfterTransfer"] = True
+    wittyPilowvoltagesettings["interval"] = 1
+    wittyPi["low"] = wittyPilowvoltagesettings
+    wittyPinormalvoltagesettings = {}
+    wittyPinormalvoltagesettings["wittyPi_enabled"] = False
+    wittyPinormalvoltagesettings["wittyPi_script"] = "BEGIN 2015-08-01 00:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   M10"
+    wittyPinormalvoltagesettings["voltage"] = 13.2
+    wittyPinormalvoltagesettings["shutdownAfterTransfer"] = False
+    wittyPinormalvoltagesettings["interval"] = 0
+    wittyPi["normal"] = wittyPinormalvoltagesettings
     settings['wittyPi'] = wittyPi
 
     return settings
@@ -136,14 +144,16 @@ def validate_settings(settings):
             settings["wittyPi_script"]
             print("Old WittyPi Script to be imported: '" + settings["wittyPi_script"] + "'")
             wittyPi = {}
+            wittyPinormalvoltagesettings = {}
             wittyPi['wittyPi_enabled']= settings["wittyPi_enabled"]
-            wittyPi['wittyPi_enabled_normal']= settings["wittyPi_enabled"]
-            wittyPi['wittyPi_script_normal'] = settings["wittyPi_script"]
-            wittyPi["wittyPi_voltage_normal"] = 13.2
-            wittyPi["wittyPi_enabled_undervoltage"] = False
-            wittyPi["wittyPi_script_undervoltage"] = ""
-            wittyPi["wittyPi_voltage_undervoltage"] = 11.9
             wittyPi["wittyPi_voltagecheck_enabled"] = False
+            wittyPinormalvoltagesettings["wittyPi_enabled"] = settings["wittyPi_enabled"]
+            wittyPinormalvoltagesettings["wittyPi_script"] = settings["wittyPi_script"]
+            wittyPinormalvoltagesettings["shutdownAfterTransfer"] = settings["shutdownAfterTransfer"]
+            wittyPinormalvoltagesettings["interval"] = settings["interval"]
+            wittyPinormalvoltagesettings["voltage"] = get_defaults()["wittyPi"]["normal"]["voltage"]
+            wittyPi["normal"] = wittyPinormalvoltagesettings
+            wittyPi["low"] = get_defaults()["wittyPi"]["low"]
             settings['wittyPi'] = wittyPi
         except:
             settings['wittyPi'] = get_defaults()["wittyPi"]
