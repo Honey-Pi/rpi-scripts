@@ -149,8 +149,14 @@ def validate_settings(settings):
             wittyPi["voltagecheck_enabled"] = False
             normalVoltage["enabled"] = settings["wittyPi_enabled"]
             normalVoltage["schedule"] = settings["wittyPi_script"]
-            normalVoltage["shutdownAfterTransfer"] = settings["shutdownAfterTransfer"]
-            normalVoltage["interval"] = settings["interval"]
+            try:
+                normalVoltage["shutdownAfterTransfer"] = settings["shutdownAfterTransfer"]
+            except:
+                normalVoltage["shutdownAfterTransfer"] = get_defaults()["wittyPi"]["normal"]["voltage"]["shutdownAfterTransfer"]
+            try: 
+                normalVoltage["interval"] = settings["interval"]
+            except: 
+                normalVoltage["interval"] = get_defaults()["wittyPi"]["normal"]["voltage"]["interval"]
             normalVoltage["voltage"] = get_defaults()["wittyPi"]["normal"]["voltage"]
             wittyPi["normal"] = normalVoltage
             wittyPi["low"] = get_defaults()["wittyPi"]["low"]
