@@ -209,24 +209,30 @@ def start_measurement(measurement_stop):
                             print("Running on low voltage")
                             if not isLowVoltage:
                                 if wittyPi["low"]["enabled"]:
+                                    print("Enable wittyPi low voltage settings!")
                                     update_wittypi_schedule(wittyPi["low"]["schedule"])
                                 else:
+                                    print("Low voltage but wittyPi disabled!")
                                     update_wittypi_schedule("")
                                 interval = wittyPi["low"]["interval"]
                                 shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
                                 isLowVoltage = setStateToStorage('isLowVoltage', True)
+                                print("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
                         elif voltage < wittyPi["normal"]["voltage"]:
                             print("No longer low voltage but recovery voltage not reached")
                         elif voltage >= wittyPi["normal"]["voltage"]:
                             print("Running on normal voltage")
                             if isLowVoltage:
                                 if wittyPi["normal"]["enabled"]:
+                                    print("Enable wittyPi normal voltage settings!")
                                     update_wittypi_schedule(wittyPi["normal"]["schedule"])
                                 else:
+                                    print("Normal voltage but wittyPi disabled!")
                                     update_wittypi_schedule("")
                                     interval = wittyPi["normal"]["interval"]
                                     shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
                                 isLowVoltage = setStateToStorage('isLowVoltage', False)
+                                print("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
                         else:
                             error_log("Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
                     else:
