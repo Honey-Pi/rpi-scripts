@@ -217,7 +217,7 @@ def start_measurement(measurement_stop):
                                 isLowVoltage = setStateToStorage('isLowVoltage', True)
                         elif voltage < wittyPi["normal"]["voltage"]:
                             print("No longer low voltage but recovery voltage not reached")
-                        elif voltage >= wittyPi["voltage_normal"]:
+                        elif voltage >= wittyPii["normal"]["voltage"]:
                             print("Running on normal voltage")
                             if isLowVoltage:
                                 if wittyPi["normal"]["enabled"]:
