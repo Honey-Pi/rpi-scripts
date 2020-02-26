@@ -185,7 +185,7 @@ def start_measurement(measurement_stop):
         time_measured = 0
         time_measured_Voltage = 0
         if voltageSensors and len(voltageSensors) == 1:
-            voltage = get_raw_voltage(0) #initial measurement as first measurement is always wrong
+            voltage = get_raw_voltage(voltageSensors[0]) #initial measurement as first measurement is always wrong
         while not measurement_stop.is_set():
             counter += 1
 
@@ -198,11 +198,11 @@ def start_measurement(measurement_stop):
             # wait seconds of interval before next check
             # free ThingSpeak account has an upload limit of 15 seconds
             time_now = time.time()
-            if wittyPi["voltagecheck_enabled"]:
+            if wittyPi["voltagecheck_enabled"] and wittyPi["enabled"]:
                 isTimeToCheckVoltage = (time_now-time_measured_Voltage >= intervalVoltageCheck)
                 if isTimeToCheckVoltage:
                     if voltageSensors and len(voltageSensors) == 1:
-                        voltage = get_raw_voltage(0)
+                        voltage = get_raw_voltage(voltageSensors[0])
                         now = time.strftime("%H:%M", time.localtime(time_now))
                         print("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
                         if voltage <= wittyPi["low"]["voltage"]:
