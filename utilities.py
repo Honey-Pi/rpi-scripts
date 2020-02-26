@@ -270,7 +270,7 @@ def getStateFromStorage(variable, default_value=False):
             content = Path(file).read_text()
             return content
         else:
-            print('getStateFromStorage: ' + variable + ' does not exists. default_value=' + default_value)
+            print('getStateFromStorage: ' + variable + ' does not exists. default_value=' + str(default_value))
     except Exception as ex:
         print("getStateFromStorage:" + str(ex))
         pass
