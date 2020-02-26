@@ -100,11 +100,11 @@ def validate_settings(settings):
         settings["debug"] = get_defaults()["debug"]
         updateSettingsFile = True
 
-    try:
-        settings["shutdownAfterTransfer"]
-    except:
-        settings["shutdownAfterTransfer"] = get_defaults()["shutdownAfterTransfer"]
-        updateSettingsFile = True
+    #try:
+        #settings["shutdownAfterTransfer"]
+    #except:
+        #settings["shutdownAfterTransfer"] = get_defaults()["shutdownAfterTransfer"]
+        #updateSettingsFile = True
 
     try:
         settings["offline"]
