@@ -141,8 +141,12 @@ def start_measurement(measurement_stop):
         wittyPi = settings["wittyPi"]
         intervalVoltageCheck = 60
         isLowVoltage = getStateFromStorage('isLowVoltage', False)
-        interval = wittyPi["normal"]["interval"]
-        shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
+        if isLowVoltage:
+            interval = wittyPi["low"]["interval"]
+            shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
+        else:
+            interval = wittyPi["normal"]["interval"]
+            shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
         offline = settings["offline"] # flag to enable offline csv storage
 
         if debug:
