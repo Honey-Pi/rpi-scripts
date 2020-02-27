@@ -268,7 +268,8 @@ def getStateFromStorage(variable, default_value=False):
     try:
         if os.path.exists(file):
             content = Path(file).read_text()
-            return content
+            if len(content) > 0
+                return content
         else:
             print('getStateFromStorage: ' + variable + ' does not exists. default_value=' + str(default_value))
     except Exception as ex:

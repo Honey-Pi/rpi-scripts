@@ -40,7 +40,7 @@ def get_defaults():
     lowVoltage = {}
     lowVoltage["enabled"] = False
     lowVoltage["schedule"] = "BEGIN 2015-08-01 06:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   H23 M55"
-    lowVoltage["voltage"] = 11.9
+    lowVoltage["voltage"] = 12.8
     lowVoltage["shutdownAfterTransfer"] = True
     lowVoltage["interval"] = 1
     wittyPi["low"] = lowVoltage
@@ -153,9 +153,9 @@ def validate_settings(settings):
                 normalVoltage["shutdownAfterTransfer"] = settings["shutdownAfterTransfer"]
             except:
                 normalVoltage["shutdownAfterTransfer"] = get_defaults()["wittyPi"]["normal"]["voltage"]["shutdownAfterTransfer"]
-            try: 
+            try:
                 normalVoltage["interval"] = settings["interval"]
-            except: 
+            except:
                 normalVoltage["interval"] = get_defaults()["wittyPi"]["normal"]["voltage"]["interval"]
             normalVoltage["voltage"] = get_defaults()["wittyPi"]["normal"]["voltage"]
             wittyPi["normal"] = normalVoltage
