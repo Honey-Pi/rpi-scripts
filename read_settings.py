@@ -40,14 +40,14 @@ def get_defaults():
     lowVoltage = {}
     lowVoltage["enabled"] = False
     lowVoltage["schedule"] = "BEGIN 2015-08-01 06:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   H23 M55"
-    lowVoltage["voltage"] = 12.8
+    lowVoltage["voltage"] = 11.9
     lowVoltage["shutdownAfterTransfer"] = True
     lowVoltage["interval"] = 1
     wittyPi["low"] = lowVoltage
     normalVoltage = {}
     normalVoltage["enabled"] = False
     normalVoltage["schedule"] = "BEGIN 2015-08-01 00:00:00 \nEND   2025-07-31 23:59:59 \nON   M5\nOFF   M10"
-    normalVoltage["voltage"] = 13.2
+    normalVoltage["voltage"] = 12.8
     normalVoltage["shutdownAfterTransfer"] = False
     normalVoltage["interval"] = 0
     wittyPi["normal"] = normalVoltage
@@ -99,12 +99,6 @@ def validate_settings(settings):
     except:
         settings["debug"] = get_defaults()["debug"]
         updateSettingsFile = True
-
-    #try:
-        #settings["shutdownAfterTransfer"]
-    #except:
-        #settings["shutdownAfterTransfer"] = get_defaults()["shutdownAfterTransfer"]
-        #updateSettingsFile = True
 
     try:
         settings["offline"]
@@ -163,6 +157,55 @@ def validate_settings(settings):
             settings['wittyPi'] = wittyPi
         except:
             settings['wittyPi'] = get_defaults()["wittyPi"]
+
+    try:
+        settings['wittyPi']["normal"]["shutdownAfterTransfer"]
+    except:
+        settings['wittyPi']["normal"]["shutdownAfterTransfer"]["shutdownAfterTransfer"] = get_defaults()["wittyPi"]["normal"]["voltage"]["shutdownAfterTransfer"]
+    try:
+        settings['wittyPi']["low"]["shutdownAfterTransfer"]
+    except:
+        settings['wittyPi']["low"]["shutdownAfterTransfer"]["shutdownAfterTransfer"] = get_defaults()["wittyPi"]["low"]["voltage"]["shutdownAfterTransfer"]
+    try:
+        settings['wittyPi']["normal"]["interval"]
+    except:
+        settings['wittyPi']["normal"]["interval"] = get_defaults()["wittyPi"]["normal"]["voltage"]["interval"]
+    try:
+        settings['wittyPi']["low"]["interval"]
+    except:
+        settings['wittyPi']["low"]["interval"] = get_defaults()["wittyPi"]["low"]["voltage"]["interval"]
+    try:
+        settings['wittyPi']['enabled']
+    except:
+        settings['wittyPi']['enabled'] = get_defaults()["wittyPi"]["enabled"]
+    try:
+        settings['wittyPi']["voltagecheck_enabled"]
+    except:
+        settings['wittyPi']["voltagecheck_enabled"] = get_defaults()['wittyPi']["voltagecheck_enabled"]
+    try:
+        settings['wittyPi']["normal"]["voltage"]
+    except:
+        settings['wittyPi']["normal"]["voltage"] = get_defaults()["wittyPi"]["normal"]["voltage"]
+    try:
+        settings['wittyPi']["low"]["voltage"]
+    except:
+        settings['wittyPi']["low"]["voltage"] = get_defaults()["wittyPi"]["low"]["voltage"]
+    try:
+        settings['wittyPi']["normal"]["enabled"]
+    except:
+        settings['wittyPi']["normal"]["enabled"] = get_defaults()["wittyPi"]["normal"]["enabled"]
+    try:
+        settings['wittyPi']["low"]["enabled"]
+    except:
+        settings['wittyPi']["low"]["enabled"] = get_defaults()["wittyPi"]["low"]["enabled"]
+    try:
+        settings['wittyPi']["normal"]["schedule"]
+    except:
+        settings['wittyPi']["normal"]["schedule"] = get_defaults()["wittyPi"]["normal"]["schedule"]
+    try:
+        settings['wittyPi']["low"]["schedule"]
+    except:
+        settings['wittyPi']["low"]["schedule"] = get_defaults()["wittyPi"]["low"]["schedule"]
 
     if updateSettingsFile:
         print("Info: Settings have been changed because of version migration.")
