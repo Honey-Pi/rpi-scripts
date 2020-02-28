@@ -269,9 +269,19 @@ def getStateFromStorage(variable, default_value=False):
     file = scriptsFolder + '/.' + variable
     try:
         if os.path.exists(file):
-            content = Path(file).read_text()
-            if len(content) > 0:
-                return content
+            with open(file, 'r') as f:
+                content = f.readline()
+                if len(content) > 0:
+                    if content == "True":
+                        content = True
+                    elif content == "False":
+                        content = False
+                    else:
+                        print("Fallback to default value")
+                        content = default_value
+                    print("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
+                    return content
+
         else:
             print('getStateFromStorage: ' + variable + ' does not exists. default_value=' + str(default_value))
     except Exception as ex:
