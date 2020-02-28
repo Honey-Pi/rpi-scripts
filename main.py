@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage
 
 # global vars
 measurement = None
@@ -26,6 +26,7 @@ def start_ap():
     global isActive, GPIO_LED
     isActive = 1 # measurement shall start next time
     print("Maintenance Mode: START - Connect yourself to HoneyPi-Wifi.")
+    isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode) #client_to_ap_mode()
     t1.start()
@@ -35,6 +36,7 @@ def stop_ap(boot=0):
     isActive = 0 # measurement shall stop next time
     if not boot:
         print("Maintenance Mode: STOP")
+    isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
     t2.start()
@@ -126,6 +128,7 @@ def main():
     create_ap()
     # start as seperate background thread
     # because Taster pressing was not recognised
+    isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     measurement_stop = threading.Event() # create event to stop measurement
     measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
     measurement.start() # start measurement
