@@ -245,8 +245,8 @@ def start_measurement(measurement_stop):
                 else:
                     print("No Voltage Check due")
 
-            isTimeToMeasure = (time_now-time_measured >= interval) and counter > 0 # old: counter%interval == 0
-            if isTimeToMeasure or interval == 1:
+            isTimeToMeasure = ((time_now-time_measured >= interval) or (interval == 1)) and counter > 0 # old: counter%interval == 0
+            if isTimeToMeasure:
                 now = time.strftime("%H:%M", time.localtime(time_now))
                 lastMeasurement = time.strftime("%H:%M", time.localtime(time_measured))
                 if time_measured == 0:
