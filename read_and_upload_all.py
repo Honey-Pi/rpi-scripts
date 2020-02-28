@@ -270,6 +270,13 @@ def start_measurement(measurement_stop):
                     measurement_stop.set()
 
                     if shutdownAfterTransfer:
+                        isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
+                        print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
+                        while isMaintenanceActive: 
+                            isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
+                            print("Shutting down was set but Maintenance mode is active, delaying shutdown!")
+                            print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
+                            time.sleep(10) 
                         print("Shutting down was set => Waiting 10seconds and then shutdown.")
                         tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25)) #client_to_ap_mode()
                         tblink.start()
