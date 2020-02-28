@@ -115,7 +115,7 @@ def measurement():
         return json.dumps(ts_fields)
 
     except Exception as e:
-        print("Measurement: " + str(e))
+        error_log(e, "Unhandled Exception in Measurement")
 
     # Error occured
     return {}
