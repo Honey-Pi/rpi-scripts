@@ -221,7 +221,7 @@ def get_sensors(settings, type):
         # Key doesn't exist => return empty array
         return []
 
-    sensors = [x for x in all_sensors if x["type"] == type]
+    sensors = [x for x in all_sensors if "type" in x and x["type"] == type]
     # not found => return empty array
     if len(sensors) < 1:
         return []
