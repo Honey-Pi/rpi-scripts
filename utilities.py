@@ -271,7 +271,7 @@ def getStateFromStorage(variable, default_value=False):
     try:
         if os.path.exists(file):
             with open(file, 'r') as f:
-                content = f.readline()
+                content = f.readline().replace('\n', '').replace('\r', '')
                 if len(content) > 0:
                     if content == "True":
                         content = True
