@@ -13,6 +13,7 @@ def get_weight(sensor):
     weight = measure_weight(sensor)
     stop_single()
 
+    # return weight in gramms
     return weight
 
 if __name__ == '__main__':
