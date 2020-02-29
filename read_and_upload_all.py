@@ -238,9 +238,9 @@ def start_measurement(measurement_stop):
                                 isLowVoltage = setStateToStorage('isLowVoltage', False)
                                 print("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
                         else:
-                            error_log("Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
+                            error_log("Warning: Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
                     else:
-                        error_log("WittyPi Voltage checks enabled but no VoltageSensors configured")
+                        error_log("Info: WittyPi Voltage checks enabled but no VoltageSensors configured")
                     time_measured_Voltage = time.time()
                 else:
                     print("No Voltage Check due")
@@ -272,11 +272,11 @@ def start_measurement(measurement_stop):
                     if shutdownAfterTransfer:
                         isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
                         print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
-                        while isMaintenanceActive: 
+                        while isMaintenanceActive:
                             isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
                             print("Shutting down was set but Maintenance mode is active, delaying shutdown!")
                             print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
-                            time.sleep(10) 
+                            time.sleep(10)
                         print("Shutting down was set => Waiting 10seconds and then shutdown.")
                         tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25)) #client_to_ap_mode()
                         tblink.start()
