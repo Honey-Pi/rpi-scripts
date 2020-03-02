@@ -19,7 +19,7 @@ from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import start_single, stop_single
+from utilities import start_single, stop_single, error_log
 
 def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits):
 
