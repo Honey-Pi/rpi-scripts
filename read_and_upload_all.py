@@ -221,7 +221,7 @@ def start_measurement(measurement_stop):
                                 interval = wittyPi["low"]["interval"]
                                 shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
                                 isLowVoltage = setStateToStorage('isLowVoltage', True)
-                                print("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+                                error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
                         elif voltage < wittyPi["normal"]["voltage"]:
                             print("No longer low voltage but recovery voltage not reached")
                         elif voltage >= wittyPi["normal"]["voltage"]:
@@ -236,7 +236,7 @@ def start_measurement(measurement_stop):
                                     interval = wittyPi["normal"]["interval"]
                                     shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
                                 isLowVoltage = setStateToStorage('isLowVoltage', False)
-                                print("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+                                error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
                         else:
                             error_log("Warning: Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
                     else:
