@@ -139,15 +139,15 @@ def start_measurement(measurement_stop):
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
         wittyPi = settings["wittyPi"]
+        offline = settings["offline"] # flag to enable offline csv storage
         intervalVoltageCheck = 60
         isLowVoltage = getStateFromStorage('isLowVoltage', False)
-        if isLowVoltage:
+        if isLowVoltage == True:
             interval = wittyPi["low"]["interval"]
             shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
         else:
             interval = wittyPi["normal"]["interval"]
             shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
-        offline = settings["offline"] # flag to enable offline csv storage
 
         if debug:
             print("Debug-Mode is enabled.")
@@ -211,12 +211,12 @@ def start_measurement(measurement_stop):
                         print("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
                         if voltage <= wittyPi["low"]["voltage"]:
                             print("Running on low voltage")
-                            if not isLowVoltage:
+                            if isLowVoltage == False:
                                 if wittyPi["low"]["enabled"]:
-                                    print("Enable wittyPi low voltage settings!")
+                                    error_log("Info: Enable wittyPi low voltage settings!")
                                     update_wittypi_schedule(wittyPi["low"]["schedule"])
                                 else:
-                                    print("Low voltage but wittyPi disabled!")
+                                    error_log("Info: Low voltage but wittyPi disabled!")
                                     update_wittypi_schedule("")
                                 interval = wittyPi["low"]["interval"]
                                 shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
@@ -226,12 +226,12 @@ def start_measurement(measurement_stop):
                             print("No longer low voltage but recovery voltage not reached")
                         elif voltage >= wittyPi["normal"]["voltage"]:
                             print("Running on normal voltage")
-                            if isLowVoltage:
+                            if isLowVoltage == True:
                                 if wittyPi["normal"]["enabled"]:
-                                    print("Enable wittyPi normal voltage settings!")
+                                    error_log("Info: Enable wittyPi normal voltage settings!")
                                     update_wittypi_schedule(wittyPi["normal"]["schedule"])
                                 else:
-                                    print("Normal voltage but wittyPi disabled!")
+                                    error_log("Info: Normal voltage but wittyPi disabled!")
                                     update_wittypi_schedule("")
                                     interval = wittyPi["normal"]["interval"]
                                     shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
@@ -245,7 +245,7 @@ def start_measurement(measurement_stop):
                 else:
                     print("No Voltage Check due")
 
-            isTimeToMeasure = ((time_now-time_measured >= interval) or (interval == 1)) and counter > 0 # old: counter%interval == 0
+            isTimeToMeasure = ((time_now-time_measured >= interval) or (interval == 1)) and counter > 0
             if isTimeToMeasure:
                 now = time.strftime("%H:%M", time.localtime(time_now))
                 lastMeasurement = time.strftime("%H:%M", time.localtime(time_measured))
@@ -278,7 +278,7 @@ def start_measurement(measurement_stop):
                             print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
                             time.sleep(10)
                         print("Shutting down was set => Waiting 10seconds and then shutdown.")
-                        tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25)) #client_to_ap_mode()
+                        tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25))
                         tblink.start()
                         time.sleep(10)
                         shutdown()
