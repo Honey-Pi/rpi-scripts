@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule
 
 # global vars
 measurement = None
@@ -86,13 +86,19 @@ def button_pressed_falling():
     MAX_TIME_TO_ELAPSE = 3000
     stop_led(GPIO_LED)
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
+        # normal button press to switch between measurement and maintenance
         toggle_measurement()
     elif time_elapsed >= 5000 and time_elapsed <= 10000:
-        blink_led(GPIO_LED, 0.1)
+        # shutdown raspberry
+        tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
+        tblink.start()
         shutdown()
     elif time_elapsed >= 10000 and time_elapsed <= 15000:
-        blink_led(GPIO_LED, 0.1)
+        # reset settings and shutdown
+        tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
+        tblink.start()
         delete_settings()
+        update_wittypi_schedule("")
         shutdown()
     elif debug:
         time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s

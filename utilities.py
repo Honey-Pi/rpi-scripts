@@ -260,7 +260,7 @@ def update_wittypi_schedule(schedule):
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         else:
-            error_log("WittyPi installation missing or incomplete")
+            error_log("Info: WittyPi installation missing or incomplete")
     except Exception as ex:
         error_log("Error in function update_wittypi_schedule: " + str(ex))
 
