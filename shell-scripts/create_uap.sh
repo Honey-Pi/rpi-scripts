@@ -18,7 +18,8 @@ fi
 # prevent using 5Ghz (uap0: IEEE 802.11 Hardware does not support configured channel)
 if [[ "$CHANNEL" -gt "13" ]]; then
    echo "Info: Select 5GHz (Channel: $CHANNEL) for AccessPoint"
-   HWMODE="a" #5Ghz
+   HWMODE="g" #5Ghz
+   CHANNEL="1"
 else
    echo "Info: Select 2,4GHz (Channel: $CHANNEL) for AccessPoint"
    HWMODE="g" #2,4Ghz
