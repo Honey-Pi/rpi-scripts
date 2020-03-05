@@ -16,13 +16,15 @@ if [[ -z "$CHANNEL" ]]; then
    CHANNEL="1"
 fi
 # prevent using 5Ghz (uap0: IEEE 802.11 Hardware does not support configured channel)
+#HWMODE=g 2,4GHz
+#HWMODE=a 5 GHz
 if [[ "$CHANNEL" -gt "13" ]]; then
-   echo "Info: Select 5GHz (Channel: $CHANNEL) for AccessPoint"
-   HWMODE="g" #5Ghz
+   echo "Info: A 5GHz (Channel: $CHANNEL) WiFi is connected."
+   HWMODE="g"
    CHANNEL="1"
 else
    echo "Info: Select 2,4GHz (Channel: $CHANNEL) for AccessPoint"
-   HWMODE="g" #2,4Ghz
+   HWMODE="g"
 fi
 export CHANNEL && export HWMODE
 # Create the config for hostapd
