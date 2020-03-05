@@ -31,10 +31,10 @@ def initBME680(ts_sensor):
 
         try:
             offset = ts_sensor[0]["offset"]
-            print('BME680 Temperature Offset ' + str(offset) + ' read from settings')
+            print('BME680: The Temperature Offset is ' + str(offset) + ' °C')
         except:
             offset = -1.5
-            print('BME680 Temperature Offset ' + str(offset) + ' set from default value')
+            print('BME680: The Temperature Offset is default: ' + str(offset) + '°C')
 
         # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
         sensor.set_humidity_oversample(bme680.OS_2X)
