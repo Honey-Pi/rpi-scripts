@@ -22,7 +22,7 @@ def stop_tv():
 def stop_led(gpio=21):
     # Turn Raspi-LED off
     os.system("sudo bash -c 'echo 0 > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo 0 > /sys/class/leds/led1/brightness'") # red LED
+    os.system("sudo bash -c 'echo 0 > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
     GPIO.setwarnings(False)
@@ -33,7 +33,7 @@ def stop_led(gpio=21):
 def start_led(gpio=21):
     # Turn Raspi-LED on
     os.system("sudo bash -c 'echo 1 > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo 1 > /sys/class/leds/led1/brightness'") # red LED
+    os.system("sudo bash -c 'echo 1 > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
     GPIO.setwarnings(False)
