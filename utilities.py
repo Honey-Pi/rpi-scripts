@@ -278,12 +278,12 @@ def getStateFromStorage(variable, default_value=False):
                     elif content == "False":
                         content = False
                     else:
-                        print("Fallback to default value")
+                        print("Warning: Fallback to default value")
                         content = default_value
                     print("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
                     return content
                 else:
-                    print("Content is empty. But file exists.")
+                    print(variable + ' has initial state because file is empty.')
                     return None
 
         else:
