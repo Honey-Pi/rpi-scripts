@@ -132,6 +132,9 @@ def main():
 
     # Create virtual uap0 for WLAN
     create_ap()
+
+    # TODO: Call connection.sh
+
     # start as seperate background thread
     # because Taster pressing was not recognised
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
