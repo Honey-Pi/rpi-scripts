@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial
 
 # global vars
 measurement = None
@@ -28,7 +28,7 @@ def start_ap():
     print("Maintenance Mode: START - Connect yourself to HoneyPi-Wifi.")
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     start_led(GPIO_LED)
-    t1 = threading.Thread(target=client_to_ap_mode) #client_to_ap_mode()
+    t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
 
 def stop_ap(boot=0):
@@ -38,7 +38,7 @@ def stop_ap(boot=0):
         print("Maintenance Mode: STOP")
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     stop_led(GPIO_LED)
-    t2 = threading.Thread(target=ap_to_client_mode) #ap_to_client_mode()
+    t2 = threading.Thread(target=ap_to_client_mode)
     t2.start()
 
 def close_script():
@@ -133,7 +133,8 @@ def main():
     # Create virtual uap0 for WLAN
     create_ap()
 
-    # TODO: Call connection.sh
+    # Call wvdial for surfsticks
+    start_wvdial()
 
     # start as seperate background thread
     # because Taster pressing was not recognised

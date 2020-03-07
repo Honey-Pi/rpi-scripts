@@ -8,21 +8,22 @@ fi
 
 if [ "$1" = "run" ] ; then
     while true; do
+		# TODO: Check if modem is connected (Specified filename /dev/ttyUSB0 does not exist.)
         if ! ps -C wvdial
         then
-            echo ">>> No wvdial process running... Start WvDial."
+            echo ">>> No wvdial process running... Start WvDial to connect modem."
             wvdial &
             time_started=`date +%s`
         fi
-        sleep 55
-        pppExists=$(ip link show ppp0 | grep -c UP)
-        if [ $pppExists != "1" ]; then
-            time_stopped=`date +%s`
-            time_running=$((time_stopped-time_started))
-            echo ">>> ppp0 does not show up => Clean old processes. Runtime was $time_running seconds"
-            killall wvdial
-        fi
-        sleep 5
+        sleep 600
+        #pppExists=$(ip link show ppp0 | grep -c UP)
+        #if [ $pppExists != "1" ]; then
+        #    time_stopped=`date +%s`
+        #    time_running=$((time_stopped-time_started))
+        #    echo ">>> ppp0 does not show up => Clean old processes. Runtime was $time_running seconds"
+        #    killall wvdial
+        #fi
+        #sleep 5
     done
 elif [ "$1" = "start" ] ; then
     wvdial &
@@ -33,7 +34,7 @@ elif [ "$1" = "stop" ] ; then
 elif [ "$1" = "set-apn" ] ; then
     if [ -z "$2" ] ; then
     	echo "Warning: Missing argument APN."
-        APN="pinternet.interkom.de"
+        APN="pinternet.interkom.de" # default: NetzClub
     else
         APN="$2"
     fi

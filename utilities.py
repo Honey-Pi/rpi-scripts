@@ -60,6 +60,9 @@ def blink_led(gpio=21, duration=0.25):
     time.sleep(duration)
     stop_led(gpio)
 
+def start_wvdial():
+    os.system("(sudo sh " + scriptsFolder + "/shell-scripts/connection.sh run)&")
+
 def create_ap():
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/create_uap.sh")
     os.system("sudo ifdown uap0")
