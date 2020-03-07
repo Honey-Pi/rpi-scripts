@@ -11,7 +11,7 @@ if [ "$1" = "run" ] ; then
 		# TODO: Check if modem is connected (Specified filename /dev/ttyUSB0 does not exist.)
         if ! ps -C wvdial
         then
-            echo ">>> No wvdial process running... Start WvDial to connect modem."
+            echo ">>> No wvdial process running... Start WvDial to connect modem to internet."
             wvdial &
             time_started=`date +%s`
         fi
