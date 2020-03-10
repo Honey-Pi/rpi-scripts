@@ -26,7 +26,7 @@ def measure_temperature(device_id):
             return temperature
 
     except FileNotFoundError:
-        print("FileNotFoundError: Cannot find Device-ID")
+        print("Cannot find Device-ID from Ds18b20 Sensor.")
         return None
 
 # function for reading the value from sensor
