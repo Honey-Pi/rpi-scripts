@@ -8,14 +8,19 @@ fi
 
 if [ "$1" = "run" ] ; then
     while true; do
-		# TODO: Check if modem is connected (Specified filename /dev/ttyUSB0 does not exist.)
-        if ! ps -C wvdial
-        then
-            echo ">>> No wvdial process running... Start WvDial to connect modem to internet."
-            wvdial &
-            time_started=`date +%s`
-        fi
+		# Check if modem is connected (/dev/ttyUSB0 does exist)
+		if ls -la /dev/ttyUSB0 2>/dev/null; then
+			# TODO: Run usb_modewitch rule for specifick surfsticks
+			# Check if wvdial process is running
+			if ! ps -C wvdial
+	        then
+	            echo ">>> No wvdial process running... Start WvDial to connect modem to internet."
+	            wvdial &
+	            time_started=`date +%s`
+	        fi
+		fi
         sleep 600
+		# Kill a old wvdial process if ppp0 does not show up anymore
         #pppExists=$(ip link show ppp0 | grep -c UP)
         #if [ $pppExists != "1" ]; then
         #    time_stopped=`date +%s`
