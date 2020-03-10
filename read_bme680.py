@@ -50,7 +50,7 @@ def initBME680(ts_sensor):
         return 1
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
-            print("Initializing BME680 failed: Most likely wrong Sensor Chip-ID")
+            print("Initializing BME680 failed: Most likely wrong Sensor Chip-ID or sensor not connected.")
         else:
             print("Initializing BME680 failed: " + str(ex))
     return 0
