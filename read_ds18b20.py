@@ -12,7 +12,7 @@ filtered_temperature = [[]] # here we keep the temperature values after removing
 
 def measure_temperature(device_id):
     try:
-        
+
         # read 1-wire slave file
         with open('/sys/bus/w1/devices/' + device_id + '/w1_slave', 'r') as file:
             file_content = file.read()
@@ -62,9 +62,8 @@ def filter_values(unfiltered_values, std_factor=2):
 
 # function for appending the filter
 def filter_temperatur_values(sensorIndex):
-    if len(unfiltered_values[sensorIndex]) > 5:
-        # read the last 5 values
-        # and filter them
+    if sensorIndex in unfiltered_values and len(unfiltered_values[sensorIndex]) > 5:
+        # read the last 5 values and filter them
         filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-5:]])))
 
 def checkIfSensorExistsInArray(sensorIndex):

@@ -14,7 +14,7 @@ import RPi.GPIO as GPIO
 from read_bme680 import measure_bme680, initBME680FromMain
 from read_bme280 import measure_bme280
 from read_pcf8591 import measure_voltage
-from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values, checkIfSensorExistsInArray
+from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values
 from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
 from read_max import measure_tc
@@ -25,35 +25,31 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     try:
-       # measure every sensor with type 0
-       try:
+
+        # measure every sensor with type 0 (Ds18b20)
+        try:
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 filter_temperatur_values(sensorIndex)
-       except Exception as e:
-            error_log(e, "Unhandled Exception in Measurement / ds18b20Sensors filter_temperatur_values")
-         try:     
-            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-                if filtered_temperature is not None:
-                    # if we have at leat one filtered value we can upload
-                    if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
-                        ts_field_ds18b20 = sensor["ts_field"]
-                        ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
-                        if ts_field_ds18b20:
-                            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-                    elif len(filtered_temperature[sensorIndex]) == 0 and 'ts_field' and 'device_id' in sensor:
-                        #Case for filtered_temperature was not filled, use direct measured temperture in this case
-                        ts_field_ds18b20 = sensor["ts_field"]
-                        ds18b20_temperature = measure_temperature(sensor["device_id"])
-                        if ts_field_ds18b20:
-                            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-                else:
-                    if 'ts_field' in sensor and 'device_id' in sensor:
-                        ts_field_ds18b20 = sensor["ts_field"]
-                        ds18b20_temperature = measure_temperature(sensor["device_id"])
-                        if ts_field_ds18b20:
-                            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
         except Exception as e:
-            error_log(e, "Unhandled Exception in Measurement / ds18b20Sensors")
+           error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors filter_temperatur_values")
+
+        try:
+            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+                if filtered_temperature is not None and len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
+                    # if we have at leat one filtered value we can upload
+                    ts_field_ds18b20 = sensor["ts_field"]
+                    ds18b20_temperature = filtered_temperature[sensorIndex].pop()
+                    ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
+                    if ts_field_ds18b20:
+                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+                elif 'ts_field' and 'device_id' in sensor:
+                    # Case for filtered_temperature was not filled, use direct measured temperture in this case
+                    ts_field_ds18b20 = sensor["ts_field"]
+                    ds18b20_temperature = measure_temperature(sensor["device_id"])
+                    if ts_field_ds18b20:
+                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+        except Exception as e:
+            error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors")
 
         # measure BME680 (can only be one) [type 1]
         if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:

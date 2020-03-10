@@ -114,7 +114,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
                     if s and debug:
                         error_log("Info: Data succesfully saved to CSV-File.")
                 except Exception as ex:
-                    error_log(ex, "Exception")
+                    error_log(ex, "Exception in measure")
 
             # if transfer to thingspeak is set
             if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
