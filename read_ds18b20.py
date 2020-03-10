@@ -62,11 +62,17 @@ def filter_values(unfiltered_values, std_factor=2):
 
 # function for appending the filter
 def filter_temperatur_values(sensorIndex):
-    if len(unfiltered_values[sensorIndex]) > 5:
-        # read the last 5 values
-        # and filter them
-        filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-5:]])))
-
+    try:
+        unfiltered_values[sensorIndex]
+        if len(unfiltered_values[sensorIndex]) > 5:
+            # read the last 5 values
+            # and filter them
+            filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-5:]])))
+    except IndexError:
+        print("IndexError: Cannot find unfiltered_values for sensorindex '" + str(sensorIndex) + "'")
+    except:
+        print("Error in filter_temperatur_values")
+        
 def checkIfSensorExistsInArray(sensorIndex):
     try:
         filtered_temperature[sensorIndex]
