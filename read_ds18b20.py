@@ -7,8 +7,8 @@ import math
 import numpy as np
 from pprint import pprint
 
-unfiltered_values = [[]] # here we keep all the unfilteres values
-filtered_temperature = [[]] # here we keep the temperature values after removing outliers
+unfiltered_values = [] # here we keep all the unfilteres values
+filtered_temperature = [] # here we keep the temperature values after removing outliers
 
 def measure_temperature(device_id):
     try:
