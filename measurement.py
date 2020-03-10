@@ -25,30 +25,35 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     try:
-        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-            filter_temperatur_values(sensorIndex)
-
-        # measure every sensor with type 0
-        for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
-            if filtered_temperature is not None:
-                # if we have at leat one filtered value we can upload
-                if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
-                    ts_field_ds18b20 = sensor["ts_field"]
-                    ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
-                    if ts_field_ds18b20:
-                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-                elif len(filtered_temperature[sensorIndex]) == 0 and 'ts_field' and 'device_id' in sensor:
-                    #Case for filtered_temperature was not filled, use direct measured temperture in this case
-                    ts_field_ds18b20 = sensor["ts_field"]
-                    ds18b20_temperature = measure_temperature(sensor["device_id"])
-                    if ts_field_ds18b20:
-                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
-            else:
-                if 'ts_field' in sensor and 'device_id' in sensor:
-                    ts_field_ds18b20 = sensor["ts_field"]
-                    ds18b20_temperature = measure_temperature(sensor["device_id"])
-                    if ts_field_ds18b20:
-                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+       # measure every sensor with type 0
+       try:
+            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+                filter_temperatur_values(sensorIndex)
+       except Exception as e:
+            error_log(e, "Unhandled Exception in Measurement / ds18b20Sensors filter_temperatur_values")
+         try:     
+            for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
+                if filtered_temperature is not None:
+                    # if we have at leat one filtered value we can upload
+                    if len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
+                        ts_field_ds18b20 = sensor["ts_field"]
+                        ds18b20_temperature = float("{0:.2f}".format(filtered_temperature[sensorIndex].pop()))
+                        if ts_field_ds18b20:
+                            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+                    elif len(filtered_temperature[sensorIndex]) == 0 and 'ts_field' and 'device_id' in sensor:
+                        #Case for filtered_temperature was not filled, use direct measured temperture in this case
+                        ts_field_ds18b20 = sensor["ts_field"]
+                        ds18b20_temperature = measure_temperature(sensor["device_id"])
+                        if ts_field_ds18b20:
+                            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+                else:
+                    if 'ts_field' in sensor and 'device_id' in sensor:
+                        ts_field_ds18b20 = sensor["ts_field"]
+                        ds18b20_temperature = measure_temperature(sensor["device_id"])
+                        if ts_field_ds18b20:
+                            ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+        except Exception as e:
+            error_log(e, "Unhandled Exception in Measurement / ds18b20Sensors")
 
         # measure BME680 (can only be one) [type 1]
         if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
