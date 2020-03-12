@@ -298,11 +298,11 @@ def getStateFromStorage(variable, default_value=False):
                     print("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
                     return content
                 else:
-                    print(variable + ' has initial state because file is empty.')
+                    print('Info: ' + variable + ' has initial state because file is empty.')
                     return None
 
         else:
-            print(variable + ' does not exists. default_value=' + str(default_value))
+            print('Info: ' + variable + ' does not exists. default_value=' + str(default_value))
     except Exception as ex:
         print("getStateFromStorage:" + str(ex))
         pass

@@ -150,7 +150,7 @@ def start_measurement(measurement_stop):
             shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
 
         if debug:
-            print("Debug-Mode is enabled.")
+            print("Info: Debug-Mode is enabled.")
             error_log("Info: The measurements have started.")
 
         # with process shared variables

@@ -25,17 +25,15 @@ GPIO_LED = 21 # GPIO for led
 def start_ap():
     global isActive, GPIO_LED
     isActive = 1 # measurement shall start next time
-    print("Maintenance Mode: START - Connect yourself to HoneyPi-Wifi.")
+    print(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
 
-def stop_ap(boot=0):
+def stop_ap():
     global isActive, GPIO_LED
     isActive = 0 # measurement shall stop next time
-    if not boot:
-        print("Maintenance Mode: STOP")
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode)
@@ -51,12 +49,12 @@ def close_script():
 def toggle_measurement():
     global isActive, measurement_stop, measurement
     if isActive == 0:
-        print("Button was pressed: Stop measurement")
+        print(">>> Button was pressed: Stop measurement / start AccessPoint")
         # stop the measurement by event's flag
         measurement_stop.set()
         start_ap() # finally start AP
     else:
-        print("Button was pressed: Start measurement")
+        print(">>> Button was pressed: Start measurement / stop AccessPoint")
         if measurement.is_alive():
             error_log("Warning: Thread should not be active anymore")
         measurement_stop.clear() # reset flag
@@ -119,12 +117,12 @@ def main():
     # blink with LED on startup
     blink_led(GPIO_LED)
 
-    # by default is AccessPoint down
-    stop_ap(1)
+    # after start is AccessPoint down
+    stop_ap()
 
     if not debug:
         # stop HDMI power (save energy)
-        print("Shutting down HDMI to save energy.")
+        print("Info: Shutting down HDMI to save energy.")
         stop_tv()
 
     if debug:
