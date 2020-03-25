@@ -11,8 +11,6 @@ from utilities import error_log
 
 
 def diag():
-    # dict with all fields and values which will be tranfered to ThingSpeak later
-    ts_fields = {}
     try:
         # load settings
         os.system("sudo ifconfig > /tmp/ifconfig.txt")
