@@ -36,7 +36,6 @@ def stop_ap():
     global isActive, GPIO_LED
     isActive = 0 # measurement shall stop next time
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
-    stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode)
     t2.start()
     t2.join()
