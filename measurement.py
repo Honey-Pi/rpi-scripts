@@ -40,12 +40,16 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                     ts_field_ds18b20 = sensor["ts_field"]
                     ds18b20_temperature = filtered_temperature[sensorIndex].pop()
                     ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
+                    if 'offset' in sensor:
+                        ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
                     if ts_field_ds18b20:
                         ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
                 elif 'ts_field' and 'device_id' in sensor:
                     # Case for filtered_temperature was not filled, use direct measured temperture in this case
                     ts_field_ds18b20 = sensor["ts_field"]
                     ds18b20_temperature = measure_temperature(sensor["device_id"])
+                    if 'offset' in sensor:
+                        ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
                     if ts_field_ds18b20:
                         ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
         except Exception as e:

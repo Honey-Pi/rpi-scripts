@@ -4,7 +4,7 @@
 
 import Adafruit_DHT
 import os
-os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs' 
+os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
 
 def measure_dht(ts_sensor):
     fields = {}
@@ -28,6 +28,8 @@ def measure_dht(ts_sensor):
             if 'ts_field_temperature' in ts_sensor and temperature is not None:
                 # limit to 2 digits
                 temperature = float("{0:.2f}".format(temperature))
+                if 'offset' in ts_sensor:
+                        temperature = temperature-float(ts_sensor["offset"])
                 fields[ts_sensor["ts_field_temperature"]] = temperature
             if 'ts_field_humidity' in ts_sensor and humidity is not None:
                 # limit to 2 digits
@@ -39,5 +41,5 @@ def measure_dht(ts_sensor):
 
     except Exception as e:
         print("DHT missing param: " + str(e))
-      
+
     return fields

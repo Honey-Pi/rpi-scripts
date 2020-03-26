@@ -30,10 +30,10 @@ def initBME680(ts_sensor):
             sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
 
         try:
-            offset = ts_sensor[0]["offset"]
+            offset = float(ts_sensor[0]["offset"])
             print('BME680: The Temperature Offset is ' + str(offset) + ' °C')
         except:
-            offset = -1.5
+            offset = 0
             print('BME680: The Temperature Offset is default: ' + str(offset) + '°C')
 
         # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
