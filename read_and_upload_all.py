@@ -82,11 +82,12 @@ def upload_single_channel(ts_instance, ts_fields_cleaned, debug):
         finally:
             if isConnectionError:
                 retries+=1
-                error_log("Warning: Waiting 15 seconds for internet connection to try transfer again (" + str(retries) + "/" + str(MAX_RETRIES) + ")...")
-                wait_for_internet_connection(15)
                 # Break after 3 retries
                 if retries >= MAX_RETRIES:
                     break
+                error_log("Warning: Waiting 15 seconds for internet connection to try transfer again (" + str(retries) + "/" + str(MAX_RETRIES) + ")...")
+                wait_for_internet_connection(15)
+
     return isConnectionError
 
 def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
