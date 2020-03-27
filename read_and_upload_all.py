@@ -83,7 +83,7 @@ def upload_single_channel(ts_instance, ts_fields_cleaned, debug):
             if isConnectionError:
                 retries+=1
                 # Break after 3 retries
-                if retries >= MAX_RETRIES:
+                if retries > MAX_RETRIES:
                     break
                 error_log("Warning: Waiting 15 seconds for internet connection to try transfer again (" + str(retries) + "/" + str(MAX_RETRIES) + ")...")
                 wait_for_internet_connection(15)
