@@ -22,9 +22,9 @@ from utilities import reboot, error_log, shutdown, start_single, stop_single, wa
 from write_csv import write_csv
 from measurement import measure_all_sensors
 
-def send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug):
+def manage_transfer_to_ts(ts_channels, ts_fields, offline, debug):
     # update ThingSpeak / transfer values
-    connectionErrorHappened = transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug)
+    connectionErrorHappened = transfer_all_channels_to_ts(ts_channels, ts_fields, debug)
 
     if connectionErrorHappened:
         # Write to CSV-File if ConnectionError occured
@@ -32,18 +32,10 @@ def send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug):
             s = write_csv(ts_fields, ts_channels)
             if s and debug:
                 error_log("Info: Data succesfully saved to CSV-File.")
-        # Do Rebooting if to many connectionErrors in a row
-        connectionErrors.value +=1
-        error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value))
-        if connectionErrors.value >= 5:
-            if not debug:
-                error_log("Info: Too many ConnectionErrors in a row => Rebooting")
-                time.sleep(4)
-                reboot()
-            else:
-                error_log("Info: Did not reboot because debug mode is enabled.")
 
-def transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug):
+    return connectionErrorHappened
+
+def transfer_all_channels_to_ts(ts_channels, ts_fields, debug):
     connectionErrorWithinAnyChannel = []
     for (channelIndex, channel) in enumerate(ts_channels, 0):
         channel_id = channel["ts_channel_id"]
@@ -53,33 +45,29 @@ def transfer_channels_to_ts(ts_channels, ts_fields, connectionErrors, debug):
                 print('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
             ts_instance = thingspeak.Channel(id=channel_id, write_key=write_key)
             ts_fields_cleaned = clean_fields(ts_fields, channelIndex, debug)
-            connectionError = transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, debug)
+            connectionError = upload_single_channel(ts_instance, ts_fields_cleaned, debug)
             connectionErrorWithinAnyChannel.append(connectionError)
         else:
-            error_log("Info: No ThingSpeak upload for this channel (" + str(channelIndex) + ") because because channel_id or write_key is None.")
+            error_log("Warning: No ThingSpeak upload for this channel (" + str(channelIndex) + ") because because channel_id or write_key is None.")
 
     return any(c == True for c in connectionErrorWithinAnyChannel)
 
-def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, debug):
+def upload_single_channel(ts_instance, ts_fields_cleaned, debug):
     # do-while to retry failed transfer
     retries = 0
-    connectionError = True
-    while connectionError:
+    MAX_RETRIES = 3
+    isConnectionError = True
+    while isConnectionError:
         try:
             if ts_fields_cleaned:
                 ts_instance.update(ts_fields_cleaned)
                 if debug:
                     error_log("Info: Data succesfully transfered to ThingSpeak.")
             else:
-                error_log("Info: No ThingSpeak data transfer because no fields defined.")
+                error_log("Warning: No ThingSpeak data transfer because no fields defined.")
 
-            if connectionErrors.value > 0:
-                if debug:
-                    error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet.")
-                # reset connectionErrors because transfer succeded
-                connectionErrors.value = 0
-            # break do-while because transfer succeded
-            connectionError = False
+            # break because transfer succeded
+            isConnectionError = False
             break
         except requests.exceptions.HTTPError as errh:
             error_log(errh, "Http Error")
@@ -92,14 +80,14 @@ def transfer_channel_to_ts(ts_instance, ts_fields_cleaned, connectionErrors, deb
         except Exception as ex:
             error_log(ex, "Exception while sending Data")
         finally:
-            if connectionError:
-                print("Warning: Waiting for internet connection to try transfer again...")
-                wait_for_internet_connection(15) # wait before next try
+            if isConnectionError:
                 retries+=1
-                # Maximum 3 retries
-                if retries >= 3:
-                    break # break do-while
-    return connectionError
+                error_log("Warning: Waiting 15 seconds for internet connection to try transfer again (" + str(retries) + "/" + str(MAX_RETRIES) + ")...")
+                wait_for_internet_connection(15)
+                # Break after 3 retries
+                if retries >= MAX_RETRIES:
+                    break
+    return isConnectionError
 
 def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
@@ -119,7 +107,25 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
             # if transfer to thingspeak is set
             if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
                 # update ThingSpeak / transfer values
-                send_ts_data(ts_channels, ts_fields, offline, connectionErrors, debug)
+                connectionErrorHappened = manage_transfer_to_ts(ts_channels, ts_fields, offline, debug)
+
+                if connectionErrorHappened:
+                    # Do Rebooting if to many connectionErrors in a row
+                    connectionErrors.value +=1
+                    error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value))
+                    if connectionErrors.value >= 5:
+                        if not debug:
+                            error_log("Info: Too many ConnectionErrors in a row => Rebooting")
+                            time.sleep(4)
+                            reboot()
+                        else:
+                            error_log("Info: Did not reboot because debug mode is enabled.")
+                else:
+                    if connectionErrors.value > 0:
+                        if debug:
+                            error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet.")
+                        # reset connectionErrors because transfer succeded
+                        connectionErrors.value = 0
 
         elif debug:
             error_log("Info: No measurement data to send.")
