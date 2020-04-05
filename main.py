@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, get_led_state, toggle_led
 
 # global vars
 measurement = None
@@ -21,6 +21,7 @@ time_rising = 0 # will be set by button_pressed event if the button is rised
 debug = 0
 GPIO_BTN = 16
 GPIO_LED = 21 # GPIO for led
+LED_STATE = 0
 
 def start_ap():
     global isActive, GPIO_LED
@@ -69,7 +70,8 @@ def toggle_measurement():
         error_log("Error: Button press recognized but undefined state of Maintenance Mode")
 
 def button_pressed(channel):
-    global GPIO_BTN
+    global GPIO_BTN, LED_STATE, GPIO_LED
+    LED_STATE = get_led_state(GPIO_LED)
     if GPIO.input(GPIO_BTN): # if port == 1
         button_pressed_rising()
     else: # if port != 1
@@ -78,7 +80,7 @@ def button_pressed(channel):
 def button_pressed_rising():
     global time_rising, GPIO_LED
     time_rising = miliseconds()
-    start_led(GPIO_LED)
+    toggle_led(GPIO_LED, LED_STATE)
 
 def button_pressed_falling():
     global time_rising, debug, GPIO_LED
@@ -87,7 +89,7 @@ def button_pressed_falling():
     time_rising = 0 # reset to prevent multiple fallings from the same rising
     MIN_TIME_TO_ELAPSE = 500 # miliseconds
     MAX_TIME_TO_ELAPSE = 3000
-    stop_led(GPIO_LED)
+    toggle_led(GPIO_LED, LED_STATE)
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
         # normal button press to switch between measurement and maintenance
         toggle_measurement()
