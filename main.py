@@ -80,7 +80,9 @@ def button_pressed(channel):
 def button_pressed_rising():
     global time_rising, GPIO_LED, LED_STATE
     time_rising = miliseconds()
-    toggle_led(GPIO_LED, LED_STATE)
+    if debug:
+        print("button_pressed_rising")
+    #toggle_led(GPIO_LED, LED_STATE)
 
 def button_pressed_falling():
     global time_rising, debug, GPIO_LED, LED_STATE
@@ -89,7 +91,9 @@ def button_pressed_falling():
     time_rising = 0 # reset to prevent multiple fallings from the same rising
     MIN_TIME_TO_ELAPSE = 500 # miliseconds
     MAX_TIME_TO_ELAPSE = 3000
-    toggle_led(GPIO_LED, LED_STATE)
+    if debug:
+        print("button_pressed_falling")
+    #toggle_led(GPIO_LED, LED_STATE)
     if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
         # normal button press to switch between measurement and maintenance
         toggle_measurement()
