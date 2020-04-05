@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, get_led_state, toggle_led
+from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, toggle_led
 
 # global vars
 measurement = None
@@ -42,6 +42,16 @@ def stop_ap():
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     stop_led(GPIO_LED)
 
+def get_led_state(self):
+    global GPIO_LED, LED_STATE
+    LED_STATE = GPIO.input(GPIO_LED)
+    if LED_STATE:
+       #LED on
+       print("LED is currently on")
+    else:
+       #LED off'
+       print("LED is currently off")
+        
 def close_script():
     global measurement_stop
     measurement_stop.set()
@@ -159,10 +169,12 @@ def main():
 
     # setup Button
     GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
+    GPIO.setup(GPIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set LED to be an input pin and set initial value to be pulled low (off)
     #bouncetime = 300 # ignoring further edges for 300ms for switch bounce handling
     # register button press event
     #GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
     GPIO.add_event_detect(GPIO_BTN, GPIO.RISING, callback=button_pressed_rising)
+    GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
     
     # Main Lopp: Cancel with STRG+C
     while True:
