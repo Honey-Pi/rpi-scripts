@@ -52,18 +52,21 @@ def toggle_measurement():
     global isActive, measurement_stop, measurement
     if isActive == 0:
         print(">>> Button was pressed: Stop measurement / start AccessPoint")
-        # stop the measurement by event's flag
+        # stop the measurement by setting event's flag
         measurement_stop.set()
         start_ap() # finally start AP
-    else:
+    elif isActive == 1:
         print(">>> Button was pressed: Start measurement / stop AccessPoint")
         if measurement.is_alive():
             error_log("Warning: Thread should not be active anymore")
+        # start the measurement by clearing event's flag
         measurement_stop.clear() # reset flag
         measurement_stop = threading.Event() # create event to stop measurement
         measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
         measurement.start() # start measurement
         stop_ap() # finally stop AP
+    else:
+        error_log("Error: Button press recognized but undefined state of Maintenance Mode")
 
 def button_pressed(channel):
     global GPIO_BTN
