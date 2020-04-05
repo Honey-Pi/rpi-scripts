@@ -77,20 +77,25 @@ def button_pressed(channel):
     else: # if port != 1
         button_pressed_falling()
 
-def button_pressed_rising():
-    global time_rising, GPIO_LED, LED_STATE
+def button_pressed_rising(self):
+    global time_rising, debug, GPIO_LED, LED_STATE
     time_rising = miliseconds()
+    GPIO.remove_event_detect(GPIO_BTN)
+    GPIO.add_event_detect(GPIO_BTN, GPIO.FALLING, callback=button_pressed_falling)
+
     if debug:
         print("button_pressed_rising")
     #toggle_led(GPIO_LED, LED_STATE)
 
-def button_pressed_falling():
+def button_pressed_falling(self):
     global time_rising, debug, GPIO_LED, LED_STATE
     time_falling = miliseconds()
     time_elapsed = time_falling-time_rising
     time_rising = 0 # reset to prevent multiple fallings from the same rising
     MIN_TIME_TO_ELAPSE = 500 # miliseconds
     MAX_TIME_TO_ELAPSE = 3000
+    GPIO.remove_event_detect(GPIO_BTN)
+    GPIO.add_event_detect(GPIO_BTN, GPIO.RISING, callback=button_pressed_rising)
     if debug:
         print("button_pressed_falling")
     #toggle_led(GPIO_LED, LED_STATE)
@@ -154,10 +159,11 @@ def main():
 
     # setup Button
     GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
-    bouncetime = 300 # ignoring further edges for 300ms for switch bounce handling
+    #bouncetime = 300 # ignoring further edges for 300ms for switch bounce handling
     # register button press event
-    GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
-
+    #GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
+    GPIO.add_event_detect(GPIO_BTN, GPIO.RISING, callback=button_pressed_rising)
+    
     # Main Lopp: Cancel with STRG+C
     while True:
         time.sleep(0.2)  # wait 200 ms to give CPU chance to do other things
