@@ -78,12 +78,12 @@ def button_pressed(channel):
         button_pressed_falling()
 
 def button_pressed_rising():
-    global time_rising, GPIO_LED
+    global time_rising, GPIO_LED, LED_STATE
     time_rising = miliseconds()
     toggle_led(GPIO_LED, LED_STATE)
 
 def button_pressed_falling():
-    global time_rising, debug, GPIO_LED
+    global time_rising, debug, GPIO_LED, LED_STATE
     time_falling = miliseconds()
     time_elapsed = time_falling-time_rising
     time_rising = 0 # reset to prevent multiple fallings from the same rising
