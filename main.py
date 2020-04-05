@@ -24,21 +24,21 @@ GPIO_LED = 21 # GPIO for led
 
 def start_ap():
     global isActive, GPIO_LED
-    isActive = 1 # measurement shall start next time
-    print(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
-    isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
     t1.join()
+    isActive = 1 # measurement shall start next time
+    print(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
+    isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     start_led(GPIO_LED)
 
 def stop_ap():
     global isActive, GPIO_LED
-    isActive = 0 # measurement shall stop next time
-    isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     t2 = threading.Thread(target=ap_to_client_mode)
     t2.start()
     t2.join()
+    isActive = 0 # measurement shall stop next time
+    isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     stop_led(GPIO_LED)
 
 def close_script():
