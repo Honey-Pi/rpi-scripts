@@ -24,6 +24,24 @@ def is_zero():
         if 'Zero' in f.read():
             return True
     return False
+    
+def get_led_state(gpio=21):
+   state = GPIO.input(gpio)
+   if state:
+       #LED on
+       print("LED is currently on")
+   else:
+       #LED off'
+       print("LED is currently off")
+   return state
+   
+def toggle_led(gpio, state):
+   if state:
+       #LED on
+       stop_led(gpio)
+   else:
+       #LED off'
+       start_led(gpio)
 
 def stop_led(gpio=21):
     # Turn Raspi-LED off
