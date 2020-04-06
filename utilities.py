@@ -15,6 +15,7 @@ honeypiFolder = '/home/pi/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
 backendFolder = '/var/www/html/backend'
 settingsFile = backendFolder + '/settings.json'
+wittypi_scheduleFile = backendFolder + "/schedule.wpi"
 
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
@@ -270,7 +271,6 @@ def blockPrinting(func):
 
 def update_wittypi_schedule(schedule):
     try:
-        wittypi_scheduleFile = backendFolder + "/schedule.wpi"
         # write values to file
         outfile = open(wittypi_scheduleFile, "w")
         outfile.truncate(0)
