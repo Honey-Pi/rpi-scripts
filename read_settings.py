@@ -4,8 +4,11 @@
 
 import io
 import json
+import os
 from pathlib import Path
 from utilities import settingsFile
+from pwd import getpwuid
+from grp import getgrgid
 
 def get_defaults():
     settings = {}
@@ -62,7 +65,12 @@ def get_settings():
     try:
         my_file = Path(settingsFile)
         my_abs_path = my_file.resolve()
-
+        
+        if str(getpwuid(os.stat(settingsFile).st_uid).pw_name) != "www-data":
+            os.system("sudo chown www-data " + str(settingsFile))
+        if str(getgrgid(os.stat(settingsFile).st_gid).gr_name) != "www-data":
+            os.system("sudo chgrp www-data " + str(settingsFile))
+            
         with io.open(settingsFile, encoding="utf-8") as data_file:
             settings = json.loads(data_file.read())
     except:
