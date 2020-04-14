@@ -6,15 +6,23 @@
 import math
 import numpy as np
 from pprint import pprint
+from utilities import error_log
+from read_gpio import setup_gpio, reset_ds18b20_3V
 
 unfiltered_values = [] # here we keep all the unfilteres values
 filtered_temperature = [] # here we keep the temperature values after removing outliers
 
-def measure_temperature(device_id):
+def measure_temperature(sensor):
     try:
+        if 'pin' in sensor and isinstance(sensor["pin"], (int)) and sensor["pin"] > 0:
+            setup_gpio(sensor["pin"])
+
+            if (os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]) == False):
+                error_log("Info: Resetting 3.3V GPIO " + str(sensor["pin"]) + " because " + sensor["device_id"] + " was missing.")
+                reset_ds18b20_3V(sensor["pin"])
 
         # read 1-wire slave file
-        with open('/sys/bus/w1/devices/' + device_id + '/w1_slave', 'r') as file:
+        with open('/sys/bus/w1/devices/' + sensor["device_id"] + '/w1_slave', 'r') as file:
             file_content = file.read()
             file.close()
 
@@ -26,23 +34,26 @@ def measure_temperature(device_id):
             return temperature
 
     except FileNotFoundError:
-        print("Cannot find Device-ID from Ds18b20 Sensor.")
-        return None
+        error_log("Warning: Cannot find Device-ID from Ds18b20 Sensor " + sensor["device_id"])
+    except Exception as ex:
+        error_log(ex, "Error: Unhandled Exception in measure_temperature")
+
+    return None
 
 # function for reading the value from sensor
-def read_unfiltered_temperatur_values(sensorIndex, device_id):
+def read_unfiltered_temperatur_values(sensorIndex, sensor):
     temperature = None
     try:
-        temperature = measure_temperature(device_id)
+        temperature = measure_temperature(sensor)
         print("temperature for device '" + str(device_id) + "': " + str(temperature))
 
         if math.isnan(temperature) == False:
             unfiltered_values[sensorIndex].append(temperature)
 
-    except IOError:
-        print("IOError occurred: Maybe wrong Device-ID")
-    except TypeError:
-        print ("TypeError occurred")
+    except IOError as ex1:
+        error_log(ex1, "Error: IOError occurred in read_unfiltered_temperatur_values")
+    except TypeError as ex2:
+        error_log(ex2, "Error: TypeError occurred in read_unfiltered_temperatur_values")
 
 # function which eliminates the noise by using a statistical model
 # we determine the standard normal deviation and we exclude anything that goes beyond a threshold

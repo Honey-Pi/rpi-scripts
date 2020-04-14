@@ -14,7 +14,7 @@ import RPi.GPIO as GPIO
 from read_bme680 import measure_bme680, initBME680FromMain
 from read_bme280 import measure_bme280
 from read_pcf8591 import measure_voltage
-from read_ds18b20 import measure_temperature, read_unfiltered_temperatur_values, filter_temperatur_values
+from read_ds18b20 import measure_temperature, filter_temperatur_values
 from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
 from read_max import measure_tc
@@ -47,7 +47,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                 elif 'ts_field' and 'device_id' in sensor:
                     # Case for filtered_temperature was not filled, use direct measured temperture in this case
                     ts_field_ds18b20 = sensor["ts_field"]
-                    ds18b20_temperature = measure_temperature(sensor["device_id"])
+                    ds18b20_temperature = measure_temperature(sensor)
                     if 'offset' in sensor:
                         ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
                     if ts_field_ds18b20:

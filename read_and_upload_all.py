@@ -258,7 +258,7 @@ def start_measurement(measurement_stop):
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 checkIfSensorExistsInArray(sensorIndex)
                 if 'device_id' in sensor:
-                    read_unfiltered_temperatur_values(sensorIndex, sensor['device_id'])
+                    read_unfiltered_temperatur_values(sensorIndex, sensor)
 
             time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage = check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer)
 

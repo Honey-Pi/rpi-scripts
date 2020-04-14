@@ -8,13 +8,17 @@ import time
 def setup_gpio(GPIO_PIN):
     GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
     GPIO.setwarnings(False)
-    GPIO.setup(GPIO_PIN, GPIO.OUT) # Set pin 20 to led output
+    GPIO.setup(GPIO_PIN, GPIO.OUT)
     GPIO.setwarnings(True)
-    # Output to pin GPIO_PIN
-    GPIO.output(GPIO_PIN, 1)
+    GPIO.output(GPIO_PIN, GPIO.HIGH)
 
 def reset_gpio(GPIO_PIN):
-    # Output to pin GPIO_PIN
-    GPIO.output(GPIO_PIN, 0)
+    GPIO.output(GPIO_PIN, PIO.LOW)
     time.sleep(0.1) # wait 100ms
-    GPIO.output(GPIO_PIN, 1)
+    GPIO.output(GPIO_PIN, PIO.HIGH)
+
+def reset_ds18b20_3V(GPIO_PIN):
+    GPIO.output(GPIO_PIN, GPIO.LOW)
+    time.sleep(3)
+    GPIO.output(GPIO_PIN, GPIO.HIGH)
+    time.sleep(5)
