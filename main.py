@@ -51,7 +51,7 @@ def get_led_state(self):
     else:
        #LED off'
        print("LED is currently off")
-        
+
 def close_script():
     global measurement_stop
     measurement_stop.set()
@@ -123,6 +123,7 @@ def button_pressed_falling(self):
         tblink.start()
         delete_settings()
         update_wittypi_schedule("")
+        error_log("Info: Resettet settings because Button was pressed.")
         shutdown()
     elif debug:
         time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s
@@ -175,7 +176,7 @@ def main():
     #GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
     GPIO.add_event_detect(GPIO_BTN, GPIO.RISING, callback=button_pressed_rising)
     GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
-    
+
     # Main Lopp: Cancel with STRG+C
     while True:
         time.sleep(0.2)  # wait 200 ms to give CPU chance to do other things
