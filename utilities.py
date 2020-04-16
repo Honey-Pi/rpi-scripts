@@ -54,10 +54,10 @@ def stop_hdd_led():
 
 def start_hdd_led():
     # Turn Raspi-LED off
-    off = 0
+    on = 1
     if is_zero():
-        off = 1
-    os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led0/brightness'") # green LED
+        on = 0
+    os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led0/brightness'") # green LED
     os.system("sudo bash -c 'echo mmc0 > /sys/class/leds/led0/trigger'") # green LED
 
 def stop_led(gpio=21):
