@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, toggle_led
+from utilities import stop_tv, stop_led, start_led, stop_hdd_led, start_hdd_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, toggle_led
 
 # global vars
 measurement = None
@@ -151,9 +151,11 @@ def main():
         # stop HDMI power (save energy)
         print("Info: Shutting down HDMI to save energy.")
         stop_tv()
+        stop_hdd_led()
 
     if debug:
         error_log("Info: Raspberry Pi has been powered on.")
+        start_hdd_led()
 
     # Create virtual uap0 for WLAN
     create_ap()
