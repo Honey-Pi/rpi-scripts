@@ -45,7 +45,7 @@ def read_unfiltered_temperatur_values(sensorIndex, sensor):
     temperature = None
     try:
         temperature = measure_temperature(sensor)
-        print("temperature for device '" + str(device_id) + "': " + str(temperature))
+        print("temperature for device '" + str(sensor["device_id"]) + "': " + str(temperature))
 
         if math.isnan(temperature) == False:
             unfiltered_values[sensorIndex].append(temperature)
@@ -54,11 +54,13 @@ def read_unfiltered_temperatur_values(sensorIndex, sensor):
         error_log(ex1, "Error: IOError occurred in read_unfiltered_temperatur_values")
     except TypeError as ex2:
         error_log(ex2, "Error: TypeError occurred in read_unfiltered_temperatur_values")
-
+    except Exception as ex:
+        error_log(ex, "Error: Unhandled Exception in read_unfiltered_temperatur_values")
 # function which eliminates the noise by using a statistical model
 # we determine the standard normal deviation and we exclude anything that goes beyond a threshold
 # think of a probability distribution plot - we remove the extremes
 # the greater the std_factor, the more "forgiving" is the algorithm with the extreme values
+
 def filter_values(unfiltered_values, std_factor=2):
     mean = np.mean(unfiltered_values)
     standard_deviation = np.std(unfiltered_values)
