@@ -6,7 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
-from utilities import settingsFile, wittypi_scheduleFile
+from utilities import settingsFile, wittypi_scheduleFile, error_log
 from pwd import getpwuid
 from grp import getgrgid
 
@@ -80,7 +80,8 @@ def get_settings():
             
         with io.open(settingsFile, encoding="utf-8") as data_file:
             settings = json.loads(data_file.read())
-    except:
+    except Exception as ex:
+        error_log("Warning: Loading default settings because of Error in get_settings " + str(ex))
         # FileNotFoundError: doesn't exist => default values
         # FileReadError / json.loads Error => default values
         settings = get_defaults()
