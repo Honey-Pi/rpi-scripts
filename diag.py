@@ -11,21 +11,30 @@ from utilities import error_log
 
 
 def diag():
+    diag = ""
     try:
-        # load settings
-        os.system("sudo ifconfig > /tmp/ifconfig.txt")
-        os.system("sudo route > /tmp/route.txt")
-        with io.open("/tmp/ifconfig.txt", encoding="utf-8") as data_file:
-            ifconfig = data_file.read()
-        with io.open("/tmp/route.txt", encoding="utf-8") as data_file:
-            route = data_file.read()
-        return ifconfig + '\n\n\n' + route
+        os.system("echo 'ifconfig:\n' > /tmp/diag.txt")
+        os.system("sudo ifconfig >> /tmp/diag.txt")
+        os.system("echo '\n\nroute:\n' >> /tmp/diag.txt")
+        os.system("sudo route >> /tmp/diag.txt")
+        os.system("echo '\n\nlsusb:\n' >> /tmp/diag.txt")
+        os.system("sudo lsusb >> /tmp/diag.txt")
+        os.system("echo '\n\ndmesg:\n' >> /tmp/diag.txt")
+        os.system("sudo dmesg | grep USB >> /tmp/diag.txt")
+        os.system("sudo dmesg | grep ttyUSB >> /tmp/diag.txt")
+        os.system("echo '\n\nttyUSB*:\n' >> /tmp/diag.txt")
+        os.system("sudo ls -la /dev/ttyUSB* >> /tmp/diag.txt")
+        os.system("echo '\n\nlog:\n' >> /tmp/diag.txt")
+        os.system("sudo grep -a -B 2 -A 2 'usb_modeswitch\|modem\|pppd\|PPP\|ppp0\|ttyUSB0\|wvdial' /var/log/messages >> /tmp/diag.txt")
+        with io.open("/tmp/diag.txt", encoding="utf-8") as data_file:
+            diag = data_file.read()
+        return diag
 
     except Exception as e:
         error_log(e, "Unhandled Exception in diag")
 
     # Error occured
-    return ""
+    return diag
 
 if __name__ == '__main__':
     try:

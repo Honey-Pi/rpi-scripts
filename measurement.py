@@ -37,21 +37,19 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 if filtered_temperature is not None and len(filtered_temperature[sensorIndex]) > 0 and 'ts_field' in sensor:
                     # if we have at leat one filtered value we can upload
-                    ts_field_ds18b20 = sensor["ts_field"]
                     ds18b20_temperature = filtered_temperature[sensorIndex].pop()
-                    ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
-                    if 'offset' in sensor:
-                        ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
-                    if ts_field_ds18b20:
-                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+                    if sensor["ts_field"] and ds18b20_temperature is not None:
+                        if 'offset' in sensor:
+                            ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
+                        ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
+                        ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
                 elif 'ts_field' and 'device_id' in sensor:
                     # Case for filtered_temperature was not filled, use direct measured temperture in this case
-                    ts_field_ds18b20 = sensor["ts_field"]
                     ds18b20_temperature = measure_temperature(sensor)
-                    if 'offset' in sensor:
-                        ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
-                    if ts_field_ds18b20:
-                        ts_fields.update({ts_field_ds18b20: ds18b20_temperature})
+                    if sensor["ts_field"] and ds18b20_temperature is not None:
+                        if 'offset' in sensor:
+                            ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
+                        ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
         except Exception as e:
             error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors")
 

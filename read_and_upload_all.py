@@ -111,12 +111,13 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
                 connectionErrorHappened = manage_transfer_to_ts(ts_channels, ts_fields, offline, debug)
 
                 if connectionErrorHappened:
+                    MAX_RETRIES_IN_A_ROW = 3
                     # Do Rebooting if to many connectionErrors in a row
                     connectionErrors.value +=1
-                    error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value))
-                    if connectionErrors.value >= 5:
+                    error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value) + "/" + str(MAX_RETRIES_IN_A_ROW))
+                    if connectionErrors.value >= MAX_RETRIES_IN_A_ROW:
                         if not debug:
-                            error_log("Info: Too many ConnectionErrors in a row => Rebooting")
+                            error_log("Warning: Too many Connection Errors in a row => Rebooting Raspberry")
                             time.sleep(4)
                             reboot()
                         else:
@@ -124,7 +125,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
                 else:
                     if connectionErrors.value > 0:
                         if debug:
-                            error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet.")
+                            error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet because transfer succeded.")
                         # reset connectionErrors because transfer succeded
                         connectionErrors.value = 0
 
