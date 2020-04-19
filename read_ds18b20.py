@@ -4,6 +4,7 @@
 
 # read temperature from DS18b20 sensor
 import math
+import os
 import numpy as np
 from pprint import pprint
 from utilities import error_log
