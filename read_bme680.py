@@ -34,7 +34,7 @@ def initBME680(ts_sensor):
             print('BME680: The Temperature Offset is ' + str(offset) + ' °C')
         except:
             offset = 0
-            print('BME680: The Temperature Offset is default: ' + str(offset) + '°C')
+            #print('BME680: The Temperature Offset is default: ' + str(offset) + '°C')
 
         # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
         sensor.set_humidity_oversample(bme680.OS_2X)
@@ -57,10 +57,9 @@ def initBME680(ts_sensor):
 
 def initBME680FromMain(ts_sensor):
     if isSMBusConnected():
-        print("A Sensor (eg. BME680/WittyPi) is connected to SMBus.")
         return initBME680(ts_sensor)
     else:
-        print("SMBus is not connected.")
+        print("No I2C sensor connected to SMBus. Please check sensor or remove BME680 from settings.")
         return 0
 
 def burn_in_bme680(sensor, burn_in_time):

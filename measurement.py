@@ -43,7 +43,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                             ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
                         ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
                         ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
-                elif 'ts_field' and 'device_id' in sensor:
+                elif 'ts_field' in sensor:
                     # Case for filtered_temperature was not filled, use direct measured temperture in this case
                     ds18b20_temperature = measure_temperature(sensor)
                     if sensor["ts_field"] and ds18b20_temperature is not None:

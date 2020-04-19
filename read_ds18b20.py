@@ -15,24 +15,30 @@ filtered_temperature = [] # here we keep the temperature values after removing o
 
 def measure_temperature(sensor):
     try:
+        if 'device_id' not in sensor:
+            sensor["device_id"] = "undefined"
+
         if 'pin' in sensor and isinstance(sensor["pin"], (int)) and sensor["pin"] > 0:
+            print("GPIO" + str(sensor["pin"]) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
             setup_gpio(sensor["pin"])
 
+        if sensor["device_id"] != "undefined":
+
             if (os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]) == False):
-                error_log("Info: Resetting 3.3V GPIO " + str(sensor["pin"]) + " because " + sensor["device_id"] + " was missing.")
+                error_log("Info: Resetting 3.3V GPIO" + str(sensor["pin"]) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
                 reset_ds18b20_3V(sensor["pin"])
 
-        # read 1-wire slave file
-        with open('/sys/bus/w1/devices/' + sensor["device_id"] + '/w1_slave', 'r') as file:
-            file_content = file.read()
-            file.close()
+            # read 1-wire slave file
+            with open('/sys/bus/w1/devices/' + sensor["device_id"] + '/w1_slave', 'r') as file:
+                file_content = file.read()
+                file.close()
 
-            # read temperature and convert temperature
-            string_value = file_content.split("\n")[1].split(" ")[9]
-            temperature = float(string_value[2:]) / 1000
-            temperature = float('%6.2f' % temperature)
+                # read temperature and convert temperature
+                string_value = file_content.split("\n")[1].split(" ")[9]
+                temperature = float(string_value[2:]) / 1000
+                temperature = float('%6.2f' % temperature)
 
-            return temperature
+                return temperature
 
     except FileNotFoundError:
         error_log("Warning: Cannot find Device-ID from Ds18b20 Sensor " + sensor["device_id"])
