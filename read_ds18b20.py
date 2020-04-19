@@ -25,7 +25,7 @@ def measure_temperature(sensor):
                 print("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
                 setup_gpio(gpio_3V)
 
-                if (os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]) == False) and sensor["device_id"] != "undefined":
+                if not os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]):
                     error_log("Info: Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
                     reset_ds18b20_3V(gpio_3V)
 
