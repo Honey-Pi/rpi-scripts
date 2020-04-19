@@ -18,16 +18,18 @@ def measure_temperature(sensor):
         if 'device_id' not in sensor:
             sensor["device_id"] = "undefined"
 
-        if 'pin' in sensor and isinstance(sensor["pin"], (int)) and sensor["pin"] > 0:
-            print("GPIO" + str(sensor["pin"]) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
-            setup_gpio(sensor["pin"])
+        if 'pin' in sensor:
+            gpio_3V = int(sensor["pin"])
+            if gpio_3V > 0:
+
+                print("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
+                setup_gpio(gpio_3V)
+
+                if (os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]) == False) and sensor["device_id"] != "undefined":
+                    error_log("Info: Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
+                    reset_ds18b20_3V(gpio_3V)
 
         if sensor["device_id"] != "undefined":
-
-            if (os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]) == False):
-                error_log("Info: Resetting 3.3V GPIO" + str(sensor["pin"]) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
-                reset_ds18b20_3V(sensor["pin"])
-
             # read 1-wire slave file
             with open('/sys/bus/w1/devices/' + sensor["device_id"] + '/w1_slave', 'r') as file:
                 file_content = file.read()
