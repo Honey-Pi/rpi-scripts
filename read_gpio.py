@@ -13,11 +13,13 @@ def setup_gpio(GPIO_PIN):
     GPIO.output(GPIO_PIN, GPIO.HIGH)
 
 def reset_gpio(GPIO_PIN):
+    GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
     GPIO.output(GPIO_PIN, PIO.LOW)
     time.sleep(0.1) # wait 100ms
     GPIO.output(GPIO_PIN, PIO.HIGH)
 
 def reset_ds18b20_3V(GPIO_PIN):
+    GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
     GPIO.output(GPIO_PIN, GPIO.LOW)
     time.sleep(3)
     GPIO.output(GPIO_PIN, GPIO.HIGH)
