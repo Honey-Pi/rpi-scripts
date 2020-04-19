@@ -44,24 +44,26 @@ def stop_hdd_led():
     # Turn Raspi-LED off
     off = 0
     if is_zero():
-        off = 1
-    os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo none > /sys/class/leds/led0/trigger'") # green LED
+        #off = 1
+    else:
+        os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led0/brightness'") # green LED
+        os.system("sudo bash -c 'echo none > /sys/class/leds/led0/trigger'") # green LED
 
 def start_hdd_led():
     # Turn Raspi-LED on
     on = 1
     if is_zero():
-        on = 0
-    os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo mmc0 > /sys/class/leds/led0/trigger'") # green LED
+        #on = 0
+    else:
+        os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led0/brightness'") # green LED
+        os.system("sudo bash -c 'echo mmc0 > /sys/class/leds/led0/trigger'") # green LED
 
 def stop_led(gpio=21):
     # Turn Raspi-LED off
     off = 0
     if is_zero():
         off = 1
-    #os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led0/brightness'") # green LED
+        os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led0/brightness'") # green LED
     os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
@@ -75,7 +77,7 @@ def start_led(gpio=21):
     on = 1
     if is_zero():
         on = 0
-    #os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led0/brightness'") # green LED
+        os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led0/brightness'") # green LED
     os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
