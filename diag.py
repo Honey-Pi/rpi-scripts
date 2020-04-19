@@ -17,6 +17,8 @@ def diag():
         os.system("sudo ifconfig >> /tmp/diag.txt")
         os.system("echo '\n\nroute:\n' >> /tmp/diag.txt")
         os.system("sudo route >> /tmp/diag.txt")
+        os.system("echo '\n\nWLAN0 status:\n' >> /tmp/diag.txt")
+        os.system("sudo wpa_cli -i wlan0 status >> /tmp/diag.txt")
         os.system("echo '\n\nlsusb:\n' >> /tmp/diag.txt")
         os.system("sudo lsusb >> /tmp/diag.txt")
         os.system("echo '\n\ndmesg:\n' >> /tmp/diag.txt")
