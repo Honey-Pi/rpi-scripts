@@ -39,7 +39,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                     # if we have at leat one filtered value we can upload
                     ds18b20_temperature = filtered_temperature[sensorIndex].pop()
                     if sensor["ts_field"] and ds18b20_temperature is not None:
-                        if 'offset' in sensor:
+                        if 'offset' in sensor and sensor["offset"] is not None:
                             ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
                         ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
                         ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
@@ -47,8 +47,9 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                     # Case for filtered_temperature was not filled, use direct measured temperture in this case
                     ds18b20_temperature = measure_temperature(sensor)
                     if sensor["ts_field"] and ds18b20_temperature is not None:
-                        if 'offset' in sensor:
+                        if 'offset' in sensor and sensor["offset"] is not None:
                             ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
+                        ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
                         ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
         except Exception as e:
             error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors")
