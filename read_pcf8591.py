@@ -30,13 +30,21 @@ def measure_voltage(ts_sensor):
         # AIN3 => Pin 3
 
         # Configure PCF8591
+        if 'I2CVoltage' in ts_sensor:
+            if int(ts_sensor['I2CVoltage']) == 5:
+                factor = 1.5151515151515151
+            else:
+                factor = 1
+        else:
+            factor = 1
+
         PCF8591.write_byte(address, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
 
         # measure once just for fun
         _v = PCF8591.read_byte(address)
 
         Voltage_8bit = PCF8591.read_byte(address) # = i2cget -y 1 0x48
-        voltage = Voltage_8bit*0.064453125 # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
+        voltage = Voltage_8bit*0.064453125*factor # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
 
         if 'ts_field' in ts_sensor and isinstance(voltage, (int, float)):
             fields[ts_sensor["ts_field"]] = round(voltage, 4)
@@ -68,10 +76,18 @@ def get_raw_voltage(ts_sensor):
         # AIN3 => Pin 3
 
         # Configure PCF8591
+        if 'I2CVoltage' in ts_sensor:
+            if int(ts_sensor['I2CVoltage']) == 5:
+                factor = 1.5151515151515151
+            else:
+                factor = 1
+        else:
+            factor = 1
+
         PCF8591.write_byte(address, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
 
         Voltage_8bit = PCF8591.read_byte(address) # = i2cget -y 1 0x48
-        voltage = Voltage_8bit*0.064453125 # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
+        voltage = Voltage_8bit*0.064453125*factor # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
 
         if isinstance(voltage, (int, float)):
             voltage=round(voltage, 4)
