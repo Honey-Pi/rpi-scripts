@@ -19,7 +19,7 @@ def measure_voltage(ts_sensor):
         PCF8591 = smbus.SMBus(get_smbus())
 
         # read pin from ts_sensor settings
-        if 'pin' in ts_sensor:
+        if 'pin' in ts_sensor and ts_sensor['pin'] is not None:
             pin = int(ts_sensor['pin'])
         else:
             pin = 2
@@ -29,14 +29,11 @@ def measure_voltage(ts_sensor):
         # AIN2 => Pin 2 (default)
         # AIN3 => Pin 3
 
-        # Configure PCF8591
-        if 'I2CVoltage' in ts_sensor:
+        # Setup a factor for 5V or 3.3V
+        factor = 1
+        if 'I2CVoltage' in ts_sensor and ts_sensor['I2CVoltage'] is not None:
             if int(ts_sensor['I2CVoltage']) == 5:
                 factor = 1.5151515151515151
-            else:
-                factor = 1
-        else:
-            factor = 1
 
         PCF8591.write_byte(address, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
 
