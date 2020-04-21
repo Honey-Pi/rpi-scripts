@@ -54,9 +54,9 @@ def read_unfiltered_temperatur_values(sensorIndex, sensor):
     temperature = None
     try:
         temperature = measure_temperature(sensor)
-        print("temperature for device '" + str(sensor["device_id"]) + "': " + str(temperature))
 
-        if math.isnan(temperature) == False:
+        if temperature is not None and math.isnan(temperature) == False:
+            print("temperature for device '" + str(sensor["device_id"]) + "': " + str(temperature))
             unfiltered_values[sensorIndex].append(temperature)
 
     except IOError as ex1:
