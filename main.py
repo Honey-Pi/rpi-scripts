@@ -55,7 +55,7 @@ def close_script():
     sys.exit()
 
 def toggle_measurement():
-    global isActive, measurement_stop, measurement
+    global isActive, measurement_stop, measurement, GPIO_LED
     if isActive == 0:
         print(">>> Button was pressed: Stop measurement / start AccessPoint")
         # stop the measurement by setting event's flag
