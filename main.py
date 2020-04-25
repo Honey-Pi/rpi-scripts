@@ -10,7 +10,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import stop_tv, stop_led, start_led, stop_hdd_led, start_hdd_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, toggle_led
+from utilities import stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial
 
 # global vars
 measurement = None
@@ -25,32 +25,27 @@ LED_STATE = 0
 
 def start_ap():
     global isActive, GPIO_LED
+    start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
     t1.join()
     isActive = 1 # measurement shall start next time
     print(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
-    start_led(GPIO_LED)
 
 def stop_ap():
     global isActive, GPIO_LED
+    stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode)
     t2.start()
     t2.join()
     isActive = 0 # measurement shall stop next time
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
-    stop_led(GPIO_LED)
 
 def get_led_state(self):
     global GPIO_LED, LED_STATE
     LED_STATE = GPIO.input(GPIO_LED)
-    if LED_STATE:
-       #LED on
-       print("LED is currently on")
-    else:
-       #LED off'
-       print("LED is currently off")
+    return LED_STATE
 
 def close_script():
     global measurement_stop
@@ -78,6 +73,9 @@ def toggle_measurement():
         stop_ap() # finally stop AP
     else:
         error_log("Error: Button press recognized but undefined state of Maintenance Mode")
+    # make signal, that job finished
+    tblink = threading.Thread(target=toggle_blink_led, args = (GPIO_LED, 0.2))
+    tblink.start()
 
 def button_pressed(channel):
     global GPIO_BTN, LED_STATE, GPIO_LED
@@ -90,12 +88,9 @@ def button_pressed(channel):
 def button_pressed_rising(self):
     global time_rising, debug, GPIO_LED, LED_STATE
     time_rising = miliseconds()
-    #GPIO.remove_event_detect(GPIO_BTN)
-    #GPIO.add_event_detect(GPIO_BTN, GPIO.FALLING, callback=button_pressed_falling)
 
     if debug:
         print("button_pressed_rising")
-    #toggle_led(GPIO_LED, LED_STATE)
 
 def button_pressed_falling(self):
     global time_rising, debug, GPIO_LED, LED_STATE
@@ -104,30 +99,30 @@ def button_pressed_falling(self):
     time_rising = 0 # reset to prevent multiple fallings from the same rising
     MIN_TIME_TO_ELAPSE = 500 # miliseconds
     MAX_TIME_TO_ELAPSE = 3000
-    #GPIO.remove_event_detect(GPIO_BTN)
-    #GPIO.add_event_detect(GPIO_BTN, GPIO.RISING, callback=button_pressed_rising)
+
     if debug:
         print("button_pressed_falling")
-    #toggle_led(GPIO_LED, LED_STATE)
-    if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
-        # normal button press to switch between measurement and maintenance
-        toggle_measurement()
-    elif time_elapsed >= 5000 and time_elapsed <= 10000:
-        # shutdown raspberry
-        tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
-        tblink.start()
-        shutdown()
-    elif time_elapsed >= 10000 and time_elapsed <= 15000:
-        # reset settings and shutdown
-        tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
-        tblink.start()
-        delete_settings()
-        update_wittypi_schedule("")
-        error_log("Info: Resettet settings because Button was pressed.")
-        shutdown()
-    elif debug:
-        time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s
-        error_log("Info: Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed_s) + "s elapsed.")
+    if time_elapsed >= 0 and time_elapsed <= 30000:
+        if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
+            # normal button press to switch between measurement and maintenance
+            tmeasurement = threading.Thread(target=toggle_measurement)
+            tmeasurement.start()
+        elif time_elapsed >= 5000 and time_elapsed <= 10000:
+            # shutdown raspberry
+            tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
+            tblink.start()
+            shutdown()
+        elif time_elapsed >= 10000 and time_elapsed <= 15000:
+            # reset settings and shutdown
+            tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
+            tblink.start()
+            delete_settings()
+            update_wittypi_schedule("")
+            error_log("Info: Resettet settings because Button was pressed.")
+            shutdown()
+        elif debug:
+            time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s
+            error_log("Info: Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed_s) + "s elapsed.")
 
 def main():
     global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
@@ -141,27 +136,30 @@ def main():
     GPIO_BTN = settings["button_pin"]
     GPIO_LED = settings["led_pin"]
 
+    # setup LED as output
+    GPIO.setup(GPIO_LED, GPIO.OUT)
+
     # blink with LED on startup
-    blink_led(GPIO_LED)
+    tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
+    tblink.start()
 
     # after start is AccessPoint down
     stop_ap()
-
-    if not debug:
-        # stop HDMI power (save energy)
-        print("Info: Shutting down HDMI to save energy.")
-        stop_tv()
-        stop_hdd_led()
-
-    if debug:
-        error_log("Info: Raspberry Pi has been powered on.")
-        start_hdd_led()
 
     # Create virtual uap0 for WLAN
     create_ap()
 
     # Call wvdial for surfsticks
     start_wvdial()
+
+    if not debug:
+        # stop HDMI power (save energy)
+        print("Info: Shutting down HDMI to save energy.")
+        stop_tv()
+        stop_hdd_led()
+    else:
+        error_log("Info: Raspberry Pi has been powered on.")
+        start_hdd_led()
 
     # start as seperate background thread
     # because Taster pressing was not recognised
@@ -172,12 +170,11 @@ def main():
 
     # setup Button
     GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
-    GPIO.setup(GPIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set LED to be an input pin and set initial value to be pulled low (off)
+    #GPIO.setup(GPIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set LED to be an input pin and set initial value to be pulled low (off)
     bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
     # register button press event
     GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
-    #GPIO.add_event_detect(GPIO_BTN, GPIO.RISING, callback=button_pressed_rising)
-    GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
+    #GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
 
     # Main Lopp: Cancel with STRG+C
     while True:

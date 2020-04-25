@@ -67,9 +67,6 @@ def stop_led(gpio=21):
     os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
-    GPIO.setwarnings(False)
-    GPIO.setup(gpio, GPIO.OUT) # Set pin as output
-    GPIO.setwarnings(True)
     GPIO.output(gpio, GPIO.LOW)
 
 def start_led(gpio=21):
@@ -81,10 +78,14 @@ def start_led(gpio=21):
     os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
-    GPIO.setwarnings(False)
-    GPIO.setup(gpio, GPIO.OUT) # Set pin as output
-    GPIO.setwarnings(True)
     GPIO.output(gpio, GPIO.HIGH)
+
+def toggle_blink_led(gpio=21, duration=0.25):
+    GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+    state = bool(GPIO.input(gpio))
+    GPIO.output(gpio, not state)
+    time.sleep(duration)
+    GPIO.output(gpio, state)
 
 def blink_led(gpio=21, duration=0.25):
     stop_led(gpio)
