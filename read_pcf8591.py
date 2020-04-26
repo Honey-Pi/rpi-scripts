@@ -29,11 +29,11 @@ def measure_voltage(ts_sensor):
         # AIN2 => Pin 2 (default)
         # AIN3 => Pin 3
 
-        # Setup a factor for 5V or 3.3V
-        factor = 1
+        # convert 8 bit number to voltage (default: 5V)
+        factor = 0.09765625 # 25V/256 (=5V analog output signal)
         if 'I2CVoltage' in ts_sensor and ts_sensor['I2CVoltage'] is not None:
-            if int(ts_sensor['I2CVoltage']) == 5:
-                factor = 1.5151515151515151
+            if int(ts_sensor['I2CVoltage']) == 3:
+                factor = 0.064453125 # 16.5V/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
 
         PCF8591.write_byte(address, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
 
@@ -41,7 +41,7 @@ def measure_voltage(ts_sensor):
         _v = PCF8591.read_byte(address)
 
         Voltage_8bit = PCF8591.read_byte(address) # = i2cget -y 1 0x48
-        voltage = Voltage_8bit*0.064453125*factor # convert 8 bit number to voltage 16.5/256 | 16.5V max voltage for 0xff (=3.3V analog output signal)
+        voltage = Voltage_8bit*factor # convert 8 bit number to voltage
 
         if 'ts_field' in ts_sensor and isinstance(voltage, (int, float)):
             fields[ts_sensor["ts_field"]] = round(voltage, 4)
