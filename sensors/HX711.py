@@ -379,7 +379,7 @@ class HX711:
         while (not self._ready() and ready_counter <= 40):
             time.sleep(0.01)  # sleep for 10 ms because data is not ready
             ready_counter += 1
-            if ready_counter == 50:  # if counter reached max value then return False
+            if ready_counter == 40:  # if counter reached max value then return False
                 if self._debug_mode:
                     print('self._read() not ready after 40 trials')
                 return False
