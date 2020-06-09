@@ -28,6 +28,8 @@ def diag():
         os.system("sudo ls -la /dev/ttyUSB* >> /tmp/diag.txt")
         os.system("echo '\n\nlog:\n' >> /tmp/diag.txt")
         os.system("sudo grep -a -B 2 -A 2 'usb_modeswitch\|modem\|pppd\|PPP\|ppp0\|ttyUSB0\|wvdial' /var/log/messages >> /tmp/diag.txt")
+        os.system("echo '\n\nFirmware:\n' >> /tmp/diag.txt")
+        os.system("sudo uname -a >> /tmp/diag.txt")
         with io.open("/tmp/diag.txt", encoding="utf-8") as data_file:
             diag = data_file.read()
         return diag
