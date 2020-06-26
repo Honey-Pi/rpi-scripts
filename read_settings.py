@@ -30,6 +30,7 @@ def get_defaults():
     internet['router'] = router
     internet['honeypi'] = honeypi
     settings["internet"] = internet
+    ts_channel['ts_server_url'] = "http://api.thingspeak.com"
     settings["ts_channels"] = []
     ts_channel = {}
     ts_channel['ts_channel_id'] = None
@@ -121,6 +122,13 @@ def validate_settings(settings):
         settings["offline"]
     except:
         settings["offline"] = get_defaults()["offline"]
+        updateSettingsFile = True
+
+    # Add since v1.0.8
+    try:
+        settings["ts_server_url"]
+    except:
+        settings["ts_server_url"] = get_defaults()["ts_server_url"]
         updateSettingsFile = True
 
     # Migrate v0.1.1 to v1.0 (Multi-Channel)

@@ -9,7 +9,6 @@ from pprint import pprint
 from multiprocessing import Process, Queue, Value
 
 import RPi.GPIO as GPIO
-import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import requests
 import json
 
@@ -18,13 +17,14 @@ from read_bme680 import initBME680FromMain
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
 from read_settings import get_settings, get_sensors
-from utilities import reboot, error_log, shutdown, start_single, stop_single, wait_for_internet_connection, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led
+from utilities import reboot, error_log, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led
 from write_csv import write_csv
 from measurement import measure_all_sensors
+from thingspeak import transfer_all_channels_to_ts
 
-def manage_transfer_to_ts(ts_channels, ts_fields, offline, debug):
+def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug):
     # update ThingSpeak / transfer values
-    connectionErrorHappened = transfer_all_channels_to_ts(ts_channels, ts_fields, debug)
+    connectionErrorHappened = transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug)
 
     if connectionErrorHappened:
         # Write to CSV-File if ConnectionError occured
@@ -35,62 +35,8 @@ def manage_transfer_to_ts(ts_channels, ts_fields, offline, debug):
 
     return connectionErrorHappened
 
-def transfer_all_channels_to_ts(ts_channels, ts_fields, debug):
-    connectionErrorWithinAnyChannel = []
-    for (channelIndex, channel) in enumerate(ts_channels, 0):
-        channel_id = channel["ts_channel_id"]
-        write_key = channel["ts_write_key"]
-        if channel_id and write_key:
-            if debug :
-                print('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
-            ts_instance = thingspeak.Channel(id=channel_id, write_key=write_key)
-            ts_fields_cleaned = clean_fields(ts_fields, channelIndex, debug)
-            connectionError = upload_single_channel(ts_instance, ts_fields_cleaned, debug)
-            connectionErrorWithinAnyChannel.append(connectionError)
-        else:
-            error_log("Warning: No ThingSpeak upload for this channel (" + str(channelIndex) + ") because because channel_id or write_key is None.")
 
-    return any(c == True for c in connectionErrorWithinAnyChannel)
-
-def upload_single_channel(ts_instance, ts_fields_cleaned, debug):
-    # do-while to retry failed transfer
-    retries = 0
-    MAX_RETRIES = 3
-    isConnectionError = True
-    while isConnectionError:
-        try:
-            if ts_fields_cleaned:
-                ts_instance.update(ts_fields_cleaned)
-                if debug:
-                    error_log("Info: Data succesfully transfered to ThingSpeak.")
-            else:
-                error_log("Warning: No ThingSpeak data transfer because no fields defined.")
-
-            # break because transfer succeded
-            isConnectionError = False
-            break
-        except requests.exceptions.HTTPError as errh:
-            error_log(errh, "Http Error")
-        except requests.exceptions.ConnectionError as errc:
-            pass
-        except requests.exceptions.Timeout as errt:
-            error_log(errt, "Timeout Error")
-        except requests.exceptions.RequestException as err:
-            error_log(err, "Something Else")
-        except Exception as ex:
-            error_log(ex, "Exception while sending Data")
-        finally:
-            if isConnectionError:
-                retries+=1
-                # Break after 3 retries
-                if retries > MAX_RETRIES:
-                    break
-                error_log("Warning: Waiting 15 seconds for internet connection to try transfer again (" + str(retries) + "/" + str(MAX_RETRIES) + ")...")
-                wait_for_internet_connection(15)
-
-    return isConnectionError
-
-def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
     ts_fields = {}
     try:
@@ -108,7 +54,7 @@ def measure(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, b
             # if transfer to thingspeak is set
             if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
                 # update ThingSpeak / transfer values
-                connectionErrorHappened = manage_transfer_to_ts(ts_channels, ts_fields, offline, debug)
+                connectionErrorHappened = manage_transfer_to_ts(ts_channels, ts_fields, ts_server_url, offline, debug)
 
                 if connectionErrorHappened:
                     MAX_RETRIES_IN_A_ROW = 3
@@ -193,6 +139,7 @@ def start_measurement(measurement_stop):
         # load settings
         settings = get_settings()
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
+        ts_server_url = settings["ts_server_url"]
         debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
         wittyPi = settings["wittyPi"]
         offline = settings["offline"] # flag to enable offline csv storage
@@ -278,7 +225,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(offline, debug, ts_channels, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join()
                 else:
