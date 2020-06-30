@@ -40,7 +40,7 @@ def _measure_all():
         return co,temp,pressure
 
     except Exception as e:
-        error_log(e, 'Error: Error while reading EE'.)
+        error_log(e, 'Error: Error while reading EE.')
 
     return None
 
@@ -52,7 +52,7 @@ def measure_raw():
     print("temp: %+.2f °C" % temp)
     print("temp: %d mbar" % pressure)
 
-def measure_values(ts_sensor):
+def measure_ee895(ts_sensor):
 
     fields = {}
     try:

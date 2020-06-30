@@ -30,7 +30,7 @@ def get_defaults():
     internet['router'] = router
     internet['honeypi'] = honeypi
     settings["internet"] = internet
-    ts_channel['ts_server_url'] = "http://api.thingspeak.com"
+    settings['ts_server_url'] = "http://api.thingspeak.com"
     settings["ts_channels"] = []
     ts_channel = {}
     ts_channel['ts_channel_id'] = None

@@ -13,6 +13,7 @@ import RPi.GPIO as GPIO
 
 from read_bme680 import measure_bme680, initBME680FromMain
 from read_bme280 import measure_bme280
+from read_ee895 import measure_ee895
 from read_pcf8591 import measure_voltage
 from read_ds18b20 import measure_temperature, filter_temperatur_values
 from read_hx711 import measure_weight, compensate_temperature
@@ -21,7 +22,7 @@ from read_max import measure_tc
 from read_settings import get_settings, get_sensors
 from utilities import start_single, stop_single, error_log
 
-def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, hxInits):
+def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits):
 
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     try:
@@ -79,6 +80,11 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             voltage = measure_voltage(voltageSensors[0])
             ts_fields.update(voltage)
 
+        # measure EE895 (can only be one) [type 7]
+        if ee895Sensors and len(ee895Sensors) == 1:
+            ee895_values = measure_ee895(ee895Sensors[0])
+            ts_fields.update(ee895_values)
+
         # measure every sensor with type 2 [HX711]
         start_single()
         for (i, sensor) in enumerate(weightSensors):
@@ -115,6 +121,7 @@ def measurement():
         tcSensors = get_sensors(settings, 4)
         bme280Sensors = get_sensors(settings, 5)
         voltageSensors = get_sensors(settings, 6)
+        ee895Sensors = get_sensors(settings, 7)
 
         # if bme680 is configured
         if bme680Sensors and len(bme680Sensors) == 1:
@@ -122,7 +129,7 @@ def measurement():
         else:
             bme680IsInitialized = 0
 
-        ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, weightSensors, None)
+        ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
         return json.dumps(ts_fields)
 
     except Exception as e:
