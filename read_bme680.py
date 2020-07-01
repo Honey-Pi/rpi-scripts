@@ -134,7 +134,7 @@ def calc_air_quality(sensor, gas_baseline):
     return air_quality_score
 
 
-def measure_bme680(ts_sensor, burn_in_time=300):
+def measure_bme680(ts_sensor, burn_in_time=30):
     global sensor, gas_baseline
     start_time = time.time()
     curr_time = time.time()
@@ -157,7 +157,7 @@ def measure_bme680(ts_sensor, burn_in_time=300):
                 fields[ts_sensor["ts_field_air_pressure"]] = air_pressure
             if 'ts_field_air_quality' in ts_sensor:
                 if not gas_baseline:
-                    gas_baseline = burn_in_bme680(sensor, 30)
+                    gas_baseline = burn_in_bme680(sensor, burn_in_time)
                 # Calculate air_quality_score.
                 if gas_baseline:
                     air_quality_score = calc_air_quality(sensor, gas_baseline)
