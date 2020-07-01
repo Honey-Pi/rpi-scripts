@@ -5,8 +5,7 @@
 import time
 import bme680
 import smbus
-import math
-from sensors.sensor_utilities import get_smbus
+from sensors.sensor_utilities import get_smbus, computeAbsoluteHumidity 
 
 # global vars
 sensor = None
@@ -128,7 +127,7 @@ def calc_air_quality(sensor, gas_baseline):
 
     # Calculate air_quality_score.
     air_quality_score = hum_score + gas_score
-    absoluteHumidity = computeAbsoluteHumidity(sensor)
+    absoluteHumidity = computeAbsoluteHumidity(hum, temp)
 
     print('BME680 Gas: {0:.2f} Ohms, humidity: {1:.2f} %RH, air quality: {2:.2f}, absolute humidity: {3:.2f} g/m³'.format(gas,hum,air_quality_score,absoluteHumidity))
     return air_quality_score
@@ -170,23 +169,3 @@ def measure_bme680(ts_sensor, burn_in_time=30):
 
     # error
     return {}
-
-def computeAbsoluteHumidity(sensor):
-    try:
-        """https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/"""
-        temperature = sensor.data.temperature
-        humidity = sensor.data.humidity
-        air_pressure = sensor.data.pressure
-        absTemperature = temperature + 273.15;
-        absHumidity = 6.112;
-        absHumidity *= math.exp((17.67 * temperature) / (243.5 + temperature));
-        absHumidity *= humidity;
-        absHumidity *= 2.1674;
-        absHumidity /= absTemperature;
-        return round(absHumidity, 2)
-        
-    except Exception as ex:
-        error_log(ex, "Exception during computeAbsoluteHumidity")
-        return None
-
-    return round(absHumidity, 2)
