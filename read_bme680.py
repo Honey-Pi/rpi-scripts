@@ -99,6 +99,8 @@ def calc_air_quality(sensor, gas_baseline):
     # This sets the balance between humidity and gas reading in the
     # calculation of air_quality_score (25:75, humidity:gas)
     hum_weighting = 0.25
+    
+    temp = sensor.data.temperature
 
     gas = sensor.data.gas_resistance
     gas_offset = gas_baseline - gas
