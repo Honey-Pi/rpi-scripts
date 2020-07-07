@@ -40,9 +40,9 @@ def _measure_all():
         return co,temp,pressure
 
     except Exception as e:
-        error_log(e, 'Error: Error while reading EE.')
+        error_log(e, 'Error: Error while reading EE895 Sensor. Is it connected?')
 
-    return None
+    return None, None, None
 
 
 def measure_raw():
