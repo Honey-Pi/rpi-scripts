@@ -10,7 +10,6 @@ def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
         if channel_id and write_key:
             if debug :
                 print('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
-            ts_instance = thingspeak.Channel(id=channel_id, write_key=write_key)
             ts_fields_cleaned = clean_fields(ts_fields, channelIndex, debug)
             if ts_fields_cleaned:
                 connectionError = upload_single_channel(write_key, ts_fields_cleaned, server_url, debug)
@@ -36,15 +35,15 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug):
             isConnectionError = False
             break
         except requests.exceptions.HTTPError as errh:
-            error_log(errh, "Http Error")
+            error_log(errh, "Warning: Propaply a wrong ThingSpeak WRITE API-Key.")
         except requests.exceptions.ConnectionError as errc:
             pass
         except requests.exceptions.Timeout as errt:
-            error_log(errt, "Timeout Error")
+            error_log(errt, "Error: Timeout Error")
         except requests.exceptions.RequestException as err:
-            error_log(err, "Something Else")
+            error_log(err, "Error: Something Else")
         except Exception as ex:
-            error_log(ex, "Exception while sending Data")
+            error_log(ex, "Error: Exception while sending Data")
         finally:
             if isConnectionError:
                 retries+=1
@@ -64,7 +63,7 @@ def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', 
     """
     if write_key is not None:
         data['api_key'] = write_key
-    url = '{ts}/update{fmt}'.format(
+    url = '{ts}/update.{fmt}'.format(
         ts=server_url,
         fmt=fmt,
     )

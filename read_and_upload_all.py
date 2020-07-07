@@ -81,7 +81,7 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
         measurementIsRunning.value = 0 # clear flag
 
     except Exception as ex:
-        error_log(ex, "Exception during measurement")
+        error_log(ex, "Exception during measure")
         measurementIsRunning.value = 0 # clear flag
 
 def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer):

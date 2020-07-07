@@ -78,12 +78,14 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         # measure YL-40 PFC8591 (can only be one) [type 6]
         if voltageSensors and len(voltageSensors) == 1:
             voltage = measure_voltage(voltageSensors[0])
-            ts_fields.update(voltage)
+            if voltage is not None:
+                ts_fields.update(voltage)
 
         # measure EE895 (can only be one) [type 7]
         if ee895Sensors and len(ee895Sensors) == 1:
             ee895_values = measure_ee895(ee895Sensors[0])
-            ts_fields.update(ee895_values)
+            if ee895_values is not None:
+                ts_fields.update(ee895_values)
 
         # measure every sensor with type 2 [HX711]
         start_single()
