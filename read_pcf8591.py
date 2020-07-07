@@ -5,6 +5,7 @@
 import smbus
 import time
 from sensors.sensor_utilities import get_smbus
+from utilities import error_log
 
 # Main Source: http://www.diyblueprints.net/measuring-voltage-with-raspberry-pi/#Measure_Voltage_Python
 
@@ -49,7 +50,7 @@ def measure_voltage(ts_sensor):
         return fields
 
     except Exception as e:
-        print('Error while reading PCF8591 (Voltage): ' + str(e))
+        error_log(e, 'Error while reading PCF8591 (Voltage). Is the Sensor connected?')
 
     return None
 

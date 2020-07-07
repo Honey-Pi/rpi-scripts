@@ -30,7 +30,7 @@ def get_defaults():
     internet['router'] = router
     internet['honeypi'] = honeypi
     settings["internet"] = internet
-    settings['ts_server_url'] = "http://api.thingspeak.com"
+    settings['ts_server_url'] = "https://api.thingspeak.com"
     settings["ts_channels"] = []
     ts_channel = {}
     ts_channel['ts_channel_id'] = None
@@ -83,7 +83,7 @@ def get_settings():
         with io.open(settingsFile, encoding="utf-8") as data_file:
             settings = json.loads(data_file.read())
     except Exception as ex:
-        error_log("Warning: Loading default settings because of Error in get_settings " + str(ex))
+        error_log("Warning: Loading default settings because File does not exist.")
         # FileNotFoundError: doesn't exist => default values
         # FileReadError / json.loads Error => default values
         settings = get_defaults()
