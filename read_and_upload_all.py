@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
+# Changelog 05.12.2020: New sensors ATH10, SHT31 and HDC1080(1008)
 
 import math
 import threading
 import time
+
 from pprint import pprint
 from multiprocessing import Process, Queue, Value
 
@@ -16,6 +18,11 @@ from read_pcf8591 import measure_voltage, get_raw_voltage
 from read_bme680 import initBME680FromMain
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
+
+from read_aht10 import measure_aht10
+from read_sht31 import measure_sht31
+from read_hdc1008 import measure_hdc1008
+
 from read_settings import get_settings, get_sensors
 from utilities import reboot, error_log, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led
 from write_csv import write_csv
@@ -35,13 +42,11 @@ def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug):
 
     return connectionErrorHappened
 
-
-def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
     ts_fields = {}
     try:
-        ts_fields = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits)
-
+        ts_fields = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits)
         if len(ts_fields) > 0:
             if offline == 1 or offline == 3:
                 try:
@@ -49,7 +54,7 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
                     if s and debug:
                         error_log("Info: Data succesfully saved to CSV-File.")
                 except Exception as ex:
-                    error_log(ex, "Exception in measure")
+                    error_log(ex, "Exception in measure (1)")
 
             # if transfer to thingspeak is set
             if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
@@ -81,7 +86,7 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
         measurementIsRunning.value = 0 # clear flag
 
     except Exception as ex:
-        error_log(ex, "Exception during measure")
+        error_log(ex, "Exception during measure (2)")
         measurementIsRunning.value = 0 # clear flag
 
 def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer):
@@ -174,6 +179,9 @@ def start_measurement(measurement_stop):
         bme280Sensors = get_sensors(settings, 5)
         voltageSensors = get_sensors(settings, 6)
         ee895Sensors = get_sensors(settings, 7)
+        aht10Sensors = get_sensors(settings, 8)
+        sht31Sensors = get_sensors(settings, 9)
+        hdc1008Sensors = get_sensors(settings, 10)
 
         # -- Run Pre Configuration --
         # if bme680 is configured
@@ -226,7 +234,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join()
                 else:
@@ -259,7 +267,7 @@ def start_measurement(measurement_stop):
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
 
     except Exception as e:
-        error_log(e, "Unhandled Exception while Measurement")
+        error_log(e, "Unhandled Exception while Measurement (3)")
         if not debug:
             time.sleep(10)
             reboot()
