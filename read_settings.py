@@ -18,17 +18,22 @@ def get_defaults():
     # settings["interval"] = 0
     settings["debug"] = True
     settings["offline"] = 0
-    # settings["shutdownAfterTransfer"] = False
     router = {}
     router['enabled'] = False
     router['ssid'] = None
     router['password'] = None
+    router['wpa_type'] = 0
+    modem = {}
+    modem['enabled'] = False
+    modem['ttyUSB'] = 0
+    modem['apn'] = "pinternet.interkom.de"
     honeypi = {}
     honeypi['ssid'] = "HoneyPi"
     honeypi['password'] = "HoneyPi!"
     internet = {}
     internet['router'] = router
     internet['honeypi'] = honeypi
+    internet['modem'] = modem
     settings["internet"] = internet
     settings['ts_server_url'] = "https://api.thingspeak.com"
     settings["ts_channels"] = []
@@ -37,9 +42,10 @@ def get_defaults():
     ts_channel['ts_write_key'] = None
     settings["ts_channels"].append(ts_channel)
     settings["sensors"] = []
-    settings["wittyPi_enabled"] = False #To be removed once Webinterface is updated
     wittyPi = {}
     wittyPi["enabled"] = False
+    wittyPi["version"] = 2
+    wittyPi["dummyload"] = False
     wittyPi["voltagecheck_enabled"] = False
     lowVoltage = {}
     lowVoltage["enabled"] = False
@@ -129,6 +135,13 @@ def validate_settings(settings):
         settings["ts_server_url"]
     except:
         settings["ts_server_url"] = get_defaults()["ts_server_url"]
+        updateSettingsFile = True
+
+    # Migrate from v1.0.8-beta
+    try:
+        settings["internet"]["modem"]
+    except:
+        settings["internet"]["modem"] = get_defaults()["internet"]["modem"]
         updateSettingsFile = True
 
     # Migrate v0.1.1 to v1.0 (Multi-Channel)
