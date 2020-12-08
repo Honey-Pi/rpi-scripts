@@ -15,7 +15,6 @@ def get_defaults():
     settings["button_pin"] = 16
     settings["led_pin"] = 21
     settings["w1gpio"] = 11
-    # settings["interval"] = 0
     settings["debug"] = True
     settings["offline"] = 0
     router = {}
@@ -59,7 +58,7 @@ def get_defaults():
     normalVoltage["schedule"] = "BEGIN 2015-08-01 00:00:00 \nEND   2025-07-31 23:59:59 \nON   M5 WAIT\nOFF   M10"
     normalVoltage["voltage"] = 12.8
     normalVoltage["shutdownAfterTransfer"] = False
-    normalVoltage["interval"] = 0
+    normalVoltage["interval"] = 600
     wittyPi["normal"] = normalVoltage
     settings['wittyPi'] = wittyPi
 
