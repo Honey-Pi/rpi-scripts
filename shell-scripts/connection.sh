@@ -87,7 +87,15 @@ elif [ "$1" = "set-apn" ] ; then
         APN="$2"
     fi
 
+	if [ -z "$3" ] ; then
+    	echo "Warning: Missing argument ttyUSB."
+        ttyUSB="0" # default: 0
+    else
+        ttyUSB="$3"
+    fi
+
     export APN
+	export ttyUSB
     # Create the config for wvdial
     cat /etc/wvdial.conf.tmpl | envsubst > /etc/wvdial.conf
 else
