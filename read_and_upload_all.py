@@ -189,7 +189,7 @@ def start_measurement(measurement_stop):
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
         #if bme680Sensors and len(bme680Sensors) == 1:
             bme680IsInitialized[sensorIndex] = 0
-            bme680IsInitialized = initBME680FromMain(bme680Sensor)
+            bme680IsInitialized[sensorIndex] = initBME680FromMain(bme680Sensor)
         #else:
             #bme680IsInitialized = 0
 
