@@ -34,6 +34,23 @@ def average(myList):
     total = sum(myList)
     return total / len(myList)
 
+    
+def findmax(myList):
+    # from list of integers, get number closest to a given value
+    maximum = myList[0]
+    for i in range(1, len(myList)):
+        if (myList[i] > maximum):
+            maximum = myList[i]
+    return maximum
+    
+def findmin(myList):
+    # from list of integers, get number closest to a given value
+    minimum = myList[0]
+    for i in range(1, len(myList)):
+        if (myList[i] < minimum):
+            minimum = myList[i]
+    return minimum
+
 def easy_weight(weight_sensor):
     pin_dt = 5
     pin_sck = 6
@@ -201,7 +218,8 @@ def measure_weight(weight_sensor, hx=None):
             while count_avg < LOOP_AVG and count_avg < 6: # Break after max. 6 loops
                 count_avg += 1
                 # use outliers_filter and do average over 20 measurements
-                reading = hx.get_weight_mean(20)
+                reading = hx.get_weight_mean(41)
+                print('Number of elements removed by filter within hx711: ' + str(hx.get_num_data_filtered_out()))
                 if isinstance(reading, (int, float)): # always check if you get correct value or only False
                     weightMeasures.append(reading)
                 else: # returned False
@@ -210,8 +228,10 @@ def measure_weight(weight_sensor, hx=None):
 
             # take "best" measure
             average_weight = round(average(weightMeasures), 1)
+            maxweight = round(findmax(weightMeasures), 1)
+            minweight = round(findmin(weightMeasures), 1)
             weight = round(takeClosest(weightMeasures, average_weight), 1)
-            print("Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
+            print("Max weight: " + str(maxweight) + "g," + "Min weight: " + str(minweight) + "g," + "Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
 
             ALLOWED_DIVERGENCE = round((500/reference_unit), 1)
             # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
