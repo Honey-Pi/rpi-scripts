@@ -60,7 +60,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors")
 
         # measure BME680 (can only be one) [type 1]
-        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized:
+        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized[0]:
             bme680_values = measure_bme680(bme680Sensors[0], 30)
             ts_fields.update(bme680_values)
 
@@ -149,12 +149,15 @@ def measurement():
         aht10Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
         hdc1008Sensors = get_sensors(settings, 10)
-
+        bme680IsInitialized = {}
+        
         # if bme680 is configured
-        if bme680Sensors and len(bme680Sensors) == 1:
-            bme680IsInitialized = initBME680FromMain(bme680Sensors)
-        else:
-            bme680IsInitialized = 0
+        for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):        
+        #if bme680Sensors and len(bme680Sensors) == 1:
+            bme680IsInitialized[sensorIndex] = 0
+            bme680IsInitialized[sensorIndex] = initBME680FromMain(bme680Sensor)
+        #else:
+            #bme680IsInitialized = 0
 
         ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
         return json.dumps(ts_fields)
