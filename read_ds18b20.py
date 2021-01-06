@@ -35,18 +35,19 @@ def measure_temperature(sensor):
         except Exception as ex:
             error_log(ex, "Error: Unhandled Exception in measure_temperature / pin")
             
-        try:        if sensor["device_id"] != "undefined":
-            # read 1-wire slave file
-            with open('/sys/bus/w1/devices/' + sensor["device_id"] + '/w1_slave', 'r') as file:
-                file_content = file.read()
-                file.close()
+        try:
+            if sensor["device_id"] != "undefined":
+                # read 1-wire slave file
+                with open('/sys/bus/w1/devices/' + sensor["device_id"] + '/w1_slave', 'r') as file:
+                    file_content = file.read()
+                    file.close()
 
-                # read temperature and convert temperature
-                string_value = file_content.split("\n")[1].split(" ")[9]
-                temperature = float(string_value[2:]) / 1000
-                temperature = float('%6.2f' % temperature)
+                    # read temperature and convert temperature
+                    string_value = file_content.split("\n")[1].split(" ")[9]
+                    temperature = float(string_value[2:]) / 1000
+                    temperature = float('%6.2f' % temperature)
 
-                return temperature
+                    return temperature
 
         except FileNotFoundError:
             error_log("Warning: Cannot find Device-ID from Ds18b20 Sensor " + sensor["device_id"])
@@ -79,23 +80,29 @@ def read_unfiltered_temperatur_values(sensorIndex, sensor):
 # the greater the std_factor, the more "forgiving" is the algorithm with the extreme values
 
 def filter_values(unfiltered_values, std_factor=2):
-    mean = np.mean(unfiltered_values)
-    standard_deviation = np.std(unfiltered_values)
+    try:
+        mean = np.mean(unfiltered_values)
+        standard_deviation = np.std(unfiltered_values)
 
-    if standard_deviation == 0:
-        return unfiltered_values
+        if standard_deviation == 0:
+            return unfiltered_values
 
-    final_values = [element for element in unfiltered_values if element > mean - std_factor * standard_deviation]
-    final_values = [element for element in final_values if element < mean + std_factor * standard_deviation]
+        final_values = [element for element in unfiltered_values if element > mean - std_factor * standard_deviation]
+        final_values = [element for element in final_values if element < mean + std_factor * standard_deviation]
 
-    return final_values
-
+        return final_values
+    except Exception as ex:
+        error_log(ex, "Error: Unhandled Exception in filter_values")
+        
 # function for appending the filter
 def filter_temperatur_values(sensorIndex):
-    if sensorIndex in unfiltered_values and len(unfiltered_values[sensorIndex]) > 5:
-        # read the last 5 values and filter them
-        filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-5:]])))
-
+    try:
+        if sensorIndex in unfiltered_values and len(unfiltered_values[sensorIndex]) > 5:
+            # read the last 5 values and filter them
+            filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-5:]])))
+    except Exception as ex:
+        error_log(ex, "Error: Unhandled Exception in filter_temperatur_values")
+        
 def checkIfSensorExistsInArray(sensorIndex):
     try:
         filtered_temperature[sensorIndex]
