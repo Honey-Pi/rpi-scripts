@@ -25,12 +25,17 @@ def initBME680(ts_sensor):
     try:
         # setup BME680 sensor
         try:
+            i2c_addr = ts_sensor["i2c_addr"]
+        except:
+            i2c_addr = "0x76"
+            # setup BME680 sensor
+        if i2c_addr == "0x76":
             sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
-        except IOError:
+        elif i2c_addr == "0x77":
             sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
 
         try:
-            offset = float(ts_sensor[0]["offset"])
+            offset = float(ts_sensor["offset"])
             print('BME680: The Temperature Offset is ' + str(offset) + ' °C')
         except:
             offset = 0
