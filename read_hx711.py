@@ -6,6 +6,7 @@ from sensors.HX711 import HX711 # import the class HX711
 # Source: https://github.com/gandalf15/HX711
 import RPi.GPIO as GPIO # import GPIO
 import time
+from utilities import error_log
 
 # global var
 ledState = False
