@@ -217,13 +217,21 @@ def measure_weight(weight_sensor, hx=None):
             LOOP_AVG = 3
             while count_avg < LOOP_AVG and count_avg < 6: # Break after max. 6 loops
                 count_avg += 1
-                # use outliers_filter and do average over 20 measurements
+                # use outliers_filter and do average over 41 measurements
+                num_measurements = 41
                 reading = hx.get_weight_mean(41)
                 print('Number of elements removed by filter within hx711: ' + str(hx.get_num_data_filtered_out()))
                 if isinstance(reading, (int, float)): # always check if you get correct value or only False
                     weightMeasures.append(reading)
+                    num_data_filtered_out = hx.get_num_data_filtered_out()
+                    percentage_filtered_out = round((num_data_filtered_out / num_measurements * 100),2)
+                    print(str(percentage_filtered_out) + '%, in totoal ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
+                    if percentage_filtered_out > 25:
+                        error_log(str(percentage_filtered_out) + '%, in totoal ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
+                        error_log("You might need to check your hx711 setup")
                 else: # returned False
                     LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
+                    error_log("Failured measurement, you might need to check your hx711 setup")
                 #time.sleep(0.5) # wait 500ms before next measurement
 
             # take "best" measure
