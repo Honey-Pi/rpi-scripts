@@ -66,6 +66,7 @@ class HX711:
         self._scale_ratio_B = 1  # scale ratio for channel B
         self._debug_mode = False     # init debug mode to True
         self._data_filter = outliers_filter  # default it is used outliers_filter
+        self._num_data_filtered_out =  0 # number of data filtered out by the data_filter
 
         GPIO.setup(self._pd_sck, GPIO.OUT)  # pin _pd_sck is output only
         GPIO.setup(self._dout, GPIO.IN)  # pin _dout is input only
@@ -270,6 +271,9 @@ class HX711:
         else:
             raise TypeError('Parameter "data_filter" must be a function. '
                             'Received: {}'.format(data_filter))
+
+    def get_num_data_filtered_out(self):
+        return self._num_data_filtered_out
 
     def set_debug_mode(self, flag=False):
         """
@@ -476,9 +480,13 @@ class HX711:
         data_mean = False
         if readings > 2 and self._data_filter:
             filtered_data = self._data_filter(data_list)
+            num_unfiltered_data_list = len(data_list)
+            num_filtered_data_list = len(filtered_data)
+            self._num_data_filtered_out = num_unfiltered_data_list - num_filtered_data_list
             if self._debug_mode:
                 print('data_list: {}'.format(data_list))
                 print('filtered_data list: {}'.format(filtered_data))
+                print('number of elements removed by filter: ' + str(self._num_data_filtered_out))
                 print('data_mean:', stat.mean(filtered_data))
             data_mean = stat.mean(filtered_data)
         else:
