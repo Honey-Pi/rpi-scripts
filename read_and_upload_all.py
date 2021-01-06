@@ -182,13 +182,16 @@ def start_measurement(measurement_stop):
         aht10Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
         hdc1008Sensors = get_sensors(settings, 10)
+        bme680IsInitialized = {}
 
         # -- Run Pre Configuration --
         # if bme680 is configured
-        if bme680Sensors and len(bme680Sensors) == 1:
-            bme680IsInitialized = initBME680FromMain(bme680Sensors)
-        else:
-            bme680IsInitialized = 0
+        for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
+        #if bme680Sensors and len(bme680Sensors) == 1:
+            bme680IsInitialized[sensorIndex] = 0
+            bme680IsInitialized = initBME680FromMain(bme680Sensor)
+        #else:
+            #bme680IsInitialized = 0
 
         # if hx711 is set
         hxInits = []
