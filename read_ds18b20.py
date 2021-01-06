@@ -15,21 +15,27 @@ filtered_temperature = [] # here we keep the temperature values after removing o
 
 def measure_temperature(sensor):
     try:
-        if 'device_id' not in sensor:
-            sensor["device_id"] = "undefined"
+        try:
+            if 'device_id' not in sensor:
+                sensor["device_id"] = "undefined"
+        except Exception as ex:
+            error_log(ex, "Error: Unhandled Exception in measure_temperature / device_id")
 
-        if 'pin' in sensor:
-            gpio_3V = int(sensor["pin"])
-            if gpio_3V > 0:
+        try:
+            if 'pin' in sensor:
+                gpio_3V = int(sensor["pin"])
+                if gpio_3V > 0:
 
-                print("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
-                setup_gpio(gpio_3V)
+                    print("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
+                    setup_gpio(gpio_3V)
 
-                if not os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]):
-                    error_log("Info: Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
-                    reset_ds18b20_3V(gpio_3V)
-
-        if sensor["device_id"] != "undefined":
+                    if not os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]):
+                        error_log("Info: Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
+                        reset_ds18b20_3V(gpio_3V)
+        except Exception as ex:
+            error_log(ex, "Error: Unhandled Exception in measure_temperature / pin")
+            
+        try:        if sensor["device_id"] != "undefined":
             # read 1-wire slave file
             with open('/sys/bus/w1/devices/' + sensor["device_id"] + '/w1_slave', 'r') as file:
                 file_content = file.read()
@@ -42,8 +48,10 @@ def measure_temperature(sensor):
 
                 return temperature
 
-    except FileNotFoundError:
-        error_log("Warning: Cannot find Device-ID from Ds18b20 Sensor " + sensor["device_id"])
+        except FileNotFoundError:
+            error_log("Warning: Cannot find Device-ID from Ds18b20 Sensor " + sensor["device_id"])
+        except Exception as ex:
+            error_log(ex, "Error: Unhandled Exception in measure_temperature read 1-wire slave file")
     except Exception as ex:
         error_log(ex, "Error: Unhandled Exception in measure_temperature")
 
