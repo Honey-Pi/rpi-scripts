@@ -60,9 +60,10 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors")
 
         # measure BME680 (can only be one) [type 1]
-        if bme680Sensors and len(bme680Sensors) == 1 and bme680IsInitialized[0]:
-            bme680_values = measure_bme680(bme680Sensors[0], 30)
-            ts_fields.update(bme680_values)
+        for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
+            if bme680IsInitialized[sensorIndex]:
+                bme680_values = measure_bme680(bme680Sensor, 30)
+                ts_fields.update(bme680_values)
 
         # measure every sensor with type 3 [DHT11/DHT22]
         for (i, sensor) in enumerate(dhtSensors):
