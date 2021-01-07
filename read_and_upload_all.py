@@ -97,38 +97,41 @@ def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowV
         if isTimeToCheckVoltage:
             if voltageSensors and len(voltageSensors) == 1:
                 voltage = get_raw_voltage(voltageSensors[0])
-                now = time.strftime("%H:%M", time.localtime(time_now))
-                print("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
-                if voltage <= wittyPi["low"]["voltage"]:
-                    print("Running on low voltage")
-                    if (isLowVoltage == False) or (isLowVoltage is None):
-                        if wittyPi["low"]["enabled"]:
-                            error_log("Info: Enable wittyPi low voltage settings!")
-                            update_wittypi_schedule(wittyPi["low"]["schedule"])
-                        else:
-                            error_log("Info: Low voltage but wittyPi disabled!")
-                            update_wittypi_schedule("")
-                        interval = wittyPi["low"]["interval"]
-                        shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
-                        isLowVoltage = setStateToStorage('isLowVoltage', True)
-                        error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
-                elif voltage < wittyPi["normal"]["voltage"]:
-                    print("No longer low voltage but recovery voltage not reached")
-                elif voltage >= wittyPi["normal"]["voltage"]:
-                    print("Running on normal voltage")
-                    if (isLowVoltage == True) or (isLowVoltage is None):
-                        if wittyPi["normal"]["enabled"]:
-                            error_log("Info: Enable wittyPi normal voltage settings!")
-                            update_wittypi_schedule(wittyPi["normal"]["schedule"])
-                        else:
-                            error_log("Info: Normal voltage but wittyPi disabled!")
-                            update_wittypi_schedule("")
-                            interval = wittyPi["normal"]["interval"]
-                            shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
-                        isLowVoltage = setStateToStorage('isLowVoltage', False)
-                        error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+                if voltage is not None:
+                    now = time.strftime("%H:%M", time.localtime(time_now))
+                    print("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
+                    if voltage <= wittyPi["low"]["voltage"]:
+                        print("Running on low voltage")
+                        if (isLowVoltage == False) or (isLowVoltage is None):
+                            if wittyPi["low"]["enabled"]:
+                                error_log("Info: Enable wittyPi low voltage settings!")
+                                update_wittypi_schedule(wittyPi["low"]["schedule"])
+                            else:
+                                error_log("Info: Low voltage but wittyPi disabled!")
+                                update_wittypi_schedule("")
+                            interval = wittyPi["low"]["interval"]
+                            shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
+                            isLowVoltage = setStateToStorage('isLowVoltage', True)
+                            error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+                    elif voltage < wittyPi["normal"]["voltage"]:
+                        print("No longer low voltage but recovery voltage not reached")
+                    elif voltage >= wittyPi["normal"]["voltage"]:
+                        print("Running on normal voltage")
+                        if (isLowVoltage == True) or (isLowVoltage is None):
+                            if wittyPi["normal"]["enabled"]:
+                                error_log("Info: Enable wittyPi normal voltage settings!")
+                                update_wittypi_schedule(wittyPi["normal"]["schedule"])
+                            else:
+                                error_log("Info: Normal voltage but wittyPi disabled!")
+                                update_wittypi_schedule("")
+                                interval = wittyPi["normal"]["interval"]
+                                shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
+                            isLowVoltage = setStateToStorage('isLowVoltage', False)
+                            error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+                    else:
+                        error_log("Warning: Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
                 else:
-                    error_log("Warning: Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
+                    error_log("Error: Voltagesensor did not return a value!")
             else:
                 error_log("Warning: WittyPi Voltage checks enabled but no VoltageSensors configured")
                 time_measured_Voltage = time.time()
@@ -187,10 +190,10 @@ def start_measurement(measurement_stop):
         # -- Run Pre Configuration --
         # if bme680 is configured
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-        #if bme680Sensors and len(bme680Sensors) == 1:
+            #if bme680Sensors and len(bme680Sensors) == 1:
             bme680IsInitialized[sensorIndex] = 0
             bme680IsInitialized[sensorIndex] = initBME680FromMain(bme680Sensor)
-        #else:
+            #else:
             #bme680IsInitialized = 0
 
         # if hx711 is set
