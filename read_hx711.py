@@ -226,9 +226,9 @@ def measure_weight(weight_sensor, hx=None):
                     weightMeasures.append(reading)
                     num_data_filtered_out = hx.get_num_data_filtered_out()
                     percentage_filtered_out = round((num_data_filtered_out / num_measurements * 100),2)
-                    print(str(percentage_filtered_out) + '%, in totoal ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
-                    if percentage_filtered_out > 25:
-                        error_log(str(percentage_filtered_out) + '%, in totoal ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
+                    print(str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
+                    if percentage_filtered_out > 34:
+                        error_log(str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
                         error_log("You might need to check your hx711 setup")
                 else: # returned False
                     LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
