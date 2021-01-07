@@ -13,6 +13,10 @@ from utilities import error_log
 def diag():
     diag = ""
     try:
+        os.system("echo '\n\nUnterspannung seit Bootvorgang:\n' >> /tmp/diag.txt")
+        os.system("sudo vcgencmd get_throttled >> /tmp/diag.txt")
+        os.system("echo '0x50000 = Unterspannung seit Systemstart\n' > /tmp/diag.txt")
+        os.system("echo '0x50005 = Unterspannung seit Systemstart\n\n' > /tmp/diag.txt")
         os.system("echo 'ifconfig:\n' > /tmp/diag.txt")
         os.system("sudo ifconfig >> /tmp/diag.txt")
         os.system("echo '\n\nroute:\n' >> /tmp/diag.txt")
