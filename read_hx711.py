@@ -174,7 +174,7 @@ def init_hx711(weight_sensor, debug=False):
     return None
 
 
-def measure_weight(weight_sensor, hx=None):
+def measure_weight(weight_sensor, hx=None, debug=False):
     if 'reference_unit' in weight_sensor:
         reference_unit = float(weight_sensor["reference_unit"])
     else:
@@ -183,6 +183,18 @@ def measure_weight(weight_sensor, hx=None):
         offset = int(weight_sensor["offset"])
     else:
         offset = 0
+
+    pin_dt = 0
+    pin_sck = 0
+    channel = ''
+    
+    try:
+        pin_dt = int(weight_sensor["pin_dt"])
+        pin_sck = int(weight_sensor["pin_sck"])
+        channel = weight_sensor["channel"]
+    except Exception as e:
+        print("HX711 missing param: " + str(e))
+        pass
 
     temp_reading = None
     weight = None
@@ -201,7 +213,7 @@ def measure_weight(weight_sensor, hx=None):
             print("Initialized HX711 again because shit data.")
             if hx:
                 hx.reset()
-            hx = init_hx711(weight_sensor, debug=True)
+            hx = init_hx711(weight_sensor, debug)
 
         hx.power_up()
         hx.set_scale_ratio(scale_ratio=reference_unit)
@@ -221,18 +233,21 @@ def measure_weight(weight_sensor, hx=None):
                 # use outliers_filter and do average over 41 measurements
                 num_measurements = 41
                 reading = hx.get_weight_mean(41)
-                print('Number of elements removed by filter within hx711: ' + str(hx.get_num_data_filtered_out()))
+                if debug:
+                    print('Info: Number of elements removed by filter within HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ' + str(hx.get_num_data_filtered_out()))
                 if isinstance(reading, (int, float)): # always check if you get correct value or only False
                     weightMeasures.append(reading)
                     num_data_filtered_out = hx.get_num_data_filtered_out()
                     percentage_filtered_out = round((num_data_filtered_out / num_measurements * 100),2)
-                    print(str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
                     if percentage_filtered_out > 34:
-                        error_log(str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
-                        error_log("You might need to check your hx711 setup")
+                        error_log('Warning: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
+                        error_log('Warning: You might need to check your cabling setup for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pinsck) + ' Channel: ' + channel)
+                    else:
+                        if debug:
+                            print('Info: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
                 else: # returned False
                     LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
-                    error_log("Failured measurement, you might need to check your hx711 setup")
+                    error_log('Error: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Failured measurement, you might need to check your hx711 setup')
                 #time.sleep(0.5) # wait 500ms before next measurement
 
             # take "best" measure
@@ -240,7 +255,7 @@ def measure_weight(weight_sensor, hx=None):
             maxweight = round(findmax(weightMeasures), 1)
             minweight = round(findmin(weightMeasures), 1)
             weight = round(takeClosest(weightMeasures, average_weight), 1)
-            print("Max weight: " + str(maxweight) + "g," + "Min weight: " + str(minweight) + "g," + "Average weight: " + str(average_weight) + "g, Chosen weight: " + str(weight) + "g")
+            print('Info: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Max weight: ' + str(maxweight) + 'g, Min weight: ' + str(minweight) + 'g, Average weight: ' + str(average_weight) + 'g, Chosen weight: ' + str(weight) + 'g')
 
             ALLOWED_DIVERGENCE = round((500/reference_unit), 1)
             # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
