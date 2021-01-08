@@ -114,7 +114,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         start_single()
         for (i, sensor) in enumerate(weightSensors):
             if hxInits is not None:
-                weight = measure_weight(sensor, hxInits[i])
+                weight = measure_weight(sensor, hxInits[i], debug)
                 weight = compensate_temperature(sensor, weight, ts_fields)
                 ts_fields.update(weight)
             else:
