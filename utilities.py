@@ -21,14 +21,34 @@ wittypi_scheduleFile = backendFolder + "/schedule.wpi"
 
 def get_default_gateway_linux():
     """Read the default gateway directly from /proc."""
-    with open("/proc/net/route") as fh:
-        for line in fh:
-            fields = line.strip().split()
-            if fields[1] != '00000000' or not int(fields[3], 16) & 2:
-                # If not default route or not RTF_GATEWAY, skip it
-                continue
+    try:
+        with open("/proc/net/route") as fh:
+            for line in fh:
+                fields = line.strip().split()
+                if fields[1] != '00000000' or not int(fields[3], 16) & 2:
+                    # If not default route or not RTF_GATEWAY, skip it
+                    continue
 
-            return socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
+                return socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
+    except Exception as ex:
+        print("get_default_gateway_linux:" + str(ex))
+        pass
+        return None
+
+def get_interface_upstatus_linux(interfacename):
+    """/sys/class/net/'interfacename'/operstate'."""
+    try:
+        with open('/sys/class/net/'+ str(interfacename) + '/operstate') as fh:
+            for line in fh:
+                status= line.strip()
+                if status == "up":
+                    return True
+                else:
+                    return False
+    except Exception as ex:
+        print("get_interface_upstatus_linux:" + str(ex))
+        pass
+        return False
 
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
