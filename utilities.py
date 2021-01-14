@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from datetime import datetime
-import urllib
+import urllib.request
 import json
 import logging
 import RPi.GPIO as GPIO
@@ -289,8 +289,7 @@ def wait_for_internet_connection(maxTime=10):
     while i < maxTime:
         i+=1
         try:
-            response = urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read()
-
+            response = str(urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read().decode('utf-8'))
             if response == "Microsoft NCSI":
                 print("Success: Connection established after " + str(i) + " seconds.")
                 return True
@@ -303,13 +302,11 @@ def wait_for_internet_connection(maxTime=10):
 
 def check_internet_connection():
     try:
-        response = urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read()
-
+        response = str(urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read().decode('utf-8'))
         if response == "Microsoft NCSI":
             return True
     except:
-        pass
-
+        print("Except check_internet_connection: Connection error.")
     return False
 
 def delete_settings():
