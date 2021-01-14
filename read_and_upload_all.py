@@ -7,6 +7,8 @@ import math
 import threading
 import time
 
+import logging
+
 from pprint import pprint
 from multiprocessing import Process, Queue, Value
 
@@ -148,7 +150,12 @@ def start_measurement(measurement_stop):
         settings = get_settings()
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
         ts_server_url = settings["ts_server_url"]
-        debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
+        debuglevel=settings["debuglevel"]
+        if debuglevel <= 10:
+            debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
+        else:
+            debug = False # flag to enable debug mode (HDMI output enabled and no rebooting)
+        #debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
         wittyPi = settings["wittyPi"]
         offline = settings["offline"] # flag to enable offline csv storage
 
@@ -273,7 +280,7 @@ def start_measurement(measurement_stop):
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
 
     except Exception as e:
-        error_log(e, "Unhandled Exception while Measurement (3)")
+        error_log(e, "Unhandled Exception in start_measurement")
         if not debug:
             time.sleep(10)
             reboot()
