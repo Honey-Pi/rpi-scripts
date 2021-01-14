@@ -24,7 +24,7 @@ def get_defaults():
     router['wpa_type'] = 0
     modem = {}
     modem['enabled'] = False
-    modem['ttyUSB'] = 0
+    modem['ttyUSB'] = "ttyUSB0"
     modem['apn'] = "pinternet.interkom.de"
     honeypi = {}
     honeypi['ssid'] = "HoneyPi"

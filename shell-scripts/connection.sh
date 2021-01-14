@@ -89,7 +89,7 @@ elif [ "$1" = "set-apn" ] ; then
 
 	if [ -z "$3" ] ; then
     	echo "Warning: Missing argument ttyUSB."
-        ttyUSB="0" # default: 0
+        ttyUSB="ttyUSB0" # default: ttyUSB0
     else
         ttyUSB="$3"
     fi
