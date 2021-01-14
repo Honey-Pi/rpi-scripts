@@ -299,6 +299,17 @@ def wait_for_internet_connection(maxTime=10):
 
     return False
 
+def check_internet_connection():
+    try:
+        response = urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read()
+
+        if response == "Microsoft NCSI":
+            return True
+    except:
+        pass
+
+    return False
+
 def delete_settings():
     os.remove(settingsFile)
 
