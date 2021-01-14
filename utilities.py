@@ -14,11 +14,17 @@ from pathlib import Path
 
 import socket, struct
 
+
+logger = logging.getLogger('HoneyPi.utilities')
+
 honeypiFolder = '/home/pi/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
 backendFolder = '/var/www/html/backend'
 settingsFile = backendFolder + '/settings.json'
 wittypi_scheduleFile = backendFolder + "/schedule.wpi"
+
+logfile = scriptsFolder + '/error.log'
+
 
 def get_default_gateway_linux():
     """Read the default gateway directly from /proc."""
@@ -257,7 +263,7 @@ def error_log(e=None, printText=None):
         with open(file, "a") as myfile:
             myfile.write (str(timestamp) + " | " + printText + "\n")
         """
-        logging.info(printText)
+        logger.info(printText)
     except Exception:
         pass
 
