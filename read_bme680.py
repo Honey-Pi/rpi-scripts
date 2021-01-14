@@ -5,7 +5,7 @@
 import time
 import bme680
 import smbus
-from sensors.sensor_utilities import get_smbus, computeAbsoluteHumidity 
+from sensors.sensor_utilities import get_smbus, computeAbsoluteHumidity
 
 # global vars
 sensor = None
@@ -25,21 +25,27 @@ def initBME680(ts_sensor):
     try:
         # setup BME680 sensor
         try:
-            i2c_addr = ts_sensor["i2c_addr"]
-        except:
-            i2c_addr = "0x76"
-            # setup BME680 sensor
-        if i2c_addr == "0x76":
-            sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
-        elif i2c_addr == "0x77":
-            sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
+            if 'i2c_addr' in ts_sensor:
+                i2c_addr = ts_sensor["i2c_addr"]
+            else:
+                i2c_addr = "0x76"
+
+            if i2c_addr == "0x76":
+                sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
+            if i2c_addr == "0x77":
+                sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
+        except IOError:
+            # addess not found => try the opposite address (it might be the wrong value in i2c_addr)
+            if i2c_addr == "0x76":
+                sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY) # try opposite
+            if i2c_addr == "0x77":
+                sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY) # try opposite
 
         try:
             offset = float(ts_sensor["offset"])
             print('BME680: The Temperature Offset is ' + str(offset) + ' °C')
         except:
             offset = 0
-            #print('BME680: The Temperature Offset is default: ' + str(offset) + '°C')
 
         # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
         sensor.set_humidity_oversample(bme680.OS_2X)
@@ -104,7 +110,7 @@ def calc_air_quality(sensor, gas_baseline):
     # This sets the balance between humidity and gas reading in the
     # calculation of air_quality_score (25:75, humidity:gas)
     hum_weighting = 0.25
-    
+
     temp = sensor.data.temperature
 
     gas = sensor.data.gas_resistance
