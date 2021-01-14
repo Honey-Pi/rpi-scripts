@@ -151,14 +151,11 @@ def measurement():
         sht31Sensors = get_sensors(settings, 9)
         hdc1008Sensors = get_sensors(settings, 10)
         bme680IsInitialized = {}
-        
+
         # if bme680 is configured
-        for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):        
-        #if bme680Sensors and len(bme680Sensors) == 1:
+        for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
             bme680IsInitialized[sensorIndex] = 0
             bme680IsInitialized[sensorIndex] = initBME680FromMain(bme680Sensor)
-        #else:
-            #bme680IsInitialized = 0
 
         ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
         return json.dumps(ts_fields)

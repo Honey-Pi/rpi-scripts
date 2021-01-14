@@ -197,11 +197,8 @@ def start_measurement(measurement_stop):
         # -- Run Pre Configuration --
         # if bme680 is configured
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            #if bme680Sensors and len(bme680Sensors) == 1:
             bme680IsInitialized[sensorIndex] = 0
             bme680IsInitialized[sensorIndex] = initBME680FromMain(bme680Sensor)
-            #else:
-            #bme680IsInitialized = 0
 
         # if hx711 is set
         hxInits = []
@@ -211,7 +208,7 @@ def start_measurement(measurement_stop):
 
         # PCF8591
         if voltageSensors and len(voltageSensors) == 1:
-            voltage = get_raw_voltage(voltageSensors[0]) #initial measurement as first measurement is always wrong
+            voltage = get_raw_voltage(voltageSensors[0]) # initial measurement as first measurement is always wrong
 
         # -- End Pre Configuration --
 

@@ -34,8 +34,8 @@ def get_smbus():
         return 1
 
 def computeAbsoluteHumidity(humidity, temperature):
+    """https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/"""
     try:
-        """https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/"""
         absTemperature = temperature + 273.15;
         absHumidity = 6.112;
         absHumidity *= math.exp((17.67 * temperature) / (243.5 + temperature));
@@ -43,7 +43,7 @@ def computeAbsoluteHumidity(humidity, temperature):
         absHumidity *= 2.1674;
         absHumidity /= absTemperature;
         return round(absHumidity, 2)
-        
+
     except Exception as ex:
         error_log(ex, "Exception during computeAbsoluteHumidity")
         return None

@@ -152,7 +152,7 @@ def main():
         # read settings for number of GPIO pin
         settings = get_settings()
         debuglevel=settings["debuglevel"]
-        
+
         print("Debuglevel: "+ str(debuglevel))
         time.sleep(5)
         if debuglevel <= 10:
