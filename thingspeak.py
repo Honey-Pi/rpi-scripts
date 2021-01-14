@@ -10,7 +10,7 @@ def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
         if channel_id and write_key:
             if debug :
                 print('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
-            ts_fields_cleaned = clean_fields(ts_fields, channelIndex, debug)
+            ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
             if ts_fields_cleaned:
                 connectionError = upload_single_channel(write_key, ts_fields_cleaned, server_url, debug)
                 connectionErrorWithinAnyChannel.append(connectionError)

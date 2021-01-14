@@ -5,12 +5,17 @@
 import sys
 import threading
 import time
+import logging
 
 import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
 from utilities import stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, get_default_gateway_linux, get_interface_upstatus_linux
+
+honeypiFolder = '/home/pi/HoneyPi'
+scriptsFolder = honeypiFolder + '/rpi-scripts'
+logfile = scriptsFolder + '/error.log'
 
 # global vars
 measurement = None
@@ -126,6 +131,10 @@ def button_pressed_falling(self):
 
 def main():
     global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
+
+    logging.basicConfig(filename=logfile, format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+    logging.info('HoneyPi Started')
 
     # Zaehlweise der GPIO-PINS auf der Platine
     GPIO.setmode(GPIO.BCM)
