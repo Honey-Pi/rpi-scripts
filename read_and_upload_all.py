@@ -150,7 +150,7 @@ def start_measurement(measurement_stop):
         settings = get_settings()
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
         ts_server_url = settings["ts_server_url"]
-        debuglevel=settings["debuglevel"]
+        debuglevel = settings["debuglevel"]
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
         else:
