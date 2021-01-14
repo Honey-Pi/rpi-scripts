@@ -65,7 +65,7 @@ def toggle_measurement():
     elif isActive == 1:
         print(">>> Button was pressed: Start measurement / stop AccessPoint")
         if measurement.is_alive():
-            error_log("Warning: Thread should not be active anymore")
+            logger.warning("Thread should not be active anymore")
         # start the measurement by clearing event's flag
         measurement_stop.clear() # reset flag
         measurement_stop = threading.Event() # create event to stop measurement
@@ -73,7 +73,7 @@ def toggle_measurement():
         measurement.start() # start measurement
         stop_ap() # finally stop AP
     else:
-        error_log("Error: Button press recognized but undefined state of Maintenance Mode")
+        logger.error("Button press recognized but undefined state of Maintenance Mode")
     # make signal, that job finished
     tblink = threading.Thread(target=toggle_blink_led, args = (GPIO_LED, 0.2))
     tblink.start()
@@ -119,78 +119,104 @@ def button_pressed_falling(self):
             tblink.start()
             delete_settings()
             update_wittypi_schedule("")
-            error_log("Info: Resettet settings because Button was pressed.")
+            logger.critical("Resettet settings because Button was pressed.")
             shutdown()
         elif debug:
             time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s
-            error_log("Info: Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed_s) + "s elapsed.")
+            logger.warning("Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed_s) + "s elapsed.")
 
 def main():
-    global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
+    try:
+        global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
+        logger = logging.getLogger('HoneyPi')
+        logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(logfile)
+        fh.setLevel(logging.DEBUG)
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        #logging.basicConfig(filename=logfile, format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
+        #logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+        logger.info('HoneyPi Started')
 
-    logging.basicConfig(filename=logfile, format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
-    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-    logging.info('HoneyPi Started')
+        # Zaehlweise der GPIO-PINS auf der Platine
+        GPIO.setmode(GPIO.BCM)
 
-    # Zaehlweise der GPIO-PINS auf der Platine
-    GPIO.setmode(GPIO.BCM)
+        # read settings for number of GPIO pin
+        settings = get_settings()
+        debuglevel=settings["debuglevel"]
+        
+        print("Debuglevel: "+ str(debuglevel))
+        time.sleep(5)
+        if debuglevel <= 10:
+            debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
+        else:
+            debug = False # flag to enable debug mode (HDMI output enabled and no rebooting)
+        GPIO_BTN = settings["button_pin"]
+        GPIO_LED = settings["led_pin"]
 
-    # read settings for number of GPIO pin
-    settings = get_settings()
-    debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
-    GPIO_BTN = settings["button_pin"]
-    GPIO_LED = settings["led_pin"]
+        # setup LED as output
+        GPIO.setup(GPIO_LED, GPIO.OUT)
 
-    # setup LED as output
-    GPIO.setup(GPIO_LED, GPIO.OUT)
+        # blink with LED on startup
+        tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
+        tblink.start()
 
-    # blink with LED on startup
-    tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
-    tblink.start()
+        # after start is AccessPoint down
+        stop_ap()
 
-    # after start is AccessPoint down
-    stop_ap()
+        # Create virtual uap0 for WLAN
+        create_ap()
 
-    # Create virtual uap0 for WLAN
-    create_ap()
+        # Call wvdial for surfsticks
+        start_wvdial()
 
-    # Call wvdial for surfsticks
-    start_wvdial()
+        if not debuglevel <= 20:
+            # stop HDMI power (save energy)
+            print("Info: Shutting down HDMI to save energy.")
+            stop_tv()
+            stop_hdd_led()
+        else:
+            logger.info("Info: Raspberry Pi has been powered on.")
+            start_hdd_led()
 
-    if not debug:
-        # stop HDMI power (save energy)
-        print("Info: Shutting down HDMI to save energy.")
-        stop_tv()
-        stop_hdd_led()
-    else:
-        error_log("Info: Raspberry Pi has been powered on.")
-        start_hdd_led()
+        logger.info("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
+        logger.info("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
+        logger.info("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
 
-    error_log("Info: Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
-    error_log("Info: Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
-    error_log("Info: Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
+        # start as seperate background thread
+        # because Taster pressing was not recognised
+        isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
+        measurement_stop = threading.Event() # create event to stop measurement
+        measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
+        measurement.start() # start measurement
 
-    # start as seperate background thread
-    # because Taster pressing was not recognised
-    isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
-    measurement_stop = threading.Event() # create event to stop measurement
-    measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
-    measurement.start() # start measurement
+        # setup Button
+        GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
+        #GPIO.setup(GPIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set LED to be an input pin and set initial value to be pulled low (off)
+        bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
+        # register button press event
+        GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
+        #GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
 
-    # setup Button
-    GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
-    #GPIO.setup(GPIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set LED to be an input pin and set initial value to be pulled low (off)
-    bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
-    # register button press event
-    GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
-    #GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
+        # Main Lopp: Cancel with STRG+C
+        while True:
+            time.sleep(0.2)  # wait 200 ms to give CPU chance to do other things
+            pass
 
-    # Main Lopp: Cancel with STRG+C
-    while True:
-        time.sleep(0.2)  # wait 200 ms to give CPU chance to do other things
-        pass
-
-    print("This text will never be printed.")
+        print("This text will never be printed.")
+    except Exception as e:
+        logger.critical("Unhandled Exception in main "+ repr(e))
+        if not debug:
+            time.sleep(60)
+            reboot()
 
 if __name__ == '__main__':
     try:
@@ -200,7 +226,7 @@ if __name__ == '__main__':
         close_script()
 
     except Exception as e:
-        error_log(e, "Unhandled Exception in Main")
+        logger.error("Unhandled Exception in __main__ "+ repr(e))
         if not debug:
             time.sleep(60)
             reboot()
