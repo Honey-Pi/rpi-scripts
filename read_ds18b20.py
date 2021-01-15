@@ -7,8 +7,10 @@ import math
 import os
 import numpy as np
 from pprint import pprint
-from utilities import error_log
+import logging
 from read_gpio import setup_gpio, reset_ds18b20_3V
+
+logger = logging.getLogger('HoneyPi.read_ds18b12')
 
 unfiltered_values = [] # here we keep all the unfilteres values
 filtered_temperature = [] # here we keep the temperature values after removing outliers
@@ -19,21 +21,21 @@ def measure_temperature(sensor):
             if 'device_id' not in sensor:
                 sensor["device_id"] = "undefined"
         except Exception as ex:
-            error_log(ex, "Error: Unhandled Exception in measure_temperature / device_id")
+            logger.exception('Unhandled Exception in measure_temperature / device_id '+ repr(ex))
 
         try:
             if 'pin' in sensor:
                 gpio_3V = int(sensor["pin"])
                 if gpio_3V > 0:
 
-                    print("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
+                    logger.info("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
                     setup_gpio(gpio_3V)
 
                     if not os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]):
-                        error_log("Info: Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
+                        logger.info("Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
                         reset_ds18b20_3V(gpio_3V)
         except Exception as ex:
-            error_log(ex, "Error: Unhandled Exception in measure_temperature / pin")
+            logger.exception('Unhandled Exception in measure_temperature / pin' + repr(ex))
             
         try:
             if sensor["device_id"] != "undefined":
@@ -50,11 +52,15 @@ def measure_temperature(sensor):
                     return temperature
 
         except FileNotFoundError:
-            error_log("Warning: Cannot find Device-ID from Ds18b20 Sensor " + sensor["device_id"])
+            logger.warning('Cannot find Device-ID from Ds18b20 Sensor ' + sensor["device_id"])
+            return None
+        except IndexError:
+            logger.warning('Ds18b20 Sensor with Device-ID: ' + sensor["device_id"] + ' found, but no temperatures listed')
+            return None
         except Exception as ex:
-            error_log(ex, "Error: Unhandled Exception in measure_temperature read 1-wire slave file")
+            logger.exception('Error: Unhandled Exception in measure_temperature read 1-wire slave file' + repr(ex))
     except Exception as ex:
-        error_log(ex, "Error: Unhandled Exception in measure_temperature")
+        logger.exception('Error: Unhandled Exception in measure_temperature' + repr(ex))
 
     return None
 
@@ -65,15 +71,15 @@ def read_unfiltered_temperatur_values(sensorIndex, sensor):
         temperature = measure_temperature(sensor)
 
         if temperature is not None and math.isnan(temperature) == False:
-            print("temperature for device '" + str(sensor["device_id"]) + "': " + str(temperature))
+            logger.info("temperature for device '" + str(sensor["device_id"]) + "': " + str(temperature))
             unfiltered_values[sensorIndex].append(temperature)
 
     except IOError as ex1:
-        error_log(ex1, "Error: IOError occurred in read_unfiltered_temperatur_values")
+        logger.exception("IOError occurred in read_unfiltered_temperatur_values" + repr(ex1))
     except TypeError as ex2:
-        error_log(ex2, "Error: TypeError occurred in read_unfiltered_temperatur_values")
+        logger.exception("TypeError occurred in read_unfiltered_temperatur_values" + repr(ex2))
     except Exception as ex:
-        error_log(ex, "Error: Unhandled Exception in read_unfiltered_temperatur_values")
+        logger.exception("Unhandled Exception in read_unfiltered_temperatur_values" + repr(ex))
 # function which eliminates the noise by using a statistical model
 # we determine the standard normal deviation and we exclude anything that goes beyond a threshold
 # think of a probability distribution plot - we remove the extremes
@@ -92,7 +98,7 @@ def filter_values(unfiltered_values, std_factor=2):
 
         return final_values
     except Exception as ex:
-        error_log(ex, "Error: Unhandled Exception in filter_values")
+        logger.exception("Unhandled Exception in filter_values" + repr(ex))
         
 # function for appending the filter
 def filter_temperatur_values(sensorIndex):
@@ -101,18 +107,21 @@ def filter_temperatur_values(sensorIndex):
             # read the last 5 values and filter them
             filtered_temperature[sensorIndex].append(np.mean(filter_values([x for x in unfiltered_values[sensorIndex][-5:]])))
     except Exception as ex:
-        error_log(ex, "Error: Unhandled Exception in filter_temperatur_values")
+        logger.exception("Unhandled Exception in filter_temperatur_values"+ repr(ex))
         
 def checkIfSensorExistsInArray(sensorIndex):
     try:
-        filtered_temperature[sensorIndex]
-    except IndexError:
-        # handle this
-        filtered_temperature.append([])
-        unfiltered_values.append([])
+        try:
+            filtered_temperature[sensorIndex]
+        except IndexError:
+            # handle this
+            filtered_temperature.append([])
+            unfiltered_values.append([])
 
-    # prevent buffer overflow
-    if len(filtered_temperature[sensorIndex]) > 50:
-        filtered_temperature[sensorIndex] = filtered_temperature[sensorIndex][len(filtered_temperature[sensorIndex])-10:] # remove all but the last 10 elements
-    if len(unfiltered_values[sensorIndex]) > 50:
-        unfiltered_values[sensorIndex] = unfiltered_values[sensorIndex][len(unfiltered_values[sensorIndex])-10:] # remove all but the last 10 elements
+        # prevent buffer overflow
+        if len(filtered_temperature[sensorIndex]) > 50:
+            filtered_temperature[sensorIndex] = filtered_temperature[sensorIndex][len(filtered_temperature[sensorIndex])-10:] # remove all but the last 10 elements
+        if len(unfiltered_values[sensorIndex]) > 50:
+            unfiltered_values[sensorIndex] = unfiltered_values[sensorIndex][len(unfiltered_values[sensorIndex])-10:] # remove all but the last 10 elements
+    except Exception as ex:
+        logger.exception("Unhandled Exception in checkIfSensorExistsInArray"+ repr(ex))
