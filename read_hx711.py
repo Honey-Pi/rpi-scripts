@@ -6,11 +6,12 @@ from sensors.HX711 import HX711 # import the class HX711
 # Source: https://github.com/gandalf15/HX711
 import RPi.GPIO as GPIO # import GPIO
 import time
-from utilities import error_log
+import logging
 
 # global var
 ledState = False
 GPIO_PIN = 20 # debug pin
+logger = logging.getLogger('HoneyPi.read_hx711')
 
 # setup GPIO
 GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
@@ -24,33 +25,46 @@ def triggerPIN():
 
 def takeClosest(myList, myNumber):
     # from list of integers, get number closest to a given value
-    closest = myList[0]
-    for i in range(1, len(myList)):
-        if abs(myList[i] - myNumber) < closest:
-            closest = myList[i]
-    return closest
+    try:
+        closest = myList[0]
+        for i in range(1, len(myList)):
+            if abs(myList[i] - myNumber) < closest:
+                closest = myList[i]
+        return closest
+    except Exception as e:
+        logger.exception('Error in takeClosest: ' + str(e))
 
 def average(myList):
     # Finding the average of a list
-    total = sum(myList)
-    return total / len(myList)
+    try:
+        total = sum(myList)
+        return total / len(myList)
+    except Exception as e:
+        logger.exception('Error in average: ' + str(e))
 
     
 def findmax(myList):
     # from list of integers, get number closest to a given value
-    maximum = myList[0]
-    for i in range(1, len(myList)):
-        if (myList[i] > maximum):
-            maximum = myList[i]
-    return maximum
+    try:
+        maximum = myList[0]
+        for i in range(1, len(myList)):
+            if (myList[i] > maximum):
+                maximum = myList[i]
+        return maximum
+    except Exception as e:
+        logger.exception('Error in findmax: ' + str(e))
     
 def findmin(myList):
     # from list of integers, get number closest to a given value
-    minimum = myList[0]
-    for i in range(1, len(myList)):
-        if (myList[i] < minimum):
-            minimum = myList[i]
-    return minimum
+    try:
+        minimum = myList[0]
+        for i in range(1, len(myList)):
+            if (myList[i] < minimum):
+                minimum = myList[i]
+        return minimum
+    except Exception as e:
+        logger.exception('Error in findmin: ' + str(e))
+
 
 def easy_weight(weight_sensor):
     pin_dt = 5
@@ -66,7 +80,7 @@ def easy_weight(weight_sensor):
         reference_unit = float(weight_sensor["reference_unit"])
         offset = int(weight_sensor["offset"])
     except Exception as e:
-        print("HX711 missing param: " + str(e))
+        logger.exception('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' missing param: ' + str(e))
 
     try:
         GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
@@ -80,7 +94,7 @@ def easy_weight(weight_sensor):
             return round(weight, 1)
 
     except Exception as e:
-        print("Fallback HX711 failed: " + str(e))
+        logger.exception('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Fallback failed: ' + str(e))
 
     finally:
         pass
@@ -94,11 +108,25 @@ def get_temp(weight_sensor, ts_fields):
             return float(ts_fields[field_name])
 
     except Exception as e:
-        print("Exeption while getting temperature field: " + str(e))
+        logger.exception("Exeption while getting temperature field: " + str(e))
 
     return None
 
 def compensate_temperature(weight_sensor, weight, ts_fields):
+    pin_dt = 5
+    pin_sck = 6
+    channel = 'A'
+    reference_unit = 1
+    offset = 0
+
+    try:
+        pin_dt = int(weight_sensor["pin_dt"])
+        pin_sck = int(weight_sensor["pin_sck"])
+        channel = weight_sensor["channel"]
+        reference_unit = float(weight_sensor["reference_unit"])
+        offset = int(weight_sensor["offset"])
+    except Exception as e:
+        logger.exception('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' compensate_temperature missing param: ' + str(e))
     try:
         if 'compensation' in weight_sensor:
             compensation = weight_sensor["compensation"]
@@ -114,29 +142,31 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
 
                 temp_now = get_temp(weight_sensor, ts_fields)
                 if isinstance(temp_now, (int, float)) and isinstance(weight, (int, float)):
-                    print("Weight cell temperature compensation is enabled.")
-                    print("=> TempCalibration: " + str(compensation_temp) + "C TempNow: " + str(temp_now) + "C WeightBefore: " + str(weight) + "g")
+                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Weight cell temperature compensation is enabled. TempCalibration: ' + str(compensation_temp) + 'C TempNow: ' + str(temp_now) + 'C WeightBefore: ' + str(weight) + 'g')
                     # do compensation
                     if compensation_temp and compensation_value:
                         delta = round(temp_now-compensation_temp, 4)
                         weight = weight - (compensation_value*delta)
-                    print("=> TempDelta: " + str(delta) + "C WeightAfter: " + str(weight) + "g")
+                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' => TempDelta: ' + str(delta) + 'C WeightAfter: ' + str(weight) + 'g')
                 else:
-                    print("Temperature Compensation: No temperature in given field.")
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Temperature Compensation: No temperature in given field.')
 
     except Exception as e:
-        print("Exeption while temperature compensation: " + str(e))
+        logger.exception("Exeption while compensate_temperature: " + str(e))
 
     return set_ts_field(weight_sensor, weight)
 
 def set_ts_field(weight_sensor, weight):
-    if weight and type(weight) in (float, int):
-        weight = weight/1000  # gramms to kg
-        weight = float("{0:.3f}".format(weight)) # float only 3 decimals
+    try:
+        if weight and type(weight) in (float, int):
+            weight = weight/1000  # gramms to kg
+            weight = float("{0:.3f}".format(weight)) # float only 3 decimals
 
-        if 'ts_field' in weight_sensor:
-            return ({weight_sensor["ts_field"]: weight})
-    return {}
+            if 'ts_field' in weight_sensor:
+                return ({weight_sensor["ts_field"]: weight})
+        return {}
+    except Exception as e:
+        logger.exception('Error in set_ts_field: ' + str(e))
 
 def init_hx711(weight_sensor, debug=False):
     # HX711 GPIO
@@ -145,36 +175,44 @@ def init_hx711(weight_sensor, debug=False):
     channel = 'A'
     errorEncountered = False
     try:
-        pin_dt = int(weight_sensor["pin_dt"])
-        pin_sck = int(weight_sensor["pin_sck"])
-        channel = weight_sensor["channel"]
-    except Exception as e:
-        print("HX711 missing param: " + str(e))
-
-    loops = 0
-    while not errorEncountered and loops < 3:
-        loops += 1
         try:
-            GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
-            # Create an object hx which represents your real hx711 chip
-            hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, select_channel=channel)
-            if debug:
-                hx.set_debug_mode(flag=debug)
-            errorEncountered = hx.reset() # Before we start, reset the hx711 (not necessary)
-            if not errorEncountered:
-                return hx
+            pin_dt = int(weight_sensor["pin_dt"])
+            pin_sck = int(weight_sensor["pin_sck"])
+            channel = weight_sensor["channel"]
         except Exception as e:
-            if str(e) == "no median for empty data":
-                print("Could not read enough data from HX711 => Try again: " + str(loops) + "/3")
-            else:
-                print("Initializing HX711 failed: " + str(e))
-        time.sleep(1)
+            logger.exception("init_hx711 missing param: " + str(e))
 
-    print("Returning empty HX711")
-    return None
+        loops = 0
+        while not errorEncountered and loops < 3:
+            loops += 1
+            try:
+                GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
+                # Create an object hx which represents your real hx711 chip
+                hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, select_channel=channel)
+                if debug:
+                    hx.set_debug_mode(flag=debug)
+                errorEncountered = hx.reset() # Before we start, reset the hx711 (not necessary)
+                if not errorEncountered:
+                    return hx
+            except Exception as e:
+                if str(e) == "no median for empty data":
+                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Could not read enough data from HX711 => Try again: ' + str(loops) + '/3')
+                else:
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Initializing HX711 failed: ' + str(e))
+            time.sleep(1)
+
+        logger.error('Returning empty HX711 for DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+        return None
+    except Exception as e:
+        logger.exception('Error in init_hx711: ' + str(e))
 
 
 def measure_weight(weight_sensor, hx=None, debug=False):
+    try:
+        weight_sensor
+    except Exception as e:
+        logger.exception("measure_weight is missing param weight_sensor: " + str(e))
+
     if 'reference_unit' in weight_sensor:
         reference_unit = float(weight_sensor["reference_unit"])
     else:
@@ -193,7 +231,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
         pin_sck = int(weight_sensor["pin_sck"])
         channel = weight_sensor["channel"]
     except Exception as e:
-        print("HX711 missing param: " + str(e))
+        logger.error("HX711 missing param: " + str(e))
         pass
 
     temp_reading = None
@@ -210,7 +248,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
             temp_reading = hx.get_raw_data_mean(6) # measure just for fun
 
         if not isinstance(temp_reading, (int, float)): # always check if you get correct value or only False
-            print("Initialized HX711 again because shit data.")
+            logger.debug('Initialized HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' again because shit data.')
             if hx:
                 hx.reset()
             hx = init_hx711(weight_sensor, debug)
@@ -234,20 +272,19 @@ def measure_weight(weight_sensor, hx=None, debug=False):
                 num_measurements = 41
                 reading = hx.get_weight_mean(41)
                 if debug:
-                    print('Info: Number of elements removed by filter within HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ' + str(hx.get_num_data_filtered_out()))
+                    logger.debug('Number of elements removed by filter within HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ' + str(hx.get_num_data_filtered_out()))
                 if isinstance(reading, (int, float)): # always check if you get correct value or only False
                     weightMeasures.append(reading)
                     num_data_filtered_out = hx.get_num_data_filtered_out()
                     percentage_filtered_out = round((num_data_filtered_out / num_measurements * 100),2)
                     if percentage_filtered_out > 34:
-                        error_log('Warning: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
-                        error_log('Warning: You might need to check your cabling setup for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+                        logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
+                        logger.warning('You might need to check your cabling setup for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
                     else:
-                        if debug:
-                            print('Info: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
+                        logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
                 else: # returned False
                     LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
-                    error_log('Error: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Failured measurement, you might need to check your hx711 setup')
+                    logger.error('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Failured measurement, you might need to check your hx711 setup')
                 #time.sleep(0.5) # wait 500ms before next measurement
 
             # take "best" measure
@@ -255,7 +292,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
             maxweight = round(findmax(weightMeasures), 1)
             minweight = round(findmin(weightMeasures), 1)
             weight = round(takeClosest(weightMeasures, average_weight), 1)
-            print('Info: HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Max weight: ' + str(maxweight) + 'g, Min weight: ' + str(minweight) + 'g, Average weight: ' + str(average_weight) + 'g, Chosen weight: ' + str(weight) + 'g')
+            logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Max weight: ' + str(maxweight) + 'g, Min weight: ' + str(minweight) + 'g, Average weight: ' + str(average_weight) + 'g, Chosen weight: ' + str(weight) + 'g')
 
             ALLOWED_DIVERGENCE = round((500/reference_unit), 1)
             # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
@@ -263,13 +300,13 @@ def measure_weight(weight_sensor, hx=None, debug=False):
             if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
                 # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
                 # triggerPIN() # debug method
-                print("Info: Difference between average weight ("+ str(average_weight)+"g) and chosen weight (" + str(weight) + "g) is more than " + str(ALLOWED_DIVERGENCE) + "g. => Try again ("+str(count)+"/"+str(LOOP_TRYS)+")")
+                logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + 'Difference between average weight ('+ str(average_weight)+'g) and chosen weight (' + str(weight) + 'g) is more than ' + str(ALLOWED_DIVERGENCE) + 'g. => Try again ('+str(count)+'/'+str(LOOP_TRYS)+')')
                 #time.sleep(0.5) # sleep 500ms
 
                 if LOOP_TRYS == count: # last loop
                     # 3 loops and still no chosen weight => fallback measurement
                     weight = easy_weight(weight_sensor)
-                    print("Fallback weight: " + str(weight) + "g")
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + 'Difference between average weight ('+ str(average_weight)+'g) and chosen weight (' + str(weight) + 'g) is more than ' + str(ALLOWED_DIVERGENCE) + 'g. after ' +str(count) + ' loops, Fallback weight: ' + str(weight) + 'g')
             else:
                 # divergence is OK => skip
                 break
@@ -282,9 +319,9 @@ def measure_weight(weight_sensor, hx=None, debug=False):
 
     except Exception as e:
         if str(e) == "no median for empty data":
-            print("Could not read enough data from HX711")
+            logger.exception('Could not read enough data from HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ')
         else:
-            print("Reading HX711 failed: " + str(e))
+            logger.error('Reading HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
     finally:
         pass
 
