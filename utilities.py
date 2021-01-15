@@ -142,8 +142,22 @@ def blink_led(gpio=21, duration=0.25):
     time.sleep(duration)
     stop_led(gpio)
 
-def start_wvdial():
-    os.system("(sudo sh " + scriptsFolder + "/shell-scripts/connection.sh run)&")
+def start_wvdial(settings):
+    try:
+        internet = {}
+        internet = settings['internet']
+        modem = {}
+        modem = internet['modem']
+        modemapn = modem['apn']
+        modempath = modem['ttyUSB']
+        modemisenabled = modem['enabled']
+        if modemisenabled:
+            logger.info('Starting wvdial for Modem on path ' + str(modempath) + ' with APN ' + modemapn)
+            os.system("(sudo sh " + scriptsFolder + "/shell-scripts/connection.sh run)&")
+        else:
+            logger.debug('Modem is enabled: ' + str(modemisenabled) + ' Modem path: ' + str(modempath) + 'Modem APN: ' + modemapn)
+    except Exception as ex:
+        logger.exception("Exception in start_wvdial:" + str(ex))
 
 def create_ap():
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/create_uap.sh")

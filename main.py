@@ -129,7 +129,7 @@ def main():
     try:
         global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
         logger = logging.getLogger('HoneyPi')
-        logger.setLevel(logging.NOTSET)
+        logger.setLevel(logging.DEBUG)
         fh = logging.FileHandler(logfile)
         fh.setLevel(logging.DEBUG)
         # create console handler with a higher log level
@@ -151,13 +151,12 @@ def main():
 
         # read settings for number of GPIO pin
         settings = get_settings()
-        debuglevel=settings["debuglevel"]
-        logfiledebuglevel=settings["logfiledebuglevel"]
-        fh.setLevel(int(logfiledebuglevel))
-        ch.setLevel(int(debuglevel))
-
-        print("Debuglevel: "+ str(debuglevel))
-        print("Logfiledebuglevel: "+ str(logfiledebuglevel))
+        debuglevel=int(settings["debuglevel"])
+        logfiledebuglevel=int(settings["logfiledebuglevel"])
+        fh.setLevel(logging.getLevelName(logfiledebuglevel))
+        ch.setLevel(logging.getLevelName(debuglevel))
+        print("Debuglevel: " + logging.getLevelName(debuglevel))
+        print("Logfiledebuglevel: " + logging.getLevelName(logfiledebuglevel))
         time.sleep(5)
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
@@ -180,7 +179,7 @@ def main():
         create_ap()
 
         # Call wvdial for surfsticks
-        start_wvdial()
+        start_wvdial(settings)
 
         if not debuglevel <= 20:
             # stop HDMI power (save energy)

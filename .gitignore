@@ -35,3 +35,4 @@ error.log
 error.log
 *.csv
 .isMaintenanceActive
+.isLowVoltage
