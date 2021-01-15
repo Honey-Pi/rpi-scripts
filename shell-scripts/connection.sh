@@ -48,7 +48,7 @@ kill_old_wvdial () {
 
 start_wvdial () {
 	# Check if modem is connected (/dev/ttyUSB0 does exist)
-	if ls -la /dev/ttyUSB0 2>/dev/null; then
+	if ls -la /dev/$ttyUSB 2>/dev/null; then
 		# Check if wvdial process is running
 		if ! ps -C wvdial
 				then

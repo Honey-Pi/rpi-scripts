@@ -34,3 +34,4 @@ error.log
 *.pyc
 error.log
 *.csv
+.isMaintenanceActive
