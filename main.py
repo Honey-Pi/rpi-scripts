@@ -129,12 +129,12 @@ def main():
     try:
         global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
         logger = logging.getLogger('HoneyPi')
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(logging.NOTSET)
         fh = logging.FileHandler(logfile)
         fh.setLevel(logging.DEBUG)
         # create console handler with a higher log level
         ch = logging.StreamHandler()
-        ch.setLevel(logging.INFO)
+        ch.setLevel(logging.DEBUG)
         # create formatter and add it to the handlers
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         fh.setFormatter(formatter)
@@ -152,8 +152,12 @@ def main():
         # read settings for number of GPIO pin
         settings = get_settings()
         debuglevel=settings["debuglevel"]
+        logfiledebuglevel=settings["logfiledebuglevel"]
+        fh.setLevel(int(logfiledebuglevel))
+        ch.setLevel(int(debuglevel))
 
         print("Debuglevel: "+ str(debuglevel))
+        print("Logfiledebuglevel: "+ str(logfiledebuglevel))
         time.sleep(5)
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)

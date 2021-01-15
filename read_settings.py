@@ -6,9 +6,12 @@ import io
 import json
 import os
 from pathlib import Path
-from utilities import settingsFile, wittypi_scheduleFile, error_log
+from utilities import settingsFile, wittypi_scheduleFile
+import logging
 from pwd import getpwuid
 from grp import getgrgid
+
+logger = logging.getLogger('HoneyPi.read_settings')
 
 def get_defaults():
     settings = {}
@@ -16,6 +19,7 @@ def get_defaults():
     settings["led_pin"] = 21
     settings["w1gpio"] = 11
     settings["debuglevel"] = 10
+    settings["logfiledebuglevel"] = 10
     settings["offline"] = 0
     router = {}
     router['enabled'] = False
@@ -88,7 +92,7 @@ def get_settings():
         with io.open(settingsFile, encoding="utf-8") as data_file:
             settings = json.loads(data_file.read())
     except Exception as ex:
-        error_log("Warning: Loading default settings because File does not exist.")
+        logger.warning("Loading default settings because File does not exist.")
         # FileNotFoundError: doesn't exist => default values
         # FileReadError / json.loads Error => default values
         settings = get_defaults()
@@ -116,6 +120,21 @@ def validate_settings(settings):
     except:
         settings["led_pin"] = get_defaults()["led_pin"]
         updateSettingsFile = True
+    try:
+        settings["logfiledebuglevel"]
+    except:
+        # Migrate debug to debuglevel
+        try:
+            settings["debug"]
+            if settings["debug"]:
+                settings["logfiledebuglevel"] = 10
+            else:
+                settings["logfiledebuglevel"] = get_defaults()["logfiledebuglevel"]
+            updateSettingsFile = True
+            #settings.remove("debug")
+        except:
+            settings["logfiledebuglevel"] = get_defaults()["logfiledebuglevel"]
+            updateSettingsFile = True
 
     try:
         settings["debuglevel"]
@@ -129,7 +148,6 @@ def validate_settings(settings):
                 settings["debuglevel"] = get_defaults()["debuglevel"]
             updateSettingsFile = True
             #settings.remove("debug")
-                
         except:
             settings["debuglevel"] = get_defaults()["debuglevel"]
             updateSettingsFile = True
@@ -162,9 +180,9 @@ def validate_settings(settings):
         updateSettingsFile = True
         try:
             settings["ts_channel_id"]
-            print("Old Channel ID to be imported " + str(settings["ts_channel_id"]))
+            logger.debug("Old Channel ID to be imported " + str(settings["ts_channel_id"]))
             settings["ts_write_key"]
-            print("Old write key to be imported " + settings["ts_write_key"])
+            logger.debug("Old write key to be imported " + settings["ts_write_key"])
             ts_channel = {}
             ts_channel['ts_channel_id']= settings["ts_channel_id"]
             ts_channel['ts_write_key'] = settings["ts_write_key"]
@@ -182,9 +200,9 @@ def validate_settings(settings):
         updateSettingsFile = True
         try:
             settings["wittyPi_enabled"]
-            print("Old wittyPi_enabled to be imported: '" + str(settings["wittyPi_enabled"]) + "'")
+            logger.debug("Old wittyPi_enabled to be imported: '" + str(settings["wittyPi_enabled"]) + "'")
             settings["wittyPi_script"]
-            print("Old wittyPi_script to be imported: '" + settings["wittyPi_script"] + "'")
+            logger.debug("Old wittyPi_script to be imported: '" + settings["wittyPi_script"] + "'")
             wittyPi = {}
             normalVoltage = {}
             wittyPi['enabled']= settings["wittyPi_enabled"]
@@ -256,7 +274,7 @@ def validate_settings(settings):
         settings['wittyPi']["low"]["schedule"] = get_defaults()["wittyPi"]["low"]["schedule"]
 
     if updateSettingsFile:
-        print("Info: Settings have been changed because of version migration.")
+        logger.warning("Settings have been changed because of version migration.")
         write_settings(settings)
 
     return settings
@@ -284,6 +302,6 @@ def write_settings(settings):
         outfile.close()
         return True
     except Exception as ex:
-        print("write_settings " + str(ex))
+        logger.exception("Exception in function write_settings " + str(ex))
 
     return False
