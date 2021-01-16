@@ -24,7 +24,11 @@ from read_sht31 import measure_sht31
 from read_hdc1008 import measure_hdc1008
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import start_single, stop_single, error_log
+from utilities import start_single, stop_single
+
+import logging
+
+logger = logging.getLogger('HoneyPi.measurement')
 
 def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits):
 
@@ -36,7 +40,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 filter_temperatur_values(sensorIndex)
         except Exception as e:
-           error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors filter_temperatur_values")
+           logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors filter_temperatur_values " + repr(e))
 
         try:
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
@@ -57,7 +61,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                         ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
                         ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
         except Exception as e:
-            error_log(e, "Unhandled Exception in measure_all_sensors / ds18b20Sensors")
+            logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors " + repr(e))
 
         # measure BME680 (can only be one) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
@@ -129,7 +133,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                 print(key + ": " + str(value))
         return ts_fields
     except Exception as ex:
-        error_log(ex, "Exception during measurement 1")
+        logger.exception("Unhandled Exception in measure_all_sensors " + repr(ex))
         return ts_fields
 
 def measurement():
@@ -161,7 +165,7 @@ def measurement():
         return json.dumps(ts_fields)
 
     except Exception as e:
-        error_log(e, "Unhandled Exception in Measurement 2")
+        logger.exception("Unhandled Exception in measurement " + repr(e))
 
     # Error occured
     return {}
@@ -174,4 +178,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as e:
-        error_log(e, "Unhandled Exception in Measurement 3")
+        logger.exception("Unhandled Exception in __main__" + repr(e))
