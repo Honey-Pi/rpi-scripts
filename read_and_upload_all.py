@@ -31,18 +31,23 @@ from write_csv import write_csv
 from measurement import measure_all_sensors
 from thingspeak import transfer_all_channels_to_ts
 
+logger = logging.getLogger('HoneyPi.read_and_upload_all')
+
 def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug):
-    # update ThingSpeak / transfer values
-    connectionErrorHappened = transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug)
+    try:
+        # update ThingSpeak / transfer values
+        connectionErrorHappened = transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug)
 
-    if connectionErrorHappened:
-        # Write to CSV-File if ConnectionError occured
-        if offline == 2:
-            s = write_csv(ts_fields, ts_channels)
-            if s and debug:
-                error_log("Info: Data succesfully saved to CSV-File.")
+        if connectionErrorHappened:
+            # Write to CSV-File if ConnectionError occured
+            if offline == 2:
+                s = write_csv(ts_fields, ts_channels)
+                if s and debug:
+                    logger.info("Data succesfully saved to CSV-File.")
 
-    return connectionErrorHappened
+        return connectionErrorHappened
+    except Exception as ex:
+        logger.exception("Exception during manage_transfer_to_ts "+ repr(ex))
 
 def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
@@ -54,9 +59,9 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
                 try:
                     s = write_csv(ts_fields, ts_channels)
                     if s and debug:
-                        error_log("Info: Data succesfully saved to CSV-File.")
+                        logger.info("Data succesfully saved to CSV-File.")
                 except Exception as ex:
-                    error_log(ex, "Exception in measure (1)")
+                    logger.exception("Exception in measure / write_csv)" + repr(ex))
 
             # if transfer to thingspeak is set
             if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
@@ -67,80 +72,84 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
                     MAX_RETRIES_IN_A_ROW = 3
                     # Do Rebooting if to many connectionErrors in a row
                     connectionErrors.value +=1
-                    error_log("Error: Failed internet connection. Count: " + str(connectionErrors.value) + "/" + str(MAX_RETRIES_IN_A_ROW))
+                    logger.warning("Error: Failed internet connection. Count: " + str(connectionErrors.value) + "/" + str(MAX_RETRIES_IN_A_ROW))
                     if connectionErrors.value >= MAX_RETRIES_IN_A_ROW:
                         if not debug:
-                            error_log("Warning: Too many Connection Errors in a row => Rebooting Raspberry")
+                            logger.critical("Too many Connection Errors in a row => Rebooting Raspberry")
                             time.sleep(4)
                             reboot()
                         else:
-                            error_log("Info: Did not reboot because debug mode is enabled.")
+                            logger.critical("Too many Connection Errors in a row but did not reboot because console debug mode is enabled.")
                 else:
                     if connectionErrors.value > 0:
                         if debug:
-                            error_log("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet because transfer succeded.")
+                            logger.warning("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet because transfer succeded.")
                         # reset connectionErrors because transfer succeded
                         connectionErrors.value = 0
 
         elif debug:
-            error_log("Info: No measurement data to send.")
+            logger.info("No measurement data to send.")
 
         measurementIsRunning.value = 0 # clear flag
 
     except Exception as ex:
-        error_log(ex, "Exception during measure (2)")
+        logger.exception("Exception during measure (outer)" + repr(ex))
         measurementIsRunning.value = 0 # clear flag
 
 def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer):
-    if wittyPi["voltagecheck_enabled"] and wittyPi["enabled"]:
-        intervalVoltageCheck = 60
-        time_now = time.time()
-        isTimeToCheckVoltage = (time_now-time_measured_Voltage >= intervalVoltageCheck)
-        if isTimeToCheckVoltage:
-            if voltageSensors and len(voltageSensors) == 1:
-                voltage = get_raw_voltage(voltageSensors[0])
-                if voltage is not None:
-                    now = time.strftime("%H:%M", time.localtime(time_now))
-                    print("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
-                    if voltage <= wittyPi["low"]["voltage"]:
-                        print("Running on low voltage")
-                        if (isLowVoltage == False) or (isLowVoltage is None):
-                            if wittyPi["low"]["enabled"]:
-                                error_log("Info: Enable wittyPi low voltage settings!")
-                                update_wittypi_schedule(wittyPi["low"]["schedule"])
-                            else:
-                                error_log("Info: Low voltage but wittyPi disabled!")
-                                update_wittypi_schedule("")
-                            interval = wittyPi["low"]["interval"]
-                            shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
-                            isLowVoltage = setStateToStorage('isLowVoltage', True)
-                            error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
-                    elif voltage < wittyPi["normal"]["voltage"]:
-                        print("No longer low voltage but recovery voltage not reached")
-                    elif voltage >= wittyPi["normal"]["voltage"]:
-                        print("Running on normal voltage")
-                        if (isLowVoltage == True) or (isLowVoltage is None):
-                            if wittyPi["normal"]["enabled"]:
-                                error_log("Info: Enable wittyPi normal voltage settings!")
-                                update_wittypi_schedule(wittyPi["normal"]["schedule"])
-                            else:
-                                error_log("Info: Normal voltage but wittyPi disabled!")
-                                update_wittypi_schedule("")
-                                interval = wittyPi["normal"]["interval"]
-                                shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
-                            isLowVoltage = setStateToStorage('isLowVoltage', False)
-                            error_log("Info: New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+    try:
+        if wittyPi["voltagecheck_enabled"] and wittyPi["enabled"]:
+            intervalVoltageCheck = 60
+            time_now = time.time()
+            isTimeToCheckVoltage = (time_now-time_measured_Voltage >= intervalVoltageCheck)
+            if isTimeToCheckVoltage:
+                if voltageSensors and len(voltageSensors) == 1:
+                    voltage = get_raw_voltage(voltageSensors[0])
+                    if voltage is not None:
+                        now = time.strftime("%H:%M", time.localtime(time_now))
+                        logger.debug("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
+                        if voltage <= wittyPi["low"]["voltage"]:
+                            logger.debug("Running on low voltage")
+                            if (isLowVoltage == False) or (isLowVoltage is None):
+                                if wittyPi["low"]["enabled"]:
+                                    logger.info("Enable wittyPi low voltage settings!")
+                                    update_wittypi_schedule(wittyPi["low"]["schedule"])
+                                else:
+                                    logger.warning("Low voltage but wittyPi disabled!")
+                                    update_wittypi_schedule("")
+                                interval = wittyPi["low"]["interval"]
+                                shutdownAfterTransfer = wittyPi["low"]["shutdownAfterTransfer"]
+                                isLowVoltage = setStateToStorage('isLowVoltage', True)
+                                logger.info("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+                        elif voltage < wittyPi["normal"]["voltage"]:
+                            logger.info("No longer low voltage but recovery voltage not reached")
+                        elif voltage >= wittyPi["normal"]["voltage"]:
+                            logger.debug("Running on normal voltage")
+                            if (isLowVoltage == True) or (isLowVoltage is None):
+                                if wittyPi["normal"]["enabled"]:
+                                    logger.info("Enable wittyPi normal voltage settings!")
+                                    update_wittypi_schedule(wittyPi["normal"]["schedule"])
+                                else:
+                                    logger.info("Info: Normal voltage but wittyPi disabled!")
+                                    update_wittypi_schedule("")
+                                    interval = wittyPi["normal"]["interval"]
+                                    shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
+                                isLowVoltage = setStateToStorage('isLowVoltage', False)
+                                logger.info("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
+                        else:
+                            logger.error("Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
                     else:
-                        error_log("Warning: Choosen WittyPi Voltage settings irregular Voltage Normal should be higher than Undervoltage")
+                        logger.error("Voltagesensor did not return a value!")
                 else:
-                    error_log("Error: Voltagesensor did not return a value!")
+                    logger.error("WittyPi Voltage checks enabled but no VoltageSensors configured")
+                    time_measured_Voltage = time.time()
             else:
-                error_log("Warning: WittyPi Voltage checks enabled but no VoltageSensors configured")
-                time_measured_Voltage = time.time()
-        else:
-            print("No Voltage Check due")
+                logger.debug("No Voltage Check due")
 
-    return (time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage)
+        return (time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage)
+    except Exception as ex:
+        logger.exception("Exception during check_wittypi_voltage" + repr(ex))
+        measurementIsRunning.value = 0 # clear flag
 
 def start_measurement(measurement_stop):
     try:
