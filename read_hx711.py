@@ -182,6 +182,7 @@ def init_hx711(weight_sensor, debug=False):
         except Exception as e:
             logger.exception("init_hx711 missing param: " + str(e))
 
+        logger.debug('Init HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' started')
         loops = 0
         while not errorEncountered and loops < 3:
             loops += 1
@@ -193,6 +194,7 @@ def init_hx711(weight_sensor, debug=False):
                     hx.set_debug_mode(flag=debug)
                 errorEncountered = hx.reset() # Before we start, reset the hx711 (not necessary)
                 if not errorEncountered:
+                    logger.debug('Init HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
                     return hx
             except Exception as e:
                 if str(e) == "no median for empty data":
@@ -237,6 +239,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
     temp_reading = None
     weight = None
     try:
+        logger.debug('measure_weight HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' started')
         GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
 
         # init hx711
@@ -316,6 +319,8 @@ def measure_weight(weight_sensor, hx=None, debug=False):
         # invert weight if flag is set
         if 'invert' in weight_sensor and weight_sensor['invert'] == True and isinstance(weight, (int, float)):
                 weight = weight*-1;
+        logger.debug('measure_weight HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
+
 
     except Exception as e:
         if str(e) == "no median for empty data":
