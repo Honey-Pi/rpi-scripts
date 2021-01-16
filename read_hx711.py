@@ -142,12 +142,12 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
 
                 temp_now = get_temp(weight_sensor, ts_fields)
                 if isinstance(temp_now, (int, float)) and isinstance(weight, (int, float)):
-                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Weight cell temperature compensation is enabled. TempCalibration: ' + str(compensation_temp) + 'C TempNow: ' + str(temp_now) + 'C WeightBefore: ' + str(weight) + 'g')
+                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Weight cell temperature compensation is enabled. TempCalibration: ' + str(compensation_temp) + 'C TempNow: ' + str(temp_now) + 'C WeightBefore: ' + str(weight) + 'g')
                     # do compensation
                     if compensation_temp and compensation_value:
                         delta = round(temp_now-compensation_temp, 4)
                         weight = weight - (compensation_value*delta)
-                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' => TempDelta: ' + str(delta) + 'C WeightAfter: ' + str(weight) + 'g')
+                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' => TempDelta: ' + str(delta) + 'C WeightAfter: ' + str(weight) + 'g')
                 else:
                     logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Temperature Compensation: No temperature in given field.')
 
@@ -295,7 +295,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
             maxweight = round(findmax(weightMeasures), 1)
             minweight = round(findmin(weightMeasures), 1)
             weight = round(takeClosest(weightMeasures, average_weight), 1)
-            logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Max weight: ' + str(maxweight) + 'g, Min weight: ' + str(minweight) + 'g, Average weight: ' + str(average_weight) + 'g, Chosen weight: ' + str(weight) + 'g')
+            logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Max weight: ' + str(maxweight) + 'g, Min weight: ' + str(minweight) + 'g, Average weight: ' + str(average_weight) + 'g, Chosen weight: ' + str(weight) + 'g')
 
             ALLOWED_DIVERGENCE = round((500/reference_unit), 1)
             # bei reference_unit=25 soll ALLOWED_DIVERGENCE=20
