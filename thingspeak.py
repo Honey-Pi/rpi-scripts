@@ -1,5 +1,5 @@
 import requests
-from utilities import wait_for_internet_connection, error_log, clean_fields
+from utilities import wait_for_internet_connection, clean_fields
 import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import logging
 
@@ -35,8 +35,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug):
     while isConnectionError:
         try:
             thingspeak_update(write_key, ts_fields_cleaned, server_url)
-            if debug:
-                error_log("Info: Data succesfully transfered to ThingSpeak.")
+            logger.info("Data succesfully transfered to ThingSpeak.")
             # break because transfer succeded
             isConnectionError = False
             break
