@@ -28,11 +28,11 @@ def measure_temperature(sensor):
                 gpio_3V = int(sensor["pin"])
                 if gpio_3V > 0:
 
-                    logger.info("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
+                    logger.debug("GPIO" + str(gpio_3V) + " is defined as 3.3V power source for Ds18b20 '" + sensor["device_id"] + "'")
                     setup_gpio(gpio_3V)
 
                     if not os.path.isdir("/sys/bus/w1/devices/" + sensor["device_id"]):
-                        logger.info("Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
+                        logger.warning("Resetting 3.3V GPIO" + str(gpio_3V) + " because Ds18b20 with device-id '" + sensor["device_id"] + "' was missing.")
                         reset_ds18b20_3V(gpio_3V)
         except Exception as ex:
             logger.exception('Unhandled Exception in measure_temperature / pin' + repr(ex))
@@ -71,7 +71,7 @@ def read_unfiltered_temperatur_values(sensorIndex, sensor):
         temperature = measure_temperature(sensor)
 
         if temperature is not None and math.isnan(temperature) == False:
-            logger.info("temperature for device '" + str(sensor["device_id"]) + "': " + str(temperature))
+            logger.debug("temperature for device '" + str(sensor["device_id"]) + "': " + str(temperature))
             unfiltered_values[sensorIndex].append(temperature)
 
     except IOError as ex1:
