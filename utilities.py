@@ -13,6 +13,8 @@ import RPi.GPIO as GPIO
 from pathlib import Path
 import socket, struct
 
+import subprocess
+import re
 logger = logging.getLogger('HoneyPi.utilities')
 
 honeypiFolder = '/home/pi/HoneyPi'
@@ -50,6 +52,28 @@ def get_interface_upstatus_linux(interfacename):
                     return False
     except Exception as ex:
         print("get_interface_upstatus_linux:" + str(ex))
+        pass
+        return False
+
+def get_lsusb_linux():
+    try:
+        device_re = re.compile(b"Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<name>.+)$", re.I)
+        df = subprocess.check_output("lsusb")
+        devices = []
+        for i in df.split(b'\n'):
+            if i:
+                info = device_re.match(i)
+                if info:
+                    dinfo = info.groupdict()
+                    dinfo['id'] = dinfo['id'].decode("utf-8", errors="ignore")
+                    dinfo['name'] = dinfo['name'].decode("utf-8", errors="ignore")
+                    dinfo['device'] = '/dev/bus/usb/%s/%s' % (dinfo.pop('bus').decode("utf-8", errors="ignore"), dinfo.pop('device').decode("utf-8", errors="ignore"))
+                    devices.append(dinfo)
+        #print(devices)
+        return devices
+
+    except Exception as ex:
+        print("Error in get_lsusb_linux:" + repr(ex))
         pass
         return False
 

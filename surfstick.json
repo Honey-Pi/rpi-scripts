@@ -1,0 +1,154 @@
+{
+	"name": "MediaTek Inc. S4222 (MD99079),
+	"alternatename": "ALDI TALK Webstick",
+	"id-storage": "0e8d:0002",
+	"id": "0e8d:00a5",
+	"MessageContent": ""
+},
+{
+	"name": "ZTE MF637",
+	"alternatename": "Web'n'Walk Stick Fusion",
+	"id-storage": "19d2:2000",
+	"id": "19d2:0037",
+	"MessageContent": ""
+},
+{
+	"name": "4G XS Stick W10/W14",
+	"alternatename": "MobiData MBD-200HU",
+	"id-storage": "1c9e:f000",
+	"id": "1c9e:9603",
+	"MessageContent": ""
+},
+{
+	"name": "4G XS Stick P14",
+	"alternatename: ",
+	"id-storage": "1c9e:f000",
+	"id": "1c9e:9605",
+	"MessageContent": ""
+},
+{
+	"name": "4G UXS1",
+	"alternatename": "web'n'walk Box Mini",
+	"id-storage": "1995:4e44",
+	"id": "11f5:0008",
+	"MessageContent": ""
+},
+{
+	"name": "Option iCON 210",
+	"alternatename": "PROLiNK PHS100", Hyundai Mobile MB-810",
+	"id-storage": "1e0e:f000",
+	"id": "1e0e:9000",
+	"MessageContent": ""
+},
+{
+	"name": "K3765-HV",
+	"alternatename": "K3765",
+	"id-storage": "12d1:1520",
+	"id": "12d1:1465",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E620",
+	"alternatename": "BASE bzw. FONIC Surfstick",
+	"id-storage": "12d1:1446",
+	"id": "12d1:1001",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E1550",
+	"alternatename": "Medion S4012",
+	"id-storage": "12d1:1446",
+	"id": "12d1:140c",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E1552",
+	"alternatename": "web'n'walk Stick Fusion II",
+	"id-storage": "12d1:1446",
+	"id": "12d1:1436",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E1750",
+	"alternatename": "wetter.com-Surfstick",
+	"id-storage": "12d1:1446",
+	"id": "12d1:14ac",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E160/E220",
+	"alternatename": "O2 Stick, Tchibo Internet-Stick, FONIC SurfStick, Medion S4011",
+	"id-storage": "12d1:1003",
+	"id": "12d1:1003",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E173",
+	"alternatename": "Mobile Broadband USB Stick",
+	"id-storage": "12d1:1446",
+	"id": "12d1:1436",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E173s",
+	"alternatename": "Mobile Broadband USB Stick 615",
+	"id-storage": "12d1:1c0b",
+	"id": "12d1:1c05",
+	"MessageContent": ""
+},
+{
+	"name": "Vodafone(Huawei) E173s-1/K3770",
+	"alternatename": "Pro7 Web Stick",
+	"id-storage": "12d1:14d1",
+	"id": "12d1:14c9",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E303/E353Ws-2/E3131",
+	"alternatename": "HiLink USB Stick",
+	"id-storage": "12d1:1f01",
+	"id": "12d1:14db",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E352s-5",
+	"alternatename": "Telekom web'n'walk Stick Fusion III",
+	"id-storage": "12d1:14fe",
+	"id": "12d1:1506",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E3372h",
+	"alternatename": "HiLink LTE USB Stick",
+	"id-storage": "12d1:1f01",
+	"id": "12d1:14dc",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E3531",
+	"alternatename": ",
+	"id-storage": "12d1:15ca",
+	"id": "12d1:1506",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei E5786",
+	"alternatename": "LTE MiFi",
+	"id-storage": "12d1:15ca",
+	"id": "12d1:1506",
+	"MessageContent": ""
+},
+{
+	"name": "Huawei K5005",
+	"alternatename": "Vodafone Mobile Broadband LTE",
+	"id-storage": "12d1:14c3",
+	"id": "12d1:14c8",
+	"MessageContent": ""
+},
+{
+	"name": "Alcatel W800",
+	"alternatename": "Telekom Speedstick LTE IV",
+	"id-storage": "1bbb:0000",
+	"id": "1bbb:0195",
+	"MessageContent": ""
+}
