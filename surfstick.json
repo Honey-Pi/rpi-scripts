@@ -1,5 +1,6 @@
+[
 {
-	"name": "MediaTek Inc. S4222 (MD99079),
+	"name": "MediaTek Inc. S4222 (MD99079)",
 	"alternatename": "ALDI TALK Webstick",
 	"id-storage": "0e8d:0002",
 	"id": "0e8d:00a5",
@@ -21,7 +22,7 @@
 },
 {
 	"name": "4G XS Stick P14",
-	"alternatename: ",
+	"alternatename": "",
 	"id-storage": "1c9e:f000",
 	"id": "1c9e:9605",
 	"MessageContent": ""
@@ -35,7 +36,7 @@
 },
 {
 	"name": "Option iCON 210",
-	"alternatename": "PROLiNK PHS100", Hyundai Mobile MB-810",
+	"alternatename": "PROLiNK PHS100, Hyundai Mobile MB-810",
 	"id-storage": "1e0e:f000",
 	"id": "1e0e:9000",
 	"MessageContent": ""
@@ -126,7 +127,7 @@
 },
 {
 	"name": "Huawei E3531",
-	"alternatename": ",
+	"alternatename": "",
 	"id-storage": "12d1:15ca",
 	"id": "12d1:1506",
 	"MessageContent": ""
@@ -152,3 +153,4 @@
 	"id": "1bbb:0195",
 	"MessageContent": ""
 }
+]

@@ -2,6 +2,7 @@
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
+import io
 import os
 import sys
 import time
@@ -175,6 +176,24 @@ def start_wvdial(settings):
         modemapn = modem['apn']
         modempath = modem['ttyUSB']
         modemisenabled = modem['enabled']
+        founddevices = get_lsusb_linux()
+        print(founddevices)
+        surfsticks = {}
+        
+        surfstick_file = Path(scriptsFolder + '/surfstick.json')
+        surfstick_abs_path = surfstick_file.resolve()
+
+
+        try:
+            with io.open(surfstick_file, encoding="utf-8") as data_file:
+                surfsticks = json.loads(data_file.read())
+        except Exception as ex:
+            logger.exception("Exception in start_wvdial:" + str(ex))
+            pass
+        
+        
+        if founddevices:
+            print(surfsticks)
         if modemisenabled:
             logger.info('Starting wvdial for Modem on path ' + str(modempath) + ' with APN ' + modemapn)
             os.system("(sudo sh " + scriptsFolder + "/shell-scripts/connection.sh run)&")
