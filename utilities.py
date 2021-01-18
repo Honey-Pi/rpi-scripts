@@ -174,10 +174,10 @@ def start_wvdial(settings):
         modem = {}
         modem = internet['modem']
         modemapn = modem['apn']
-        modempath = modem['ttyUSB']
+        modempath = str(modem['ttyUSB'])
         modemisenabled = modem['enabled']
         founddevices = get_lsusb_linux()
-        print(founddevices)
+        #print(founddevices)
         surfsticks = {}
         
         surfstick_file = Path(scriptsFolder + '/surfstick.json')
@@ -193,12 +193,37 @@ def start_wvdial(settings):
         
         
         if founddevices:
-            print(surfsticks)
+            devicefound = False
+            for device in founddevices:
+                deviceid = device['id']
+                for surfstick in surfsticks:
+                    surfstickmodemid = surfstick['id']
+                    surfstickstorgaeid = surfstick['id-storage']
+                    if deviceid == surfstickmodemid:
+                        if os.path.exists('/dev/'+ surfstick['modem']):
+                            logger.debug('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'])
+                            devicefound = True
+                            break
+                        else:
+                            if surfstick['modem'] != modempath:
+                                if os.path.exists('/dev/'+ modempath):
+                                    logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' with /dev/' + modempath + 'as interface')
+                                    devicefound = True
+                                    break
+                                else:
+                                    logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + modempath + ' is missing')
+                            else:
+                                    logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + surfstick['modem'] + ' is missing')
+                            
+                    elif deviceid ==  surfstickstorgaeid:
+                        logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ', ' + surfstick['name'] + ', ' +surfstick['alternatename'] + ' found in Storage / Ethernet mode on ' + device['device'])
+            if not devicefound:
+                logger.debug('No known Surfstick found!')
         if modemisenabled:
             logger.info('Starting wvdial for Modem on path ' + str(modempath) + ' with APN ' + modemapn)
             os.system("(sudo sh " + scriptsFolder + "/shell-scripts/connection.sh run)&")
         else:
-            logger.debug('Modem is enabled: ' + str(modemisenabled) + ' Modem path: ' + str(modempath) + 'Modem APN: ' + modemapn)
+            logger.debug('Modem is enabled: ' + str(modemisenabled) + ' Modem path: ' + str(modempath) + ' Modem APN: ' + modemapn)
     except Exception as ex:
         logger.exception("Exception in start_wvdial:" + str(ex))
 
