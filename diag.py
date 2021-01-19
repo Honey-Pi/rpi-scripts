@@ -13,14 +13,16 @@ from utilities import error_log
 def diag():
     diag = ""
     try:
-        os.system("echo '\n\nUnterspannung seit Bootvorgang:\n' >> /tmp/diag.txt")
+        os.system("echo '\n\nUnterspannung seit Bootvorgang:' > /tmp/diag.txt")
         os.system("sudo vcgencmd get_throttled >> /tmp/diag.txt")
-        os.system("echo '0x50000 = Unterspannung seit Systemstart\n' > /tmp/diag.txt")
-        os.system("echo '0x50005 = Unterspannung seit Systemstart\n\n' > /tmp/diag.txt")
-        os.system("echo 'ifconfig:\n' > /tmp/diag.txt")
-        os.system("sudo ifconfig >> /tmp/diag.txt")
-        os.system("echo '\n\nroute:\n' >> /tmp/diag.txt")
+        os.system("echo '0x50000 = Unterspannung seit Systemstart' >> /tmp/diag.txt")
+        os.system("echo '0x50005 = Unterspannung seit Systemstart' >> /tmp/diag.txt")
+        os.system("echo '\n\nFirmware:' >> /tmp/diag.txt")
+        os.system("sudo uname -a >> /tmp/diag.txt")
+        os.system("echo '\nroute:' >> /tmp/diag.txt")
         os.system("sudo route >> /tmp/diag.txt")
+        os.system("echo '\nifconfig:\n' >> /tmp/diag.txt")
+        os.system("sudo ifconfig >> /tmp/diag.txt")
         os.system("echo '\n\nWLAN0 status:\n' >> /tmp/diag.txt")
         os.system("sudo wpa_cli -i wlan0 status >> /tmp/diag.txt")
         os.system("echo '\n\nlsusb:\n' >> /tmp/diag.txt")
@@ -30,10 +32,9 @@ def diag():
         os.system("sudo dmesg | grep ttyUSB >> /tmp/diag.txt")
         os.system("echo '\n\nttyUSB*:\n' >> /tmp/diag.txt")
         os.system("sudo ls -la /dev/ttyUSB* >> /tmp/diag.txt")
-        os.system("echo '\n\nlog:\n' >> /tmp/diag.txt")
+        os.system("echo '\n\nlog entris in /var/log/messages for usb_modeswitch | modem | pppd | PPP | ppp0 | ttyUSB0 | wvdial:\n' >> /tmp/diag.txt")
         os.system("sudo grep -a -B 2 -A 2 'usb_modeswitch\|modem\|pppd\|PPP\|ppp0\|ttyUSB0\|wvdial' /var/log/messages >> /tmp/diag.txt")
-        os.system("echo '\n\nFirmware:\n' >> /tmp/diag.txt")
-        os.system("sudo uname -a >> /tmp/diag.txt")
+
         with io.open("/tmp/diag.txt", encoding="utf-8") as data_file:
             diag = data_file.read()
         return diag

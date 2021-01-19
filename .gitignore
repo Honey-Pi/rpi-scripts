@@ -37,3 +37,4 @@ error.log
 .isMaintenanceActive
 .isLowVoltage
 .isActive
+wvdial.log

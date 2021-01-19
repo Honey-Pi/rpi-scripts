@@ -16,7 +16,7 @@ reconnect_modem () {
 	VENDOR=$1
 	PRODUCT=$2
 	# Reconnect device if no internet connection.
-	if [ -z "$(/bin/ping -q -W$TIMEOUT -c1 $PINGip | grep '1 received')" ]; then
+	if [ -n "$(/bin/ping -q -W$TIMEOUT -c4 $PINGip | grep '0 received')" ]; then
 		echo ">>> $PINGip is not reachable. => Reconnecing device $VENDOR:$PRODUCT"
 		for DIR in $(find /sys/bus/usb/devices/ -maxdepth 1 -type l); do
 			if [[ -f $DIR/idVendor && -f $DIR/idProduct &&
@@ -53,7 +53,7 @@ start_wvdial () {
 		if ! ps -C wvdial
 				then
 						echo ">>> No wvdial process running... Start WvDial to connect modem to internet."
-						wvdial &
+						wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
 						time_started=`date +%s`
 				fi
 	fi
