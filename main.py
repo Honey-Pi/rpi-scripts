@@ -152,11 +152,11 @@ def main():
         # read settings for number of GPIO pin
         settings = get_settings()
         debuglevel=int(settings["debuglevel"])
-        logfiledebuglevel=int(settings["logfiledebuglevel"])
-        fh.setLevel(logging.getLevelName(logfiledebuglevel))
+        debuglevel_logfile=int(settings["debuglevel_logfile"])
+        fh.setLevel(logging.getLevelName(debuglevel_logfile))
         ch.setLevel(logging.getLevelName(debuglevel))
         print("Debuglevel: " + logging.getLevelName(debuglevel))
-        print("Logfiledebuglevel: " + logging.getLevelName(logfiledebuglevel))
+        print("debuglevel_logfile: " + logging.getLevelName(debuglevel_logfile))
         time.sleep(5)
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
@@ -181,7 +181,7 @@ def main():
         # Call wvdial for surfsticks
         start_wvdial(settings)
 
-        if not debuglevel <= 20:
+        if debuglevel > 20:
             # stop HDMI power (save energy)
             print("Info: Shutting down HDMI to save energy.")
             stop_tv()

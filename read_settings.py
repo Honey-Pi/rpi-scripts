@@ -18,8 +18,8 @@ def get_defaults():
     settings["button_pin"] = 16
     settings["led_pin"] = 21
     settings["w1gpio"] = 11
-    settings["debuglevel"] = 10
-    settings["logfiledebuglevel"] = 10
+    settings["debuglevel"] = 30
+    settings["debuglevel_logfile"] = 20
     settings["offline"] = 0
     router = {}
     router['enabled'] = False
@@ -121,19 +121,19 @@ def validate_settings(settings):
         settings["led_pin"] = get_defaults()["led_pin"]
         updateSettingsFile = True
     try:
-        settings["logfiledebuglevel"]
+        settings["debuglevel_logfile"]
     except:
         # Migrate debug to debuglevel
         try:
             settings["debug"]
             if settings["debug"]:
-                settings["logfiledebuglevel"] = 10
+                settings["debuglevel_logfile"] = 10
             else:
-                settings["logfiledebuglevel"] = get_defaults()["logfiledebuglevel"]
+                settings["debuglevel_logfile"] = get_defaults()["debuglevel_logfile"]
             updateSettingsFile = True
             #settings.remove("debug")
         except:
-            settings["logfiledebuglevel"] = get_defaults()["logfiledebuglevel"]
+            settings["debuglevel_logfile"] = get_defaults()["debuglevel_logfile"]
             updateSettingsFile = True
 
     try:
