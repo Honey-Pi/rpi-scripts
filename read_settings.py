@@ -123,18 +123,22 @@ def validate_settings(settings):
     try:
         settings["debuglevel_logfile"]
     except:
-        # Migrate debug to debuglevel
+        # Migrate debuglevellogfile to debuglevel_logfile
         try:
-            settings["debug"]
-            if settings["debug"]:
-                settings["debuglevel_logfile"] = 10
-            else:
-                settings["debuglevel_logfile"] = get_defaults()["debuglevel_logfile"]
-            updateSettingsFile = True
-            #settings.remove("debug")
+            settings["debuglevel_logfile"] = settings["debuglevellogfile"]
+            # Migrate debug to debuglevel
         except:
-            settings["debuglevel_logfile"] = get_defaults()["debuglevel_logfile"]
-            updateSettingsFile = True
+            try:
+                settings["debug"]
+                if settings["debug"]:
+                    settings["debuglevel_logfile"] = 10
+                else:
+                    settings["debuglevel_logfile"] = get_defaults()["debuglevel_logfile"]
+                updateSettingsFile = True
+                #settings.remove("debug")
+            except:
+                settings["debuglevel_logfile"] = get_defaults()["debuglevel_logfile"]
+                updateSettingsFile = True
 
     try:
         settings["debuglevel"]

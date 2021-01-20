@@ -156,7 +156,7 @@ def main():
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
         ch.setLevel(logging.getLevelName(debuglevel))
         print("Debuglevel: " + logging.getLevelName(debuglevel))
-        print("debuglevel_logfile: " + logging.getLevelName(debuglevel_logfile))
+        print("Debuglevel logfile: " + logging.getLevelName(debuglevel_logfile))
         time.sleep(5)
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
