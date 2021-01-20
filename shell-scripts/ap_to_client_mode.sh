@@ -2,7 +2,7 @@
 #!/bin/bash
 
 # Stop AP Services
-ifdown uap0
+ifconfig uap0 down
 systemctl stop hostapd.service
 systemctl stop dnsmasq.service
-ifup wlan0
+ifconfig wlan0 up
