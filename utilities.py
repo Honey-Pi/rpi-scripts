@@ -12,7 +12,7 @@ import json
 import logging
 import RPi.GPIO as GPIO
 from pathlib import Path
-import socket, struct
+import socket, struct, fcntl
 
 import subprocess
 import re
@@ -24,6 +24,15 @@ backendFolder = '/var/www/html/backend'
 settingsFile = backendFolder + '/settings.json'
 wittypi_scheduleFile = backendFolder + "/schedule.wpi"
 logfile = scriptsFolder + '/error.log'
+
+def get_ip_address(ifname):
+    try:
+        ipv4 = os.popen('ip addr show ' + ifname + ' | grep "\<inet\>" | awk \'{ print $2 }\' | awk -F "/" \'{ print $1 }\'').read().strip()
+        return(ipv4)
+    except Exception as ex:
+        print("get_ip_address:" + str(ex))
+        pass
+        return None
 
 def get_default_gateway_linux():
     """Read the default gateway directly from /proc."""
