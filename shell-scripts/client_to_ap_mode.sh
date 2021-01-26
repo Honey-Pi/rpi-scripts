@@ -1,3 +1,4 @@
+#!/bin/bash
 echo '>>> Stopping hostapd.service'
 (systemctl stop hostapd.service || (systemctl unmask hostapd && systemctl stop hostapd))& # if stop fails because service is masked => unmask
 
