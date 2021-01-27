@@ -29,12 +29,12 @@ echo '>>> Create the virtual device uap0'
 cat /etc/hostapd/hostapd.conf.tmpl | envsubst > /etc/hostapd/hostapd.conf
 #unblock wlan interface
 
-nmcli radio wifi off
+#nmcli radio wifi off
 rfkill unblock wlan
 
 /sbin/iw dev wlan0 interface add uap0 type __ap
 ip link set uap0 up
-ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0 #dhcpcd not working
+ip addr add 192.168.4.1/24 broadcast 192.168.4.255 dev uap0 #dhcpcd not working as interface is created later
 
 sleep 1
 echo '>>> Enable routing'
@@ -45,7 +45,7 @@ iptables -t nat -A POSTROUTING -j MASQUERADE
 ifconfig wlan0 up
 
 echo '>>> Starting hostapd.service'
-systemctl start hostapd
+(systemctl start hostapd.service || (systemctl unmask hostapd && systemctl start hostapd))& # if start fails because service is masked => unmask
 #wait for hostapd to crash dhcpcd and restart it
 sleep 5
 echo '>>> Restarting dhcpcd'

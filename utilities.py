@@ -18,7 +18,8 @@ import subprocess
 import re
 logger = logging.getLogger('HoneyPi.utilities')
 
-honeypiFolder = '/home/pi/HoneyPi'
+homeFolder = '/home/pi'
+honeypiFolder = homeFolder + '/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
 backendFolder = '/var/www/html/backend'
 settingsFile = backendFolder + '/settings.json'
@@ -465,7 +466,7 @@ def update_wittypi_schedule(schedule):
         outfile.truncate(0)
         outfile.write(schedule)
         outfile.close()
-        if os.path.isfile('/home/pi/wittyPi/wittyPi.sh') and os.path.isfile('/home/pi/wittyPi/syncTime.sh') and os.path.isfile('/home/pi/wittyPi/runScript.sh'):
+        if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
             print("wittyPi 2 or wittyPi Mini detected.")
             if len(schedule) > 1:
@@ -473,7 +474,7 @@ def update_wittypi_schedule(schedule):
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
-        elif os.path.isfile('/home/pi/wittypi/wittyPi.sh') and os.path.isfile('/home/pi/wittypi/syncTime.sh') and os.path.isfile('/home/pi/wittypi/runScript.sh'):
+        elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + ' /wittypi/runScript.sh'):
             # WittyPi 3
             print("wittypi 3 or 3 Mini detected.")
             if len(schedule) > 1:

@@ -172,9 +172,6 @@ def main():
         tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
         tblink.start()
 
-        # after start is AccessPoint down
-        stop_ap()
-
         # Call wvdial for surfsticks
         start_wvdial(settings)
 
