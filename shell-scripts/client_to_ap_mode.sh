@@ -50,13 +50,4 @@ echo '>>> Starting hostapd.service'
 sleep 5
 echo '>>> Restarting dhcpcd'
 systemctl restart dhcpcd
-#hostapd /etc/hostapd/hostapd.conf
-# Wait for STRG+C
-# Restore NAT
-#iptables -D POSTROUTING -t nat -j MASQUERADE
-# Restore Routing
-#sysctl net.ipv4.ip_forward=0
-# Stop Services
-#systemctl stop dnsmasq 
-#systemctl stop hostapd 
 
