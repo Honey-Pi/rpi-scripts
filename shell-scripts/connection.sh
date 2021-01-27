@@ -94,8 +94,7 @@ elif [ "$1" = "set-apn" ] ; then
         ttyUSB="$3"
     fi
 
-    export APN
-	export ttyUSB
+    export APN && export ttyUSB
     # Create the config for wvdial
     cat /etc/wvdial.conf.tmpl | envsubst > /etc/wvdial.conf
 else

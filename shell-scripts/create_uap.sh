@@ -1,1 +1,0 @@
-#not required any more, now part of client_to_ap_mode.sh
