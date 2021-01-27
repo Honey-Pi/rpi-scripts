@@ -11,7 +11,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, error_log, reboot, create_ap, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, get_default_gateway_linux, get_interface_upstatus_linux
+from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, error_log, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, get_default_gateway_linux, get_interface_upstatus_linux
 
 # global vars
 measurement = None
@@ -128,23 +128,6 @@ def button_pressed_falling(self):
 def main():
     try:
         global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
-        logger = logging.getLogger('HoneyPi')
-        logger.setLevel(logging.DEBUG)
-        fh = logging.FileHandler(logfile)
-        fh.setLevel(logging.DEBUG)
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-        # add the handlers to the logger
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-        #logging.basicConfig(filename=logfile, format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
-        #logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-        logger.info('HoneyPi Started')
 
         # Zaehlweise der GPIO-PINS auf der Platine
         GPIO.setmode(GPIO.BCM)
@@ -153,15 +136,29 @@ def main():
         settings = get_settings()
         debuglevel=int(settings["debuglevel"])
         debuglevel_logfile=int(settings["debuglevel_logfile"])
+
+        logger = logging.getLogger('HoneyPi')
+        logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(logfile)
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
         ch.setLevel(logging.getLevelName(debuglevel))
-        print("Debuglevel: " + logging.getLevelName(debuglevel))
-        print("Debuglevel logfile: " + logging.getLevelName(debuglevel_logfile))
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        logger.info('HoneyPi Started. Debuglevel:' + logging.getLevelName(debuglevel) + ' Debuglevel logfile:' + logging.getLevelName(debuglevel_logfile))
+
         time.sleep(5)
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
         else:
             debug = False # flag to enable debug mode (HDMI output enabled and no rebooting)
+
         GPIO_BTN = settings["button_pin"]
         GPIO_LED = settings["led_pin"]
 
@@ -171,14 +168,6 @@ def main():
         # blink with LED on startup
         tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
         tblink.start()
-
-        # after start is AccessPoint down
-        #not required any more as virtual interface is only created at runtime 
-        #stop_ap()
-
-        # Create virtual uap0 for WLAN
-        #not required any more as virtual interface is only created at runtime
-        #create_ap()
 
         # Call wvdial for surfsticks
         start_wvdial(settings)
@@ -205,11 +194,9 @@ def main():
 
         # setup Button
         GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
-        #GPIO.setup(GPIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set LED to be an input pin and set initial value to be pulled low (off)
         bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
         # register button press event
         GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
-        #GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
 
         # Main Lopp: Cancel with STRG+C
         while True:
