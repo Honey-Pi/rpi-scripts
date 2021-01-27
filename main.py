@@ -173,10 +173,12 @@ def main():
         tblink.start()
 
         # after start is AccessPoint down
-        stop_ap()
+        #not required any more as virtual interface is only created at runtime 
+        #stop_ap()
 
         # Create virtual uap0 for WLAN
-        create_ap()
+        #not required any more as virtual interface is only created at runtime
+        #create_ap()
 
         # Call wvdial for surfsticks
         start_wvdial(settings)
