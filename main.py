@@ -128,23 +128,6 @@ def button_pressed_falling(self):
 def main():
     try:
         global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
-        logger = logging.getLogger('HoneyPi')
-        logger.setLevel(logging.DEBUG)
-        fh = logging.FileHandler(logfile)
-        fh.setLevel(logging.DEBUG)
-        # create console handler with a higher log level
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-        # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-        # add the handlers to the logger
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-        #logging.basicConfig(filename=logfile, format='%(asctime)s %(levelname)-8s %(message)s', level=logging.INFO)
-        #logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
-        logger.info('HoneyPi Started')
 
         # Zaehlweise der GPIO-PINS auf der Platine
         GPIO.setmode(GPIO.BCM)
@@ -153,15 +136,29 @@ def main():
         settings = get_settings()
         debuglevel=int(settings["debuglevel"])
         debuglevel_logfile=int(settings["debuglevel_logfile"])
+
+        logger = logging.getLogger('HoneyPi')
+        logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(logfile)
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
         ch.setLevel(logging.getLevelName(debuglevel))
-        print("Debuglevel: " + logging.getLevelName(debuglevel))
-        print("Debuglevel logfile: " + logging.getLevelName(debuglevel_logfile))
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        logger.info('HoneyPi Started. Debuglevel:' + logging.getLevelName(debuglevel) + ' Debuglevel logfile:' + logging.getLevelName(debuglevel_logfile))
+
         time.sleep(5)
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
         else:
             debug = False # flag to enable debug mode (HDMI output enabled and no rebooting)
+
         GPIO_BTN = settings["button_pin"]
         GPIO_LED = settings["led_pin"]
 
@@ -197,11 +194,9 @@ def main():
 
         # setup Button
         GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
-        #GPIO.setup(GPIO_LED, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set LED to be an input pin and set initial value to be pulled low (off)
         bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
         # register button press event
         GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
-        #GPIO.add_event_detect(GPIO_LED, GPIO.BOTH, callback=get_led_state)
 
         # Main Lopp: Cancel with STRG+C
         while True:
