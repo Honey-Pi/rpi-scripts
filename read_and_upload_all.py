@@ -72,7 +72,7 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
                     MAX_RETRIES_IN_A_ROW = 3
                     # Do Rebooting if to many connectionErrors in a row
                     connectionErrors.value +=1
-                    logger.warning("Error: Failed internet connection. Count: " + str(connectionErrors.value) + "/" + str(MAX_RETRIES_IN_A_ROW))
+                    logger.error("Failed internet connection. Count: " + str(connectionErrors.value) + "/" + str(MAX_RETRIES_IN_A_ROW))
                     if connectionErrors.value >= MAX_RETRIES_IN_A_ROW:
                         if not debug:
                             logger.critical("Too many Connection Errors in a row => Rebooting Raspberry")
