@@ -31,7 +31,7 @@ def get_ip_address(ifname):
         ipv4 = os.popen('ip addr show ' + ifname + ' | grep "\<inet\>" | awk \'{ print $2 }\' | awk -F "/" \'{ print $1 }\'').read().strip()
         return(ipv4)
     except Exception as ex:
-        print("get_ip_address:" + str(ex))
+        logger.exception("Exception in get_ip_address:" + str(ex))
         pass
         return None
 
@@ -47,7 +47,7 @@ def get_default_gateway_linux():
 
                 return socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
     except Exception as ex:
-        print("get_default_gateway_linux:" + str(ex))
+        logger.exception("Exception in get_default_gateway_linux:" + str(ex))
         pass
         return None
 
@@ -63,7 +63,7 @@ def get_default_gateway_interface_linux():
 
                 return str(fields[0])
     except Exception as ex:
-        print("get_default_gateway_interface_linux:" + str(ex))
+        logger.exception("Exception in get_default_gateway_interface_linux:" + str(ex))
         pass
         return None
 
@@ -78,7 +78,7 @@ def get_interface_upstatus_linux(interfacename):
                 else:
                     return False
     except Exception as ex:
-        print("get_interface_upstatus_linux:" + str(ex))
+        logger.exception("Exception in get_interface_upstatus_linux:" + str(ex))
         pass
         return False
 
@@ -100,7 +100,7 @@ def get_lsusb_linux():
         return devices
 
     except Exception as ex:
-        print("Error in get_lsusb_linux:" + repr(ex))
+        logger.exception("Exception in get_lsusb_linux:" + str(ex))
         pass
         return False
 
@@ -108,17 +108,20 @@ def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
 
 def is_zero():
-    with open('/proc/device-tree/model') as f:
-        if 'Zero' in f.read():
-            return True
-    return False
+    try:
+        with open('/proc/device-tree/model') as f:
+            if 'Zero' in f.read():
+                return True
+        return False
+    except Exception as ex:
+        logger.exception("Exception in get_lsusb_linux:" + str(ex))
 
 def get_led_state(gpio=21):
    state = GPIO.input(gpio)
    if state:
-       print("LED " + str(gpio) + " is currently on")
+       logger.debug("LED " + str(gpio) + " is currently on")
    else:
-       print("LED " + str(gpio) + " is currently off")
+       logger.debug("LED " + str(gpio) + " is currently off")
    return state
 
 def toggle_led(gpio, state):
@@ -298,15 +301,15 @@ def start_single(file_path=".isActive"):
             # and the file could be still existing
             filetime = os.stat(file).st_mtime
             if filetime < time.time()-time_to_wait:
-                print("Skiped waiting because the measurement process we are waiting for was likely not properly finished.")
+                logger.warning("Skiped waiting because the measurement process we are waiting for was likely not properly finished.")
                 os.remove(file) # remove the old file
                 break
             time.sleep(1)
-            print("Measurement waits for a process to finish. Another measurement job is running at the moment.")
+            logger.info("Measurement waits for a process to finish. Another measurement job is running at the moment.")
         # create file to stop other HX711 readings
         f = open(file, "x")
     except Exception as ex:
-        print("start_single:" + str(ex))
+        logger.exception("Exception in start_single:" + str(ex))
         pass
     finally:
         decrease_nice()
@@ -318,9 +321,9 @@ def stop_single(file_path=".isActive"):
         if os.path.exists(file):
             os.remove(file)
         else:
-            print('stop_single: File does not exists.')
+            logger.warning('stop_single: File does not exists.')
     except Exception as ex:
-        print("stop_single:" + str(ex))
+        logger.exception("Exception in stop_single:" + str(ex))
         pass
     finally:
         normal_nice()
@@ -344,6 +347,8 @@ def check_file(file, size=5, entries=25, skipFirst=0):
             w.close()
     except FileNotFoundError:
         pass
+    except Exception as ex:
+        logger.exception("Exception in check_file:" + str(ex))
 
 def error_log(e=None, printText=None):
     try:
@@ -374,23 +379,17 @@ def error_log(e=None, printText=None):
 def check_undervoltage():
     try:
         undervoltage = str(os.popen("sudo vcgencmd get_throttled").readlines())
-        error_log("undervoltagecheck")
-        print(undervoltage)
-
         if "0x0" in undervoltage:
-            error_log("Info: No undervoltage alarm")
-            print("Unterspannung 0x0 " + undervoltage)
+            logger.debug("No undervoltage alarm")
 
         elif "0x50000" in undervoltage:
-            error_log("Warning: undervoltage alarm had happened since system start ", undervoltage)
-            print("undervoltage " + undervoltage)
+            logger.warning("Undervoltage alarm had happened since system start " + undervoltage)
 
         elif "0x50005" in undervoltage:
-            error_log("Warning : undervoltage alarm is currently raised ", undervoltage)
-            print("undervoltage 0x50005 " + undervoltage)
+            logger.warning("Undervoltage alarm is currently raised " + undervoltage)
 
     except Exception as ex:
-        print("Exception in function check_undervoltage:" + str(ex))
+        logger.exception("Exception in check_undervoltage:" + str(ex))
         pass
     return
 
@@ -401,7 +400,7 @@ def wait_for_internet_connection(maxTime=10):
         try:
             response = str(urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read().decode('utf-8'))
             if response == "Microsoft NCSI":
-                print("Success: Connection established after " + str(i) + " seconds.")
+                logger.info("Success: Connection established after " + str(i) + " seconds.")
                 return True
         except:
             pass
@@ -416,7 +415,7 @@ def check_internet_connection():
         if response == "Microsoft NCSI":
             return True
     except:
-        print("Except check_internet_connection: Connection error.")
+        logger.exception("Except check_internet_connection: Connection error." + str(ex))
     return False
 
 def delete_settings():
@@ -424,25 +423,18 @@ def delete_settings():
 
 def clean_fields(ts_fields, countChannels, debug):
     if debug :
-       print('Dictionary to be converted:')
-       print(json.dumps(ts_fields))
+       logger.debug('Dictionary to be converted:')
+       logger.debug(json.dumps(ts_fields))
     ts_fields_cleaned = {}
     fieldNew = {};
     for field in ts_fields:
         fieldNumber = int(field.replace('field',''))
         fieldNumberNew = fieldNumber - (8 * countChannels)
         if fieldNumberNew <= 8 and fieldNumberNew > 0 :
-            if debug :
-                print('Data to be converted:')
-                print(ts_fields['field' + str(fieldNumber)])
-
+            logger.debug('Data to be converted:' + ts_fields['field' + str(fieldNumber)])
             ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
-            if debug :
-                print('Field ' + str(fieldNumberNew) + ' written')
-                print(json.dumps(ts_fields_cleaned['field' + str(fieldNumberNew)]))
-    if debug :
-        print('Cleaned dictionary:')
-        print(json.dumps(ts_fields_cleaned))
+            logger.debug('Field ' + str(fieldNumberNew) + ' written' + json.dumps(ts_fields_cleaned['field' + str(fieldNumberNew)]))
+    logger.debug('Cleaned dictionary:' + json.dumps(ts_fields_cleaned))
     return ts_fields_cleaned
 
 # decorater used to block function printing to the console
@@ -468,7 +460,7 @@ def update_wittypi_schedule(schedule):
         outfile.close()
         if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
-            print("wittyPi 2 or wittyPi Mini detected.")
+            logger.debug("wittyPi 2 or wittyPi Mini detected.")
             if len(schedule) > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
@@ -476,16 +468,16 @@ def update_wittypi_schedule(schedule):
             return True
         elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + ' /wittypi/runScript.sh'):
             # WittyPi 3
-            print("wittypi 3 or 3 Mini detected.")
+            logger.debug("wittypi 3 or 3 Mini detected.")
             if len(schedule) > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         else:
-            error_log("Info: WittyPi installation missing or incomplete")
+            logger.error("WittyPi installation missing or incomplete")
     except Exception as ex:
-        error_log("Error in function update_wittypi_schedule: " + str(ex))
+        logger.exception("Error in function update_wittypi_schedule: " + str(ex))
 
     return False
 
@@ -501,18 +493,18 @@ def getStateFromStorage(variable, default_value=False):
                     elif content == "False":
                         content = False
                     else:
-                        print("Warning: Fallback to default value")
+                        logger.warning("Variable '" + variable + "' Fallback to default value")
                         content = default_value
-                    print("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
+                    logger.debug("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
                     return content
                 else:
-                    print('Info: ' + variable + ' has initial state because file is empty.')
+                    logger.info("Variable '" + variable + "' has initial state because file is empty.")
                     return None
 
         else:
-            print('Info: ' + variable + ' does not exists. default_value=' + str(default_value))
+            logger.info("Variable '" + variable + "' does not exists. default_value = " + str(default_value))
     except Exception as ex:
-        print("getStateFromStorage:" + str(ex))
+        logger.exception("Error in function getStateFromStorage: " + str(ex))
         pass
     return default_value
 
@@ -522,6 +514,6 @@ def setStateToStorage(variable, value):
         with open(file, 'w') as f:
             print(value, file=f)
     except Exception as ex:
-        print("setStateToStorage:" + str(ex))
+        logger.exception("Error in function setStateToStorage: " + str(ex))
         pass
     return value
