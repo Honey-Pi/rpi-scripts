@@ -205,7 +205,7 @@ def start_wvdial(settings):
         founddevices = get_lsusb_linux()
         #print(founddevices)
         surfsticks = {}
-        
+
         surfstick_file = Path(scriptsFolder + '/surfstick.json')
         surfstick_abs_path = surfstick_file.resolve()
 
@@ -216,8 +216,8 @@ def start_wvdial(settings):
         except Exception as ex:
             logger.exception("Exception in start_wvdial:" + str(ex))
             pass
-        
-        
+
+
         if founddevices:
             devicefound = False
             for device in founddevices:
@@ -239,8 +239,8 @@ def start_wvdial(settings):
                                 else:
                                     logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + modempath + ' is missing')
                             else:
-                                    logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + surfstick['modem'] + ' is missing')
-                            
+                                logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + surfstick['modem'] + ' is missing')
+
                     elif deviceid ==  surfstickstorgaeid:
                         logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ', ' + surfstick['name'] + ', ' +surfstick['alternatename'] + ' found in Storage / Ethernet mode on ' + device['device'])
             if not devicefound:
@@ -252,10 +252,6 @@ def start_wvdial(settings):
             logger.debug('Modem is enabled: ' + str(modemisenabled) + ' Modem path: ' + str(modempath) + ' Modem APN: ' + modemapn)
     except Exception as ex:
         logger.exception("Exception in start_wvdial:" + str(ex))
-
-def create_ap():
-    os.system("sudo sh " + scriptsFolder + "/shell-scripts/create_uap.sh")
-    os.system("sudo ifdown uap0")
 
 def client_to_ap_mode():
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/client_to_ap_mode.sh")
@@ -271,6 +267,7 @@ def reboot():
     os.system("sudo reboot")
 
 def shutdown():
+    set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
@@ -374,23 +371,23 @@ def error_log(e=None, printText=None):
 def check_undervoltage():
     try:
         undervoltage = str(os.popen("sudo vcgencmd get_throttled").readlines())
-        error_log("undervoltagecheck")
-        print(undervoltage)
+        #print("undervoltagecheck")
+        #print(undervoltage)
 
         if "0x0" in undervoltage:
-            error_log("Info: No undervoltage alarm")
+            logger.debug("Info: No undervoltage alarm")
             print("Unterspannung 0x0 " + undervoltage)
 
         elif "0x50000" in undervoltage:
-            error_log("Warning: undervoltage alarm had happened since system start ", undervoltage)
+            logger.warning("Undervoltage alarm had happened since system start " + str(undervoltage))
             print("undervoltage " + undervoltage)
 
         elif "0x50005" in undervoltage:
-            error_log("Warning : undervoltage alarm is currently raised ", undervoltage)
+            logger.warning("Undervoltage alarm is currently raised " + str(undervoltage))
             print("undervoltage 0x50005 " + undervoltage)
 
     except Exception as ex:
-        print("Exception in function check_undervoltage:" + str(ex))
+        logger.exception("Exception in function check_undervoltage:" + str(ex))
         pass
     return
 
@@ -401,7 +398,7 @@ def wait_for_internet_connection(maxTime=10):
         try:
             response = str(urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read().decode('utf-8'))
             if response == "Microsoft NCSI":
-                print("Success: Connection established after " + str(i) + " seconds.")
+                logger.debug("Success: Connection established after " + str(i) + " seconds.")
                 return True
         except:
             pass
@@ -459,17 +456,13 @@ def blockPrinting(func):
 
     return func_wrapper
 
-def update_wittypi_schedule(schedule):
+def set_wittypi_schedule():
     try:
-        # write values to file
-        outfile = open(wittypi_scheduleFile, "w")
-        outfile.truncate(0)
-        outfile.write(schedule)
-        outfile.close()
+        schedule_filesize = os.stat(wittypi_scheduleFile).st_size > 0
         if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
             print("wittyPi 2 or wittyPi Mini detected.")
-            if len(schedule) > 1:
+            if schedule_filesize > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
@@ -477,15 +470,30 @@ def update_wittypi_schedule(schedule):
         elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + ' /wittypi/runScript.sh'):
             # WittyPi 3
             print("wittypi 3 or 3 Mini detected.")
-            if len(schedule) > 1:
+            if schedule_filesize > 1:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         else:
-            error_log("Info: WittyPi installation missing or incomplete")
+            logger.debug("Info: WittyPi installation missing or incomplete")
+
     except Exception as ex:
-        error_log("Error in function update_wittypi_schedule: " + str(ex))
+        logger.exception("Error in function set_wittypi_schedule: " + str(ex))
+
+    return False
+
+def update_wittypi_schedule(schedule):
+    try:
+        # write values to file
+        outfile = open(wittypi_scheduleFile, "w")
+        outfile.truncate(0)
+        outfile.write(schedule)
+        outfile.close()
+
+        set_wittypi_schedule()
+    except Exception as ex:
+        logger.exception("Error in function update_wittypi_schedule: " + str(ex))
 
     return False
 
