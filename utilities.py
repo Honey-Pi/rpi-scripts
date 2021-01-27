@@ -418,18 +418,13 @@ def delete_settings():
     os.remove(settingsFile)
 
 def clean_fields(ts_fields, countChannels, debug):
-    if debug :
-       #logger.debug('Dictionary to be converted:')
-       #logger.debug(json.dumps(ts_fields))
     ts_fields_cleaned = {}
     fieldNew = {};
     for field in ts_fields:
         fieldNumber = int(field.replace('field',''))
         fieldNumberNew = fieldNumber - (8 * countChannels)
         if fieldNumberNew <= 8 and fieldNumberNew > 0 :
-            #logger.debug('Data to be converted:' + ts_fields['field' + str(fieldNumber)])
             ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
-            #logger.debug('Field ' + str(fieldNumberNew) + ' written' + json.dumps(ts_fields_cleaned['field' + str(fieldNumberNew)]))
     logger.debug('Cleaned dictionary:' + json.dumps(ts_fields_cleaned))
     return ts_fields_cleaned
 
