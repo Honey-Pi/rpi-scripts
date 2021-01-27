@@ -209,12 +209,11 @@ def start_wvdial(settings):
         surfstick_file = Path(scriptsFolder + '/surfstick.json')
         surfstick_abs_path = surfstick_file.resolve()
 
-
         try:
             with io.open(surfstick_file, encoding="utf-8") as data_file:
                 surfsticks = json.loads(data_file.read())
         except Exception as ex:
-            logger.exception("Exception in start_wvdial:" + str(ex))
+            logger.exception("Exception in start_wvdial:" + repr(ex))
             pass
 
 
@@ -251,7 +250,7 @@ def start_wvdial(settings):
         else:
             logger.debug('Modem is enabled: ' + str(modemisenabled) + ' Modem path: ' + str(modempath) + ' Modem APN: ' + modemapn)
     except Exception as ex:
-        logger.exception("Exception in start_wvdial:" + str(ex))
+        logger.exception("Exception in start_wvdial:" + repr(ex))
 
 def client_to_ap_mode():
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/client_to_ap_mode.sh")
@@ -387,7 +386,7 @@ def check_undervoltage():
             print("undervoltage 0x50005 " + undervoltage)
 
     except Exception as ex:
-        logger.exception("Exception in function check_undervoltage:" + str(ex))
+        logger.exception("Exception in function check_undervoltage:" + repr(ex))
         pass
     return
 
@@ -479,7 +478,7 @@ def set_wittypi_schedule():
             logger.debug("Info: WittyPi installation missing or incomplete")
 
     except Exception as ex:
-        logger.exception("Error in function set_wittypi_schedule: " + str(ex))
+        logger.exception("Error in function set_wittypi_schedule: " + repr(ex))
 
     return False
 
@@ -493,7 +492,7 @@ def update_wittypi_schedule(schedule):
 
         set_wittypi_schedule()
     except Exception as ex:
-        logger.exception("Error in function update_wittypi_schedule: " + str(ex))
+        logger.exception("Error in function update_wittypi_schedule: " + repr(ex))
 
     return False
 
