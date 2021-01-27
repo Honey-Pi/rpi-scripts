@@ -458,11 +458,11 @@ def blockPrinting(func):
 
 def set_wittypi_schedule():
     try:
-        schedule_filesize = os.stat(wittypi_scheduleFile).st_size > 0
+        schedule_filesize = os.stat(wittypi_scheduleFile).st_size > 1
         if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
             print("wittyPi 2 or wittyPi Mini detected.")
-            if schedule_filesize > 1:
+            if schedule_filesize:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
@@ -470,7 +470,7 @@ def set_wittypi_schedule():
         elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + ' /wittypi/runScript.sh'):
             # WittyPi 3
             print("wittypi 3 or 3 Mini detected.")
-            if schedule_filesize > 1:
+            if schedule_filesize:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
