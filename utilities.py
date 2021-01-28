@@ -31,7 +31,7 @@ def get_ip_address(ifname):
         ipv4 = os.popen('ip addr show ' + ifname + ' | grep "\<inet\>" | awk \'{ print $2 }\' | awk -F "/" \'{ print $1 }\'').read().strip()
         return(ipv4)
     except Exception as ex:
-        logger.exception("Exception in get_ip_address:" + str(ex))
+        logger.exception("Exception in get_ip_address:" + repr(ex))
         pass
         return None
 
@@ -47,7 +47,7 @@ def get_default_gateway_linux():
 
                 return socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
     except Exception as ex:
-        logger.exception("Exception in get_default_gateway_linux:" + str(ex))
+        logger.exception("Exception in get_default_gateway_linux:" + repr(ex))
         pass
         return None
 
@@ -63,7 +63,7 @@ def get_default_gateway_interface_linux():
 
                 return str(fields[0])
     except Exception as ex:
-        logger.exception("Exception in get_default_gateway_interface_linux:" + str(ex))
+        logger.exception("Exception in get_default_gateway_interface_linux:" + repr(ex))
         pass
         return None
 
@@ -78,7 +78,7 @@ def get_interface_upstatus_linux(interfacename):
                 else:
                     return False
     except Exception as ex:
-        logger.exception("Exception in get_interface_upstatus_linux:" + str(ex))
+        logger.exception("Exception in get_interface_upstatus_linux:" + repr(ex))
         pass
         return False
 
@@ -100,7 +100,7 @@ def get_lsusb_linux():
         return devices
 
     except Exception as ex:
-        logger.exception("Exception in get_lsusb_linux:" + str(ex))
+        logger.exception("Exception in get_lsusb_linux:" + repr(ex))
         pass
         return False
 
@@ -114,7 +114,7 @@ def is_zero():
                 return True
         return False
     except Exception as ex:
-        logger.exception("Exception in get_lsusb_linux:" + str(ex))
+        logger.exception("Exception in get_lsusb_linux:" + repr(ex))
 
 def get_led_state(gpio=21):
    state = GPIO.input(gpio)
@@ -256,9 +256,11 @@ def start_wvdial(settings):
         logger.exception("Exception in start_wvdial:" + repr(ex))
 
 def client_to_ap_mode():
+    pause_wittypi_schedule()
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/client_to_ap_mode.sh")
 
 def ap_to_client_mode():
+    continue_wittypi_schedule()
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/ap_to_client_mode.sh")
 
 def reboot():
@@ -305,7 +307,7 @@ def start_single(file_path=".isActive"):
         # create file to stop other HX711 readings
         f = open(file, "x")
     except Exception as ex:
-        logger.exception("Exception in start_single:" + str(ex))
+        logger.exception("Exception in start_single:" + repr(ex))
         pass
     finally:
         decrease_nice()
@@ -319,7 +321,7 @@ def stop_single(file_path=".isActive"):
         else:
             logger.warning('stop_single: File does not exists.')
     except Exception as ex:
-        logger.exception("Exception in stop_single:" + str(ex))
+        logger.exception("Exception in stop_single:" + repr(ex))
         pass
     finally:
         normal_nice()
@@ -344,7 +346,7 @@ def check_file(file, size=5, entries=25, skipFirst=0):
     except FileNotFoundError:
         pass
     except Exception as ex:
-        logger.exception("Exception in check_file:" + str(ex))
+        logger.exception("Exception in check_file:" + repr(ex))
 
 def error_log(e=None, printText=None):
     try:
@@ -411,7 +413,7 @@ def check_internet_connection():
         if response == "Microsoft NCSI":
             return True
     except:
-        logger.exception("Except check_internet_connection: Connection error." + str(ex))
+        logger.exception("Except check_internet_connection: Connection error." + repr(ex))
     return False
 
 def delete_settings():
@@ -442,13 +444,33 @@ def blockPrinting(func):
 
     return func_wrapper
 
+def pause_wittypi_schedule():
+    try:
+        if os.stat(wittypi_scheduleFile).st_size > 1:
+            os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
+            update_wittypi_schedule("")
+    except Exception as ex:
+        logger.exception("Error in function pause_wittypi_schedule: " + repr(ex))
+
+def continue_wittypi_schedule():
+    try:
+        if os.stat(wittypi_scheduleFile + ".bak").st_size > 1:
+            if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
+                # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
+                continue
+            else:
+                os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
+                set_wittypi_schedule()
+    except Exception as ex:
+        logger.exception("Error in function continue_wittypi_schedule: " + repr(ex))
+
 def set_wittypi_schedule():
     try:
-        schedule_filesize = os.stat(wittypi_scheduleFile).st_size > 1
+        schedulefile_exists = os.stat(wittypi_scheduleFile).st_size > 1
         if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
             print("wittyPi 2 or wittyPi Mini detected.")
-            if schedule_filesize:
+            if schedulefile_exists:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
@@ -456,7 +478,7 @@ def set_wittypi_schedule():
         elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + ' /wittypi/runScript.sh'):
             # WittyPi 3
             logger.debug("wittypi 3 or 3 Mini detected.")
-            if schedule_filesize:
+            if schedulefile_exists:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
@@ -506,7 +528,7 @@ def getStateFromStorage(variable, default_value=False):
         else:
             logger.info("Variable '" + variable + "' does not exists. default_value = " + str(default_value))
     except Exception as ex:
-        logger.exception("Error in function getStateFromStorage: " + str(ex))
+        logger.exception("Error in function getStateFromStorage: " + repr(ex))
         pass
     return default_value
 
@@ -516,6 +538,6 @@ def setStateToStorage(variable, value):
         with open(file, 'w') as f:
             print(value, file=f)
     except Exception as ex:
-        logger.exception("Error in function setStateToStorage: " + str(ex))
+        logger.exception("Error in function setStateToStorage: " + repr(ex))
         pass
     return value
