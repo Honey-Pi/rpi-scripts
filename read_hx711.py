@@ -282,7 +282,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
                     percentage_filtered_out = round((num_data_filtered_out / num_measurements * 100),2)
                     if percentage_filtered_out > 34:
                         logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
-                        logger.warning('You might need to check your cabling setup for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+                        logger.warning('You might need to check your power supply or cabling setup for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
                     else:
                         logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
                 else: # returned False
