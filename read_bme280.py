@@ -4,30 +4,25 @@
 
 import time
 from sensors.bme280 import readBME280All # Source: http://bit.ly/bme280py
-
 import logging
 
 logger = logging.getLogger('HoneyPi.read_bme280')
 
-
 def measure_bme280(ts_sensor):
     fields = {}
-    i2c_addr = ""
+    i2c_addr = "0x76" # default value
     try:
         # setup BME280 sensor
         try:
             if 'i2c_addr' in ts_sensor:
                 i2c_addr = ts_sensor["i2c_addr"]
-            else:
-                i2c_addr = "0x76"
-            if i2c_addr == "0x76":
-                logger.debug("'BME680 on I2C Adress '" + i2c_addr + "'")
-            elif i2c_addr == "0x77":
-                logger.debug("'BME680 on I2C Adress '" + i2c_addr + "'")
-            elif i2c_addr == "0x77":
-                logger.debug("'BME680 on unexpected I2C Adress '" + i2c_addr + "'")
+
+                if i2c_addr == "0x76":
+                    logger.debug("'BME680 on I2C Adress '" + i2c_addr + "'")
+                elif i2c_addr == "0x77":
+                    logger.debug("'BME680 on I2C Adress '" + i2c_addr + "'")
+
         except Exception as ex:
-            i2c_addr = "0x76"
             logger.exception("Error getting  I2C Adress, using default '" + i2c_addr + "'" + repr(ex))
             pass
 
@@ -38,7 +33,7 @@ def measure_bme280(ts_sensor):
             offset = 0
             logger.exception("'BME280 on I2C Adress '" + i2c_addr + "', no offset in configurtation")
             pass
-        
+
         temperature,pressure,humidity = readBME280All(i2c_addr)
 
         # ThingSpeak fields

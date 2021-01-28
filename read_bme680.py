@@ -22,19 +22,17 @@ def isSMBusConnected():
         return 1
     except Exception as ex:
         logger.exception("Unhandled Exception in isSMBusConnected " + repr(ex))
-        pass 
+        pass
     return 0
 
 def initBME680(ts_sensor):
     sensor = None
-    i2c_addr = ""
+    i2c_addr = "0x76" # default value
     try:
         # setup BME680 sensor
         try:
             if 'i2c_addr' in ts_sensor:
                 i2c_addr = ts_sensor["i2c_addr"]
-            else:
-                i2c_addr = "0x76"
 
             if i2c_addr == "0x76":
                 sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
