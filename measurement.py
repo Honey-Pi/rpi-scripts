@@ -64,7 +64,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         except Exception as e:
             logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors " + repr(e))
 
-        # measure BME680 (can only be one) [type 1]
+        # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
             sensor = bme680Inits[sensorIndex]
             if bme680Inits[sensorIndex] != None:
@@ -81,9 +81,9 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             tc_temp = measure_tc(sensor)
             ts_fields.update(tc_temp)
 
-        # measure BME280 (can only be one) [type 5]
-        if bme280Sensors and len(bme280Sensors) == 1:
-            bme280_values = measure_bme280(bme280Sensors[0])
+        # measure BME280 (can only be two) [type 5]
+        for (sensorIndex, bme280Sensors) in enumerate(bme280Sensors):
+            bme280_values = measure_bme280(bme280Sensors[sensorIndex])
             ts_fields.update(bme280_values)
 
         # measure YL-40 PFC8591 (can only be one) [type 6]
