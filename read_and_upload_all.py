@@ -201,13 +201,13 @@ def start_measurement(measurement_stop):
         aht10Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
         hdc1008Sensors = get_sensors(settings, 10)
-        bme680IsInitialized = {}
+        bme680Inits = []
 
         # -- Run Pre Configuration --
         # if bme680 is configured
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            bme680IsInitialized[sensorIndex] = 0
-            bme680IsInitialized[sensorIndex] = initBME680FromMain(bme680Sensor)
+            bme680Init = initBME680FromMain(bme680Sensor)
+            bme680Inits.append(bme680Init)
 
         # if hx711 is set
         hxInits = []
@@ -253,7 +253,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join()
                 else:

@@ -24,13 +24,14 @@ from read_sht31 import measure_sht31
 from read_hdc1008 import measure_hdc1008
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import start_single, stop_single
+from utilities import start_single, stop_single, scriptsFolder
 
 import logging
 
 logger = logging.getLogger('HoneyPi.measurement')
+logfile = scriptsFolder+'/measurement.log'
 
-def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits):
+def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits):
 
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     try:
@@ -65,8 +66,9 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         # measure BME680 (can only be one) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            if bme680IsInitialized[sensorIndex]:
-                bme680_values = measure_bme680(bme680Sensor, 30)
+            sensor = bme680Inits[sensorIndex]
+            if bme680Inits[sensorIndex] != None:
+                bme680_values = measure_bme680(sensor, bme680Sensor, 30)
                 ts_fields.update(bme680_values)
 
         # measure every sensor with type 3 [DHT11/DHT22]
@@ -142,6 +144,25 @@ def measurement():
     try:
         # load settings
         settings = get_settings()
+        debuglevel=int(settings["debuglevel"])
+        debuglevel_logfile=10
+
+        logger = logging.getLogger('HoneyPi')
+        logger.setLevel(logging.DEBUG)
+        fh = logging.FileHandler(logfile, mode='w')
+        fh.setLevel(logging.getLevelName(debuglevel_logfile))
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.getLevelName(debuglevel))
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+        logger.info('HoneyPi Mesasuremant Started. Debuglevel:' + logging.getLevelName(debuglevel) + ' Debuglevel logfile:' + logging.getLevelName(debuglevel_logfile))
+
         # read configured sensors from settings.json
         ds18b20Sensors = get_sensors(settings, 0)
         bme680Sensors = get_sensors(settings, 1)
@@ -154,14 +175,16 @@ def measurement():
         aht10Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
         hdc1008Sensors = get_sensors(settings, 10)
-        bme680IsInitialized = {}
+        bme680Inits = []
 
         # if bme680 is configured
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            bme680IsInitialized[sensorIndex] = 0
-            bme680IsInitialized[sensorIndex] = initBME680FromMain(bme680Sensor)
+            bme680Init = initBME680FromMain(bme680Sensor)
+            bme680Inits.append(bme680Init)
 
-        ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
+        ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
+        logger.removeHandler(fh)
+        fh.close()
         return json.dumps(ts_fields)
 
     except Exception as e:
@@ -172,10 +195,16 @@ def measurement():
 
 if __name__ == '__main__':
     try:
-        print(measurement())
+        ts_fields = measurement()
+        print (ts_fields)
+        print('\n')
+        #with open(logfile) as fh:
+            #for line in fh:
+            #    print(line)
+  
 
     except (KeyboardInterrupt, SystemExit):
         pass
 
-    except Exception as e:
-        logger.exception("Unhandled Exception in __main__" + repr(e))
+    except Exception as ex:
+        print("Unhandled Exception in __main__" + repr(ex))

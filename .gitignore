@@ -38,3 +38,4 @@ error.log
 .isLowVoltage
 .isActive
 wvdial.log
+*.log
