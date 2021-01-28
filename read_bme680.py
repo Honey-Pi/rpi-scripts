@@ -22,6 +22,7 @@ def isSMBusConnected():
         return 1
     except Exception as ex:
         logger.exception("Unhandled Exception in isSMBusConnected " + repr(ex))
+        pass 
     return 0
 
 def initBME680(ts_sensor):
