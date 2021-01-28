@@ -457,7 +457,8 @@ def continue_wittypi_schedule():
         if os.stat(wittypi_scheduleFile + ".bak").st_size > 1:
             if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
                 # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
-                continue
+                os.rename(wittypi_scheduleFile + ".bak")
+                #continue
             else:
                 os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
                 set_wittypi_schedule()
