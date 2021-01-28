@@ -33,6 +33,15 @@ def get_smbus():
         # Something else
         return 1
 
+def isSMBusConnected():
+    try:
+        bus = smbus.SMBus(get_smbus())
+        return 1
+    except Exception as ex:
+        logger.exception("Unhandled Exception in isSMBusConnected " + repr(ex))
+        pass
+    return 0
+
 def computeAbsoluteHumidity(humidity, temperature):
     """https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/"""
     try:

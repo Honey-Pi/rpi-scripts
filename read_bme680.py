@@ -5,7 +5,7 @@
 import time
 import bme680
 import smbus
-from sensors.sensor_utilities import get_smbus, computeAbsoluteHumidity
+from sensors.sensor_utilities import get_smbus, computeAbsoluteHumidity, isSMBusConnected
 
 import logging
 
@@ -15,15 +15,6 @@ logger = logging.getLogger('HoneyPi.read_bme680')
 #sensor = None
 bme680IsConnected = 0
 gas_baseline = 0
-
-def isSMBusConnected():
-    try:
-        bus = smbus.SMBus(get_smbus())
-        return 1
-    except Exception as ex:
-        logger.exception("Unhandled Exception in isSMBusConnected " + repr(ex))
-        pass
-    return 0
 
 def initBME680(ts_sensor):
     sensor = None
