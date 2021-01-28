@@ -264,6 +264,7 @@ def ap_to_client_mode():
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/ap_to_client_mode.sh")
 
 def reboot():
+    set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
