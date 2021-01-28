@@ -119,7 +119,7 @@ def button_pressed_falling(self):
             tblink.start()
             delete_settings()
             update_wittypi_schedule("")
-            logger.critical("Resettet settings because Button was pressed.")
+            logger.critical("Resettet settings because Button was pressed wore than 10seconds.")
             shutdown()
         elif debug:
             time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s

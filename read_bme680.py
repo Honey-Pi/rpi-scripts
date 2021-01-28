@@ -17,7 +17,7 @@ def isSMBusConnected():
         bus = smbus.SMBus(get_smbus())
         return 1
     except Exception as ex:
-        pass #print("No BME680 connected: " + str(ex))
+        pass 
     return 0
 
 def initBME680(ts_sensor):

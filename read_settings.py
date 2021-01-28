@@ -81,7 +81,6 @@ def get_settings():
         if str(getgrgid(os.stat(settingsFile).st_gid).gr_name) != "www-data":
             os.system("sudo chgrp www-data " + str(settingsFile))
 
-
         # Check wittypi_scheduleFile
         if os.path.exists(wittypi_scheduleFile):
             if str(getpwuid(os.stat(wittypi_scheduleFile).st_uid).pw_name) != "www-data":
@@ -306,6 +305,6 @@ def write_settings(settings):
         outfile.close()
         return True
     except Exception as ex:
-        logger.exception("Exception in function write_settings " + str(ex))
+        logger.exception("Exception in function write_settings " + repr(ex))
 
     return False
