@@ -83,7 +83,7 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
                 else:
                     if connectionErrors.value > 0:
                         if debug:
-                            logger.warning("Info: Connection Errors (" + str(connectionErrors.value) + ") Counting resetet because transfer succeded.")
+                            logger.warning("Connection Errors (" + str(connectionErrors.value) + ") Counting resetet because transfer succeded.")
                         # reset connectionErrors because transfer succeded
                         connectionErrors.value = 0
 
@@ -177,8 +177,7 @@ def start_measurement(measurement_stop):
             shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
 
         if debug:
-            print("Info: Debug-Mode is enabled.")
-            error_log("Info: The measurements have started.")
+            logger.info("The measurements have started.")
 
         # with process shared variables
         connectionErrors = Value('i',0)
@@ -186,7 +185,7 @@ def start_measurement(measurement_stop):
 
         if interval and not isinstance(interval, int) or interval == 0:
             interval = 0
-            error_log("Info: Stop measurement because interval is null.")
+            logger.info("Stop measurement because interval is null.")
             measurement_stop.set()
 
         # read configured sensors from settings.json
@@ -257,7 +256,7 @@ def start_measurement(measurement_stop):
                     p.start()
                     p.join()
                 else:
-                    error_log("Warning: Forerun measurement is not finished yet. Consider increasing interval.")
+                    logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")
 
                 # stop measurements after uploading once
                 if interval == 1:
@@ -286,7 +285,7 @@ def start_measurement(measurement_stop):
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
 
     except Exception as e:
-        error_log(e, "Unhandled Exception in start_measurement")
+        logger.exception("Unhandled Exception in start_measurement" + repr(e))
         if not debug:
             time.sleep(10)
             reboot()
