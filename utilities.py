@@ -471,7 +471,7 @@ def set_wittypi_schedule():
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1
         if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
-            print("wittyPi 2 or wittyPi Mini detected.")
+            logger.debug("wittyPi 2 or wittyPi Mini detected.")
             if schedulefile_exists:
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
