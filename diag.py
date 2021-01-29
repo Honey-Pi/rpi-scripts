@@ -5,10 +5,7 @@
 import json
 import os
 import io
-
 from utilities import error_log
-
-
 
 def diag():
     diag = ""
