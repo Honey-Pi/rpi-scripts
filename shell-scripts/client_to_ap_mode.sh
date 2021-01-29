@@ -2,7 +2,7 @@
 echo '>>> Stopping hostapd.service'
 (systemctl stop hostapd.service || (systemctl unmask hostapd && systemctl stop hostapd))& # if stop fails because service is masked => unmask
 
-systemctl restart dnsmasq 
+systemctl restart dnsmasq
 # Fetch current wifi channel
 echo '>>> Fetch current wifi channel'
 CHANNEL=`iwlist wlan0 channel | grep Current | sed 's/.*Channel \([0-9]*\).*/\1/g'`
@@ -44,10 +44,9 @@ sysctl net.ipv4.ip_forward=1
 iptables -t nat -A POSTROUTING -j MASQUERADE
 ifconfig wlan0 up
 
-echo '>>> Starting hostapd.service'
+echo '>>> Starting hostapd'
 (systemctl start hostapd.service || (systemctl unmask hostapd && systemctl start hostapd))& # if start fails because service is masked => unmask
 #wait for hostapd to crash dhcpcd and restart it
 sleep 5
 echo '>>> Restarting dhcpcd'
 systemctl restart dhcpcd
-

@@ -151,7 +151,7 @@ def main():
         # add the handlers to the logger
         logger.addHandler(fh)
         logger.addHandler(ch)
-        logger.info('HoneyPi Started. Debuglevel:' + logging.getLevelName(debuglevel) + ' Debuglevel logfile:' + logging.getLevelName(debuglevel_logfile))
+        logger.debug('HoneyPi Started. Debuglevel: ' + logging.getLevelName(debuglevel) + ' | Debuglevel logfile: ' + logging.getLevelName(debuglevel_logfile))
 
         time.sleep(5)
         if debuglevel <= 10:
@@ -174,16 +174,15 @@ def main():
 
         if debuglevel > 20:
             # stop HDMI power (save energy)
-            print("Info: Shutting down HDMI to save energy.")
             stop_tv()
             stop_hdd_led()
         else:
-            logger.info("Info: Raspberry Pi has been powered on.")
+            logger.info("Raspberry Pi has been powered on.")
             start_hdd_led()
 
-        logger.info("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
-        logger.info("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
-        logger.info("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
+        logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
+        logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
+        logger.debug("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
 
         # start as seperate background thread
         # because Taster pressing was not recognised

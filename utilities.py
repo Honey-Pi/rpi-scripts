@@ -64,7 +64,6 @@ def get_default_gateway_interface_linux():
                 return str(fields[0])
     except Exception as ex:
         logger.exception("Exception in get_default_gateway_interface_linux:" + repr(ex))
-        pass
         return None
 
 def get_interface_upstatus_linux(interfacename):
@@ -77,9 +76,11 @@ def get_interface_upstatus_linux(interfacename):
                     return True
                 else:
                     return False
+    except FileNotFoundError:
+        logger.warning("FileNotFoundError in get_interface_upstatus_linux for "+ str(interfacename))
+        return False
     except Exception as ex:
         logger.exception("Exception in get_interface_upstatus_linux:" + repr(ex))
-        pass
         return False
 
 def get_lsusb_linux():
@@ -101,7 +102,6 @@ def get_lsusb_linux():
 
     except Exception as ex:
         logger.exception("Exception in get_lsusb_linux:" + repr(ex))
-        pass
         return False
 
 def stop_tv():
@@ -447,7 +447,7 @@ def blockPrinting(func):
 
 def pause_wittypi_schedule():
     try:
-        if os.stat(wittypi_scheduleFile).st_size > 1:
+        if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1:
             os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
             update_wittypi_schedule("")
     except Exception as ex:
@@ -455,7 +455,7 @@ def pause_wittypi_schedule():
 
 def continue_wittypi_schedule():
     try:
-        if os.stat(wittypi_scheduleFile + ".bak").st_size > 1:
+        if os.path.isfile(wittypi_scheduleFile + ".bak") and os.path.isfile(wittypi_scheduleFile):
             if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
                 # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
                 os.rename(wittypi_scheduleFile + ".bak")
@@ -468,7 +468,7 @@ def continue_wittypi_schedule():
 
 def set_wittypi_schedule():
     try:
-        schedulefile_exists = os.stat(wittypi_scheduleFile).st_size > 1
+        schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1
         if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
             print("wittyPi 2 or wittyPi Mini detected.")
@@ -486,7 +486,7 @@ def set_wittypi_schedule():
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         else:
-            logger.debug("Info: WittyPi installation missing or incomplete")
+            logger.debug("No WittyPi software installed.")
 
     except Exception as ex:
         logger.exception("Error in function set_wittypi_schedule: " + repr(ex))
@@ -524,11 +524,11 @@ def getStateFromStorage(variable, default_value=False):
                     logger.debug("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
                     return content
                 else:
-                    logger.info("Variable '" + variable + "' has initial state because file is empty.")
+                    logger.debug("Variable '" + variable + "' has initial state because file is empty.")
                     return None
 
         else:
-            logger.info("Variable '" + variable + "' does not exists. default_value = " + str(default_value))
+            logger.debug("Variable '" + variable + "' does not exists. default_value = " + str(default_value))
     except Exception as ex:
         logger.exception("Error in function getStateFromStorage: " + repr(ex))
         pass

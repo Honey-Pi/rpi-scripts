@@ -91,7 +91,7 @@ def get_settings():
         with io.open(settingsFile, encoding="utf-8") as data_file:
             settings = json.loads(data_file.read())
     except Exception as ex:
-        logger.warning("Loading default settings because File does not exist.")
+        logger.debug("Loading default settings because settings.json file does not exist.")
         # FileNotFoundError: doesn't exist => default values
         # FileReadError / json.loads Error => default values
         settings = get_defaults()
