@@ -507,6 +507,18 @@ def update_wittypi_schedule(schedule):
 
     return False
 
+def write_modeswitch_rule(id):
+    try:
+        modeswitchfilename = '/etc/usb_modeswitch/'+id
+        # write values to file
+        modeswitchfile = open(modeswitchfilename, "w")
+        rule = "# Huawei E353 (3.se)\n" + "TargetVendor=" + "0x12d1" + "\n" + "TargetProduct=" + "0x1f01" +"\n" + "MessageContent=" +'"55534243123456780000000000000011062000000100000000000000000000"' + "\n" + "NoDriverLoading=1"
+        outfile.write(rule)
+        outfile.close()
+
+    except Exception as ex:
+        logger.exception("Error in function write_modeswitch_rule: " + repr(ex))
+
 def getStateFromStorage(variable, default_value=False):
     file = scriptsFolder + '/.' + variable
     try:
