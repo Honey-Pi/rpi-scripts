@@ -376,21 +376,25 @@ def error_log(e=None, printText=None):
         pass
 
 def check_undervoltage():
+    message = ""
     try:
         undervoltage = str(os.popen("sudo vcgencmd get_throttled").readlines())
         if "0x0" in undervoltage:
-            logger.debug("No undervoltage alarm")
+            message = "No undervoltage alarm"
+            logger.debug(message)
 
         elif "0x50000" in undervoltage:
-            logger.warning("Undervoltage alarm had happened since system start " + undervoltage)
+            message = "Undervoltage alarm had happened since system start " + undervoltage
+            logger.warning(message)
 
         elif "0x50005" in undervoltage:
-            logger.warning("Undervoltage alarm is currently raised " + undervoltage)
+            message = "Undervoltage alarm is currently raised " + undervoltage
+            logger.warning(message)
 
     except Exception as ex:
-        logger.exception("Exception in function check_undervoltage:" + repr(ex))
-        pass
-    return
+        message = "Exception in function check_undervoltage:" + repr(ex)
+        logger.exception(message)
+    return message
 
 def wait_for_internet_connection(maxTime=10):
     i = 0

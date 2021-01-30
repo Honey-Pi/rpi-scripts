@@ -5,16 +5,15 @@
 import json
 import os
 import io
-from utilities import error_log
+from utilities import error_log, check_undervoltage
 
 def diag():
     diag = ""
     try:
-        os.system("echo '\n\nUnterspannung seit Bootvorgang:' > /tmp/diag.txt")
-        os.system("sudo vcgencmd get_throttled >> /tmp/diag.txt")
-        os.system("echo '0x50000 = Unterspannung seit Systemstart' >> /tmp/diag.txt")
-        os.system("echo '0x50005 = Unterspannung seit Systemstart' >> /tmp/diag.txt")
-        os.system("echo '\n\nFirmware:' >> /tmp/diag.txt")
+        undervoltage = check_undervoltage()
+        os.system("echo '\nUndervoltage since boot:' > /tmp/diag.txt")
+        os.system("echo '" + undervoltage + "' >> /tmp/diag.txt")
+        os.system("echo '\nFirmware:' >> /tmp/diag.txt")
         os.system("sudo uname -a >> /tmp/diag.txt")
         os.system("echo '\nroute:' >> /tmp/diag.txt")
         os.system("sudo route >> /tmp/diag.txt")
