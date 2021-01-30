@@ -5,7 +5,10 @@
 import json
 import os
 import io
-from utilities import error_log, check_undervoltage
+from utilities import check_undervoltage
+import logging
+
+logger = logging.getLogger('HoneyPi.diag')
 
 def diag():
     diag = ""
@@ -35,8 +38,8 @@ def diag():
             diag = data_file.read()
         return diag
 
-    except Exception as e:
-        error_log(e, "Unhandled Exception in diag")
+    except Exception as ex:
+        logger.exception("Unhandled exception in diag" + repr(ex))
 
     # Error occured
     return diag
@@ -48,5 +51,5 @@ if __name__ == '__main__':
     except (KeyboardInterrupt, SystemExit):
         pass
 
-    except Exception as e:
-        error_log(e, "Unhandled Exception in diag")
+    except Exception as ex:
+        logger.exception("Unhandled exception in __main__" + repr(ex))

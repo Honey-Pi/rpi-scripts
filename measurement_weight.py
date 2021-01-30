@@ -6,15 +6,21 @@
 from read_hx711 import measure_weight
 from utilities import start_single, stop_single, blockPrinting, error_log
 import sys
+import logging
+
+logger = logging.getLogger('HoneyPi.measurement_weight')
 
 @blockPrinting
 def get_weight(sensor):
-    start_single()
-    weight = measure_weight(sensor)
-    stop_single()
+    try:
+        start_single()
+        weight = measure_weight(sensor)
+        stop_single()
 
-    # return weight in gramms
-    return weight
+        # return weight in gramms
+        return weight
+    except Exception as ex:
+        logger.exception("Unhandled exception in main" + repr(ex))
 
 if __name__ == '__main__':
     try:
@@ -31,5 +37,5 @@ if __name__ == '__main__':
     except (KeyboardInterrupt, SystemExit):
         pass
 
-    except Exception as e:
-        error_log(e, "Unhandled Exception in Weight Measurement")
+    except Exception as ex:
+        logger.exception("Unhandled exception in main" + repr(ex))

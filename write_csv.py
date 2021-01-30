@@ -7,14 +7,22 @@ import time
 import os, sys
 import io
 from datetime import datetime
-from utilities import scriptsFolder, check_file, error_log, clean_fields
+from utilities import scriptsFolder, check_file, clean_fields
+import logging
+
+logger = logging.getLogger('HoneyPi.write_csv')
+
+
 
 def write_csv(ts_fields, ts_channels):
-    success = True
-    for (channelIndex, channel) in enumerate(ts_channels, 0):
-        ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
-        success = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'])
-    return success
+    try:
+        success = True
+        for (channelIndex, channel) in enumerate(ts_channels, 0):
+            ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
+            success = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'])
+        return success
+    except Exception as ex:
+        logger.exception("Unhandled exception in write_csv" + repr(ex))
 
 def write_singlechannel_csv(ts_fields_cleaned, channelId):
     try:
@@ -39,7 +47,7 @@ def write_singlechannel_csv(ts_fields_cleaned, channelId):
 
         return True
     except IOError as ex1:
-        error_log(ex1, "Write-CSV IOError")
+        logger.exception("IOError in write_singlechannel_csv" + repr(ex1))
     except Exception as ex:
-        error_log(ex, "Write-CSV Exception")
+        logger.exception("Unhandled exception in write_singlechannel_csv" + repr(ex))
     return False
