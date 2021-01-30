@@ -130,7 +130,7 @@ def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowV
                                     logger.info("Enable wittyPi normal voltage settings!")
                                     update_wittypi_schedule(wittyPi["normal"]["schedule"])
                                 else:
-                                    logger.info("Info: Normal voltage but wittyPi disabled!")
+                                    logger.info("Normal voltage but wittyPi disabled!")
                                     update_wittypi_schedule("")
                                     interval = wittyPi["normal"]["interval"]
                                     shutdownAfterTransfer = wittyPi["normal"]["shutdownAfterTransfer"]
