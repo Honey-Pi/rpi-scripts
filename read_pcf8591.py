@@ -5,15 +5,18 @@
 import smbus
 import time
 from sensors.sensor_utilities import get_smbus
-from utilities import error_log
+import logging
+
+logger = logging.getLogger('HoneyPi.utilities')
+
 
 # Main Source: http://www.diyblueprints.net/measuring-voltage-with-raspberry-pi/#Measure_Voltage_Python
 
 def measure_voltage(ts_sensor):
     fields = {}
 
-    # I2C-address of YL-40 PCF8591
-    address = 0x48
+    # I2C-addr of YL-40 PCF8591
+    i2c_addr = 0x48
 
     try:
         # Create I2C instance and open the bus
@@ -36,12 +39,12 @@ def measure_voltage(ts_sensor):
             # convert 8 bit number to voltage
             factor = float(ts_sensor['I2CVoltage']) / 256
 
-        PCF8591.write_byte(address, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
+        PCF8591.write_byte(i2c_addr, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
 
         # measure once just for fun
-        _v = PCF8591.read_byte(address)
+        _v = PCF8591.read_byte(i2c_addr)
 
-        Voltage_8bit = PCF8591.read_byte(address) # = i2cget -y 1 0x48
+        Voltage_8bit = PCF8591.read_byte(i2c_addr) # = i2cget -y 1 0x48
         voltage = Voltage_8bit*factor # convert 8 bit number to voltage
 
         if 'ts_field' in ts_sensor and isinstance(voltage, (int, float)):
@@ -49,14 +52,14 @@ def measure_voltage(ts_sensor):
 
         return fields
 
-    except Exception as e:
-        error_log(e, 'Error while reading PCF8591 (Voltage). Is the Sensor connected?')
+    except Exception as ex:
+        logger.exception("Unhaldled exception while measure_voltage PCF8591 (Voltage) on I2C Adress '" + i2c_addr + "' Is the Sensor connected?" + repr(ex))
 
     return None
 
 def get_raw_voltage(ts_sensor):
-    # I2C-address of YL-40 PCF8591
-    address = 0x48
+    # I2C-addr of YL-40 PCF8591
+    i2c_addr = 0x48
 
     try:
         # Create I2C instance and open the bus
@@ -79,9 +82,9 @@ def get_raw_voltage(ts_sensor):
             # convert 8 bit number to voltage
             factor = float(ts_sensor['I2CVoltage']) / 256
 
-        PCF8591.write_byte(address, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
+        PCF8591.write_byte(i2c_addr, 0x40+pin) # set channel to AIN0, AIN1, AIN2 or AIN3
 
-        Voltage_8bit = PCF8591.read_byte(address) # = i2cget -y 1 0x48
+        Voltage_8bit = PCF8591.read_byte(i2c_addr) # = i2cget -y 1 0x48
         voltage = Voltage_8bit*factor # convert 8 bit number to voltage
 
         if isinstance(voltage, (int, float)):
@@ -89,7 +92,7 @@ def get_raw_voltage(ts_sensor):
 
         return voltage
 
-    except Exception as e:
-        print("Exception in get_raw_voltage: " + str(e))
+    except Exception as ex:
+        logger.exception("Unhaldled exception in get_raw_voltage / PCF8591 (Voltage) on I2C Adress '" + i2c_addr + "':" + repr(ex))
 
     return None
