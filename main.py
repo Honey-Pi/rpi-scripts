@@ -145,15 +145,15 @@ def main():
         ch = logging.StreamHandler()
         ch.setLevel(logging.getLevelName(debuglevel))
         # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         # add the handlers to the logger
         logger.addHandler(fh)
         logger.addHandler(ch)
-        logger.debug('HoneyPi Started. Debuglevel: ' + logging.getLevelName(debuglevel) + ' | Debuglevel logfile: ' + logging.getLevelName(debuglevel_logfile))
+        logger.debug('HoneyPi Started. Debuglevel: "' + logging.getLevelName(debuglevel) + '" , Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile)+'"')
 
-        time.sleep(5)
+        time.sleep(1)
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
         else:
