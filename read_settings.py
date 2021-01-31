@@ -18,7 +18,7 @@ def get_defaults():
     settings["button_pin"] = 16
     settings["led_pin"] = 21
     settings["w1gpio"] = 11
-    settings["debuglevel"] = 30
+    settings["debuglevel"] = 20
     settings["debuglevel_logfile"] = 20
     settings["offline"] = 0
     router = {}
