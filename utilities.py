@@ -479,6 +479,7 @@ def continue_wittypi_schedule():
 def set_wittypi_schedule():
     try:
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1
+        logger.info('Check files wittypi: ' + str(os.path.isfile(homeFolder + '/wittypi/wittyPi.sh')) + ' ' + str(os.path.isfile(homeFolder + '/wittypi/syncTime.sh')) +' ' + str(os.path.isfile(homeFolder + '/wittypi/runScript.sh')))
         if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
             # WittyPi 2
             logger.debug("wittyPi 2 or wittyPi Mini detected.")
@@ -489,7 +490,7 @@ def set_wittypi_schedule():
                 logger.debug("Disabling  wittyPi 2 schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
-        elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + ' /wittypi/runScript.sh'):
+        elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + '/wittypi/runScript.sh'):
             # WittyPi 3
             logger.debug("wittypi 3 or 3 Mini detected.")
             if schedulefile_exists:
