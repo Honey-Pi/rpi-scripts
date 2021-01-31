@@ -163,7 +163,7 @@ def measurement():
         logger.addHandler(fh)
         logger.addHandler(ch)
 
-        logger.info('Offline mesasurement started.')
+        logger.info('Offline measurement started.')
 
         # read configured sensors from settings.json
         ds18b20Sensors = get_sensors(settings, 0)
@@ -189,7 +189,7 @@ def measurement():
         return json.dumps(ts_fields)
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in local measurement: " + repr(ex))
+        logger.exception("Unhandled Exception in offline measurement: " + repr(ex))
 
     # Error occured
     return {}
