@@ -481,16 +481,20 @@ def set_wittypi_schedule():
             # WittyPi 2
             logger.debug("wittyPi 2 or wittyPi Mini detected.")
             if schedulefile_exists:
+                logger.debug("Setting  wittyPi 2 schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
+                logger.debug("Disabling  wittyPi 2 schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + ' /wittypi/runScript.sh'):
             # WittyPi 3
             logger.debug("wittypi 3 or 3 Mini detected.")
             if schedulefile_exists:
+                logger.debug("Setting  wittyPi 3 schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
+                logger.debug("Disabling  wittyPi 3 schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         else:
