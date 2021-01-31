@@ -47,7 +47,7 @@ def get_defaults():
     settings["sensors"] = []
     wittyPi = {}
     wittyPi["enabled"] = False
-    wittyPi["version"] = 2
+    wittyPi["version"] = 3
     wittyPi["dummyload"] = 15
     wittyPi["voltagecheck_enabled"] = False
     lowVoltage = {}
