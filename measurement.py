@@ -134,7 +134,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                 print(key + ": " + str(value))
         return ts_fields
     except Exception as ex:
-        logger.exception("Unhandled Exception in measure_all_sensors " + repr(ex))
+        logger.exception("Unhandled Exception in measure_all_sensors: " + repr(ex))
         return ts_fields
 
 def measurement():
@@ -154,7 +154,7 @@ def measurement():
         ch = logging.StreamHandler()
         ch.setLevel(logging.getLevelName(debuglevel))
         # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s- %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         # add the handlers to the logger
@@ -187,7 +187,7 @@ def measurement():
         return json.dumps(ts_fields)
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in measurement " + repr(ex))
+        logger.exception("Unhandled Exception in measurement: " + repr(ex))
 
     # Error occured
     return {}
@@ -201,4 +201,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as ex:
-        print("Unhandled Exception in __main__" + repr(ex))
+        print("Unhandled Exception in measurement __main__: " + repr(ex))
