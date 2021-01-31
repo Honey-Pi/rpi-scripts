@@ -149,7 +149,7 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
                         weight = weight - (compensation_value*delta)
                     logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' => TempDelta: ' + str(delta) + 'C WeightAfter: ' + str(weight) + 'g')
                 else:
-                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Temperature Compensation: No temperature in given field.')
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Temperature Compensation: No temperature in given field.')
 
     except Exception as e:
         logger.exception("Exeption while compensate_temperature: " + str(e))
@@ -273,7 +273,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
                 count_avg += 1
                 # use outliers_filter and do average over 41 measurements
                 num_measurements = 41
-                reading = hx.get_weight_mean(41)
+                reading = hx.get_weight_mean(num_measurements)
                 if debug:
                     logger.debug('Number of elements removed by filter within HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ' + str(hx.get_num_data_filtered_out()))
                 if isinstance(reading, (int, float)): # always check if you get correct value or only False
