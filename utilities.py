@@ -419,7 +419,7 @@ def check_internet_connection():
         response = str(urllib.request.urlopen('http://www.msftncsi.com/ncsi.txt', timeout=1).read().decode('utf-8'))
         if response == "Microsoft NCSI":
             return True
-    except:
+    except Exception as ex:
         logger.exception("Except check_internet_connection: Connection error." + repr(ex))
     return False
 
@@ -467,7 +467,6 @@ def continue_wittypi_schedule():
             if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
                 # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
                 os.remove(wittypi_scheduleFile + ".bak")
-                #continue
                 logger.debug("Continuing wittyPi schedule (someone saved a new schedule in maintenance).")
             else:
                 os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
@@ -510,11 +509,13 @@ def update_wittypi_schedule(schedule):
         outfile.truncate(0)
         outfile.write(schedule)
         outfile.close()
+        # set file rights
         uid = pwd.getpwnam("www-data").pw_uid
         gid = grp.getgrnam("www-data").gr_gid
         os.chown(wittypi_scheduleFile, uid, gid)
 
         set_wittypi_schedule()
+        return True
     except Exception as ex:
         logger.exception("Error in function update_wittypi_schedule: " + repr(ex))
 
