@@ -196,8 +196,7 @@ def measurement():
 
 if __name__ == '__main__':
     try:
-        ts_fields = measurement()
-        print (ts_fields)
+        print(measurement()) 
 
     except (KeyboardInterrupt, SystemExit):
         pass
