@@ -456,7 +456,7 @@ def pause_wittypi_schedule():
         if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1:
             os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
             update_wittypi_schedule("")
-            logger.debug("Pausing wittypischedule.")
+            logger.debug("Pausing wittyPi schedule...")
 
     except Exception as ex:
         logger.exception("Error in function pause_wittypi_schedule: " + repr(ex))
@@ -466,46 +466,41 @@ def continue_wittypi_schedule():
         if os.path.isfile(wittypi_scheduleFile + ".bak") and os.path.isfile(wittypi_scheduleFile):
             if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
                 # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
-                os.rename(wittypi_scheduleFile + ".bak")
+                os.remove(wittypi_scheduleFile + ".bak")
                 #continue
-                logger.debug("Continuing wittypischedule (if).")
+                logger.debug("Continuing wittyPi schedule (someone saved a new schedule in maintenance).")
             else:
                 os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
                 set_wittypi_schedule()
-                logger.debug("Continuing wittypischedule (else).")
+                logger.debug("Continuing wittyPi schedule...")
     except Exception as ex:
         logger.exception("Error in function continue_wittypi_schedule: " + repr(ex))
 
 def set_wittypi_schedule():
     try:
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1
-        logger.info('Check files wittypi: ' + str(os.path.isfile(homeFolder + '/wittypi/wittyPi.sh')) + ' ' + str(os.path.isfile(homeFolder + '/wittypi/syncTime.sh')) +' ' + str(os.path.isfile(homeFolder + '/wittypi/runScript.sh')))
-        if os.path.isfile(homeFolder + '/wittyPi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittyPi/syncTime.sh') and os.path.isfile(homeFolder + '/wittyPi/runScript.sh'):
-            # WittyPi 2
-            logger.debug("wittyPi 2 or wittyPi Mini detected.")
-            if schedulefile_exists:
-                logger.debug("Setting  wittyPi 2 schedule...")
-                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
-            else:
-                logger.debug("Disabling  wittyPi 2 schedule...")
-                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
-            return True
-        elif os.path.isfile(homeFolder + '/wittypi/wittyPi.sh') and os.path.isfile(homeFolder + '/wittypi/syncTime.sh') and os.path.isfile(homeFolder + '/wittypi/runScript.sh'):
-            # WittyPi 3
-            logger.debug("wittypi 3 or 3 Mini detected.")
-            if schedulefile_exists:
-                logger.debug("Setting  wittyPi 3 schedule...")
-                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
-            else:
-                logger.debug("Disabling  wittyPi 3 schedule...")
-                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
-            return True
+        wittyPiPath = ''
+        if os.path.exists(homeFolder + '/wittyPi'):
+            wittyPiPath = homeFolder + '/wittyPi'
+            logger.debug("wittyPi 2 or wittyPi Mini installation detected in: " + wittyPiPath)
+        elif os.path.exists(homeFolder + '/wittypi'):
+            wittyPiPath = homeFolder + '/wittypi'
+            logger.debug("wittypi 3 or 3 Mini installation detected in: " + wittyPiPath)
         else:
             logger.debug("No WittyPi software installed.")
 
+        if os.path.isfile(wittyPiPath + '/wittyPi.sh') and os.path.isfile(wittyPiPath + '/syncTime.sh') and os.path.isfile(wittyPiPath + '/runScript.sh'):
+            if schedulefile_exists:
+                logger.debug("Setting  wittyPi schedule...")
+                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
+            else:
+                logger.debug("Pausing  wittyPi schedule ...")
+                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
+            return True
+        else:
+            logger.debug('wittyPi installation is missing files - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
     except Exception as ex:
         logger.exception("Error in function set_wittypi_schedule: " + repr(ex))
-
     return False
 
 def update_wittypi_schedule(schedule):
