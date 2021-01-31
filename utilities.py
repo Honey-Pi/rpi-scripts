@@ -454,6 +454,8 @@ def pause_wittypi_schedule():
         if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1:
             os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
             update_wittypi_schedule("")
+            logger.debug("Pausing wittypischedule.")
+
     except Exception as ex:
         logger.exception("Error in function pause_wittypi_schedule: " + repr(ex))
 
@@ -464,9 +466,11 @@ def continue_wittypi_schedule():
                 # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
                 os.rename(wittypi_scheduleFile + ".bak")
                 #continue
+                logger.debug("Continuing wittypischedule (if).")
             else:
                 os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
                 set_wittypi_schedule()
+                logger.debug("Continuing wittypischedule (else).")
     except Exception as ex:
         logger.exception("Error in function continue_wittypi_schedule: " + repr(ex))
 
