@@ -81,8 +81,8 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             ts_fields.update(tc_temp)
 
         # measure BME280 (can only be two) [type 5]
-        for (sensorIndex, bme280Sensors) in enumerate(bme280Sensors):
-            bme280_values = measure_bme280(bme280Sensors[sensorIndex])
+        for (sensorIndex, bme280Sensor) in enumerate(bme280Sensors):
+            bme280_values = measure_bme280(bme280Sensor[sensorIndex])
             ts_fields.update(bme280_values)
 
         # measure YL-40 PFC8591 (can only be one) [type 6]
