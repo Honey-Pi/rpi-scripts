@@ -4,6 +4,8 @@
 
 import io
 import os
+import pwd
+import grp
 import sys
 import time
 from datetime import datetime
@@ -512,6 +514,9 @@ def update_wittypi_schedule(schedule):
         outfile.truncate(0)
         outfile.write(schedule)
         outfile.close()
+        uid = pwd.getpwnam("www-data").pw_uid
+        gid = grp.getgrnam("www-data").gr_gid
+        os.chown(wittypi_scheduleFile, uid, gid)
 
         set_wittypi_schedule()
     except Exception as ex:
