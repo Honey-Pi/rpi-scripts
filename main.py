@@ -151,7 +151,7 @@ def main():
         # add the handlers to the logger
         logger.addHandler(fh)
         logger.addHandler(ch)
-        logger.debug('HoneyPi Started. Debuglevel: "' + logging.getLevelName(debuglevel) + '" , Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile)+'"')
+        logger.debug('HoneyPi Started. Debuglevel: "' + logging.getLevelName(debuglevel) + '", Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile)+'"')
 
         time.sleep(1)
         if debuglevel <= 10:
@@ -203,8 +203,8 @@ def main():
             pass
 
         print("This text will never be printed.")
-    except Exception as e:
-        logger.critical("Unhandled Exception in main "+ repr(e))
+    except Exception as ex:
+        logger.critical("Unhandled Exception in main: " + repr(ex))
         if not debug:
             time.sleep(60)
             reboot()
@@ -216,8 +216,8 @@ if __name__ == '__main__':
     except (KeyboardInterrupt, SystemExit):
         close_script()
 
-    except Exception as e:
-        logger.error("Unhandled Exception in __main__ "+ repr(e))
+    except Exception as ex:
+        logger.error("Unhandled Exception in __main__ " + repr(ex))
         if not debug:
             time.sleep(60)
             reboot()

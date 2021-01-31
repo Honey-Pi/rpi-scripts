@@ -24,12 +24,11 @@ from read_sht31 import measure_sht31
 from read_hdc1008 import measure_hdc1008
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import start_single, stop_single, scriptsFolder
+from utilities import logfile, start_single, stop_single, scriptsFolder
 
 import logging
 
 logger = logging.getLogger('HoneyPi.measurement')
-logfile = scriptsFolder+'/measurement.log'
 
 def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits):
 
@@ -40,8 +39,8 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         try:
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 filter_temperatur_values(sensorIndex)
-        except Exception as e:
-           logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors filter_temperatur_values " + repr(e))
+        except Exception as ex:
+           logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors filter_temperatur_values: " + repr(ex))
 
         try:
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
@@ -61,8 +60,8 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                             ds18b20_temperature = ds18b20_temperature-float(sensor["offset"])
                         ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
                         ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
-        except Exception as e:
-            logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors " + repr(e))
+        except Exception as ex:
+            logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors " + repr(ex))
 
         # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
@@ -145,7 +144,7 @@ def measurement():
         # load settings
         settings = get_settings()
         debuglevel=int(settings["debuglevel"])
-        debuglevel_logfile=10
+        debuglevel_logfile=int(settings["debuglevel_logfile"])
 
         logger = logging.getLogger('HoneyPi')
         logger.setLevel(logging.DEBUG)
@@ -155,13 +154,13 @@ def measurement():
         ch = logging.StreamHandler()
         ch.setLevel(logging.getLevelName(debuglevel))
         # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s- %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         # add the handlers to the logger
         logger.addHandler(fh)
         logger.addHandler(ch)
-        logger.info('HoneyPi Mesasuremant Started. Debuglevel:' + logging.getLevelName(debuglevel) + ' Debuglevel logfile:' + logging.getLevelName(debuglevel_logfile))
+        logger.info('HoneyPi Mesasuremant Started. Debuglevel: "' + logging.getLevelName(debuglevel) + '", Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile) + '"')
 
         # read configured sensors from settings.json
         ds18b20Sensors = get_sensors(settings, 0)
@@ -187,8 +186,8 @@ def measurement():
         fh.close()
         return json.dumps(ts_fields)
 
-    except Exception as e:
-        logger.exception("Unhandled Exception in measurement " + repr(e))
+    except Exception as ex:
+        logger.exception("Unhandled Exception in measurement " + repr(ex))
 
     # Error occured
     return {}
@@ -197,11 +196,6 @@ if __name__ == '__main__':
     try:
         ts_fields = measurement()
         print (ts_fields)
-        print('\n')
-        #with open(logfile) as fh:
-            #for line in fh:
-            #    print(line)
-  
 
     except (KeyboardInterrupt, SystemExit):
         pass

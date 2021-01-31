@@ -219,8 +219,6 @@ def start_wvdial(settings):
                 surfsticks = json.loads(data_file.read())
         except Exception as ex:
             logger.exception("Exception in start_wvdial:" + repr(ex))
-            pass
-
 
         if founddevices:
             devicefound = False
@@ -325,7 +323,6 @@ def stop_single(file_path=".isActive"):
             logger.warning('stop_single: File does not exists.')
     except Exception as ex:
         logger.exception("Exception in stop_single:" + repr(ex))
-        pass
     finally:
         normal_nice()
 
@@ -420,7 +417,7 @@ def check_internet_connection():
         if response == "Microsoft NCSI":
             return True
     except Exception as ex:
-        logger.exception("Except check_internet_connection: Connection error." + repr(ex))
+        logger.exception("Exception check_internet_connection: " + repr(ex))
     return False
 
 def delete_settings():
