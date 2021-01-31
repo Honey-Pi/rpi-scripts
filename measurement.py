@@ -141,14 +141,16 @@ def measurement():
     # dict with all fields and values which will be tranfered to ThingSpeak later
     ts_fields = {}
     try:
-        # load settings
+
+        # read settings
         settings = get_settings()
+
         debuglevel=int(settings["debuglevel"])
         debuglevel_logfile=int(settings["debuglevel_logfile"])
 
-        logger = logging.getLogger('HoneyPi')
+        logger = logging.getLogger('HoneyPi.measurement')
         logger.setLevel(logging.DEBUG)
-        fh = logging.FileHandler(logfile, mode='w')
+        fh = logging.FileHandler(logfile)
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
         # create console handler with a higher log level
         ch = logging.StreamHandler()
@@ -160,7 +162,8 @@ def measurement():
         # add the handlers to the logger
         logger.addHandler(fh)
         logger.addHandler(ch)
-        logger.info('HoneyPi Mesasuremant Started. Debuglevel: "' + logging.getLevelName(debuglevel) + '", Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile) + '"')
+
+        logger.info('Offline mesasurement started.')
 
         # read configured sensors from settings.json
         ds18b20Sensors = get_sensors(settings, 0)
@@ -182,12 +185,11 @@ def measurement():
             bme680Inits.append(bme680Init)
 
         ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
-        logger.removeHandler(fh)
-        fh.close()
+
         return json.dumps(ts_fields)
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in measurement: " + repr(ex))
+        logger.exception("Unhandled Exception in local measurement: " + repr(ex))
 
     # Error occured
     return {}
@@ -201,4 +203,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as ex:
-        print("Unhandled Exception in measurement __main__: " + repr(ex))
+        logger.exception("Unhandled Exception in offline measurement __main__: " + repr(ex))
