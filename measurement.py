@@ -192,13 +192,10 @@ def measurement():
 
         ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
 
-        return json.dumps(ts_fields)
-
     except Exception as ex:
         logger.exception("Unhandled Exception in offline measurement: " + repr(ex))
 
-    # Error occured
-    return {}
+    return json.dumps(ts_fields)
 
 if __name__ == '__main__':
     try:

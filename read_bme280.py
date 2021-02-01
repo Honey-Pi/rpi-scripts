@@ -11,7 +11,7 @@ logger = logging.getLogger('HoneyPi.read_bme280')
 def measure_bme280(ts_sensor):
     fields = {}
 
-    i2c_addr = "0x76" # default value
+    i2c_addr = 0x76 # default value
     offset = 0
 
     try:
@@ -20,17 +20,15 @@ def measure_bme280(ts_sensor):
 
             if i2c_addr == "0x76":
                 logger.debug("BM2680 on I2C Adress '" + i2c_addr + "'")
+                i2c_addr = 0x76
             elif i2c_addr == "0x77":
                 logger.debug("BME280 on I2C Adress '" + i2c_addr + "'")
+                i2c_addr = 0x77
+            else:
+                logger.debug("Undefined BME280 I2C Adress '" + str(i2c_addr) + "'")
 
     except Exception as ex:
-        logger.exception("Error getting  I2C Adress, using default '" + i2c_addr + "' " + repr(ex))
-
-    try:
-        offset = float(ts_sensor["offset"])
-        logger.debug("BME280 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
-    except Exception as ex:
-        logger.exception("BME280 on I2C Adress '" + i2c_addr + "', no offset in configurtation " + repr(ex))
+        logger.exception("Error getting  I2C Adress, using default '" + str(i2c_addr) + "' " + repr(ex))
 
     try:
         temperature,pressure,humidity = readBME280All(i2c_addr)
@@ -39,14 +37,15 @@ def measure_bme280(ts_sensor):
         # Create returned dict if ts-field is defined
         if 'ts_field_temperature' in ts_sensor and isinstance(temperature, (int, float)):
             if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
-                temperature = temperature-ts_sensor["offset"]
+                offset = float(ts_sensor["offset"])
+                temperature = temperature-offset
             fields[ts_sensor["ts_field_temperature"]] = round(temperature, 2)
         if 'ts_field_humidity' in ts_sensor and isinstance(humidity, (int, float)):
             fields[ts_sensor["ts_field_humidity"]] = round(humidity, 2)
         if 'ts_field_air_pressure' in ts_sensor and isinstance(pressure, (int, float)):
             fields[ts_sensor["ts_field_air_pressure"]] = round(pressure, 2)
     except OSError:
-        logger.exception("No BME280 Sensor connected on I2C Adress '" + i2c_addr + "'")
+        logger.error("No BME280 Sensor connected on I2C Adress.")
     except Exception as ex:
         logger.exception("Unhandled Exception in measure_bme280: " + repr(ex))
 
