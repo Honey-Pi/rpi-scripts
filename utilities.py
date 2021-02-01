@@ -269,6 +269,7 @@ def reboot():
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     os.system("sudo systemctl disable dnsmasq.service")
+    logger.debug('HoneyPi rebooting...')
     os.system("sudo reboot")
 
 def shutdown():
@@ -277,6 +278,7 @@ def shutdown():
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     os.system("sudo systemctl disable dnsmasq.service")
+    logger.debug('HoneyPi shutting down...')
     os.system("sudo shutdown -h 0")
 
 def decrease_nice():

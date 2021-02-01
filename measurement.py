@@ -36,6 +36,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
     try:
 
         # measure every sensor with type 0 (Ds18b20)
+        logger.debug("Measurement for all configured sensors started...")
         try:
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 filter_temperatur_values(sensorIndex)
@@ -120,7 +121,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         start_single()
         for (i, sensor) in enumerate(weightSensors):
             if hxInits is not None:
-                weight = measure_weight(sensor, hxInits[i], debug)
+                weight = measure_weight(sensor, hxInits[i])
                 weight = compensate_temperature(sensor, weight, ts_fields)
                 ts_fields.update(weight)
             else:
@@ -130,9 +131,13 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         stop_single()
 
         # print all measurement values stored in ts_fields
+        logger.debug("Measurement for all configured sensors finished...")
+        
         if debug:
+            ts_fields_content = ""
             for key, value in ts_fields.items():
-                print(key + ": " + str(value))
+                ts_fields_content = ts_fields_content + key + ": " + str(value) + " "
+            logger.debug(ts_fields_content)
         return ts_fields
     except Exception as ex:
         logger.exception("Unhandled Exception in measure_all_sensors: " + repr(ex))

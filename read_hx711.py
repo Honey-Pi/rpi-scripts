@@ -168,13 +168,18 @@ def set_ts_field(weight_sensor, weight):
     except Exception as e:
         logger.exception('Error in set_ts_field: ' + str(e))
 
-def init_hx711(weight_sensor, debug=False):
+def init_hx711(weight_sensor):
     # HX711 GPIO
     pin_dt = 5
     pin_sck = 6
     channel = 'A'
     errorEncountered = False
     try:
+        try:
+            debug = weight_sensor["debug"]
+        except:
+            debug = False
+
         try:
             pin_dt = int(weight_sensor["pin_dt"])
             pin_sck = int(weight_sensor["pin_sck"])
@@ -190,8 +195,7 @@ def init_hx711(weight_sensor, debug=False):
                 GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
                 # Create an object hx which represents your real hx711 chip
                 hx = HX711(dout_pin=pin_dt, pd_sck_pin=pin_sck, select_channel=channel)
-                if debug:
-                    hx.set_debug_mode(flag=debug)
+                hx.set_debug_mode(flag=debug)
                 errorEncountered = hx.reset() # Before we start, reset the hx711 (not necessary)
                 if not errorEncountered:
                     logger.debug('Init HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
@@ -209,7 +213,7 @@ def init_hx711(weight_sensor, debug=False):
         logger.exception('Error in init_hx711: ' + str(e))
 
 
-def measure_weight(weight_sensor, hx=None, debug=False):
+def measure_weight(weight_sensor, hx=None):
     try:
         weight_sensor
     except Exception as e:
@@ -254,7 +258,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
             logger.debug('Initialized HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' again because shit data.')
             if hx:
                 hx.reset()
-            hx = init_hx711(weight_sensor, debug)
+            hx = init_hx711(weight_sensor)
 
         hx.power_up()
         hx.set_scale_ratio(scale_ratio=reference_unit)
@@ -274,8 +278,7 @@ def measure_weight(weight_sensor, hx=None, debug=False):
                 # use outliers_filter and do average over 41 measurements
                 num_measurements = 41
                 reading = hx.get_weight_mean(num_measurements)
-                if debug:
-                    logger.debug('Number of elements removed by filter within HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ' + str(hx.get_num_data_filtered_out()))
+                logger.debug('Number of elements removed by filter within HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ' + str(hx.get_num_data_filtered_out()))
                 if isinstance(reading, (int, float)): # always check if you get correct value or only False
                     weightMeasures.append(reading)
                     num_data_filtered_out = hx.get_num_data_filtered_out()

@@ -211,7 +211,7 @@ def start_measurement(measurement_stop):
         # if hx711 is set
         hxInits = []
         for (i, sensor) in enumerate(weightSensors):
-            _hx = init_hx711(sensor, debug)
+            _hx = init_hx711(sensor)
             hxInits.append(_hx)
 
         # PCF8591
