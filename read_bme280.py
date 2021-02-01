@@ -10,30 +10,29 @@ logger = logging.getLogger('HoneyPi.read_bme280')
 
 def measure_bme280(ts_sensor):
     fields = {}
+
     i2c_addr = "0x76" # default value
+    offset = 0
+
     try:
-        # setup BME280 sensor
-        try:
-            if 'i2c_addr' in ts_sensor:
-                i2c_addr = ts_sensor["i2c_addr"]
+        if 'i2c_addr' in ts_sensor:
+            i2c_addr = ts_sensor["i2c_addr"]
 
-                if i2c_addr == "0x76":
-                    logger.debug("'BME680 on I2C Adress '" + i2c_addr + "'")
-                elif i2c_addr == "0x77":
-                    logger.debug("'BME680 on I2C Adress '" + i2c_addr + "'")
+            if i2c_addr == "0x76":
+                logger.debug("BM2680 on I2C Adress '" + i2c_addr + "'")
+            elif i2c_addr == "0x77":
+                logger.debug("BME280 on I2C Adress '" + i2c_addr + "'")
 
-        except Exception as ex:
-            logger.exception("Error getting  I2C Adress, using default '" + i2c_addr + "'" + repr(ex))
-            pass
+    except Exception as ex:
+        logger.exception("Error getting  I2C Adress, using default '" + i2c_addr + "' " + repr(ex))
 
-        try:
-            offset = float(ts_sensor["offset"])
-            logger.debug("'BME280 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
-        except:
-            offset = 0
-            logger.exception("'BME280 on I2C Adress '" + i2c_addr + "', no offset in configurtation")
-            pass
+    try:
+        offset = float(ts_sensor["offset"])
+        logger.debug("BME280 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
+    except Exception as ex:
+        logger.exception("BME280 on I2C Adress '" + i2c_addr + "', no offset in configurtation " + repr(ex))
 
+    try:
         temperature,pressure,humidity = readBME280All(i2c_addr)
 
         # ThingSpeak fields
@@ -49,6 +48,6 @@ def measure_bme280(ts_sensor):
     except OSError:
         logger.exception("No BME280 Sensor connected on I2C Adress '" + i2c_addr + "'")
     except Exception as ex:
-        logger.exception("Unhandled Exception in measure_bme280 " + repr(ex))
+        logger.exception("Unhandled Exception in measure_bme280: " + repr(ex))
 
     return fields

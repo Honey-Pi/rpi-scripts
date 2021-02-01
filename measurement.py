@@ -82,8 +82,9 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         # measure BME280 (can only be two) [type 5]
         for (sensorIndex, bme280Sensor) in enumerate(bme280Sensors):
-            bme280_values = measure_bme280(bme280Sensor[sensorIndex])
-            ts_fields.update(bme280_values)
+            bme280_values = measure_bme280(bme280Sensor)
+            if bme280_values is not None:
+                ts_fields.update(bme280_values)
 
         # measure YL-40 PFC8591 (can only be one) [type 6]
         if voltageSensors and len(voltageSensors) == 1:
@@ -196,7 +197,7 @@ def measurement():
 
 if __name__ == '__main__':
     try:
-        print(measurement()) 
+        print(measurement())
 
     except (KeyboardInterrupt, SystemExit):
         pass

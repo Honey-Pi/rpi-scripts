@@ -12,8 +12,6 @@ import logging
 logger = logging.getLogger('HoneyPi.read_bme680')
 
 # global vars
-#sensor = None
-bme680IsConnected = 0
 gas_baseline = 0
 
 def initBME680(ts_sensor):
@@ -38,10 +36,10 @@ def initBME680(ts_sensor):
 
         try:
             offset = float(ts_sensor["offset"])
-            logger.debug("'BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
+            logger.debug("BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
         except:
             offset = 0
-            logger.debug("'BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
+            logger.debug("BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
 
         # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
         sensor.set_humidity_oversample(bme680.OS_2X)
