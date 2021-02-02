@@ -29,13 +29,16 @@ def initBME680(ts_sensor):
                 sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
             else:
                 logger.exception("Ivalid BME680 I2C Adress '" + i2c_addr + "'specified")
-                return None
+                return sensor
         except IOError as ex:
             if str(ex) == "[Errno 121] Remote I/O error":
-                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "'failed: Most likely wrong Sensor Chip-ID or sensor not connected. " + repr(ex))
+                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely wrong Sensor Chip-ID or sensor not connected.")
             else:
-                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "'failed" + repr(ex))
-
+                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed" + repr(ex))
+            return sensor
+        except Exception as ex:
+            logger.exception("Unhandled Exception initBME680 during initializing of BME680 on I2C Adress '" + i2c_addr + "' + repr(ex)")
+            return sensor
         offset = 0
         if 'offset' in ts_sensor:
             offset = float(ts_sensor["offset"])
