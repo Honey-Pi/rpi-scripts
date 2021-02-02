@@ -17,7 +17,7 @@ import requests
 import json
 
 from read_pcf8591 import measure_voltage, get_raw_voltage
-from read_bme680 import initBME680FromMain
+from read_bme680 import initBME680FromMain, burn_in_bme680
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
 
@@ -205,7 +205,11 @@ def start_measurement(measurement_stop):
         # -- Run Pre Configuration --
         # if bme680 is configured
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            bme680Init = initBME680FromMain(bme680Sensor)
+            bme680Init = {}
+            sensor = initBME680FromMain(bme680Sensor)
+            gas_baseline = burn_in_bme680(sensor, 30)
+            bme680Init['sensor'] = sensor
+            bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
 
         # if hx711 is set

@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger('HoneyPi.read_bme680')
 
 # global vars
-gas_baseline = 0
+#gas_baseline = 0
 
 def initBME680(ts_sensor):
     sensor = None
@@ -78,6 +78,7 @@ def burn_in_bme680(sensor, burn_in_time):
         curr_time = time.time()
 
         burn_in_data = []
+        logger.debug('Bruning in BME680 for Gas Baseline for ' + str(burn_in_time) + ' seconds')
         while curr_time - start_time < burn_in_time:
             curr_time = time.time()
             if sensor.get_sensor_data() and sensor.data.heat_stable:
@@ -90,7 +91,7 @@ def burn_in_bme680(sensor, burn_in_time):
             else:
                 time.sleep(0.4) # wait 400ms for heat_stable
         gas_baseline = sum(burn_in_data[-burn_in_time:]) / burn_in_time
-        #print('Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
+        logger.debug('Bruning in BME680 finished, Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
         return gas_baseline
     except NameError:
         logger.exception("Sensor BME680 is not connected.")
@@ -145,12 +146,12 @@ def calc_air_quality(sensor, gas_baseline):
         logger.exception("Unhandled Exception in calc_air_quality " + repr(ex))
     return 0
 
-def measure_bme680(sensor, ts_sensor, burn_in_time=30):
+def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
     # ThingSpeak fields
     # Create returned dict if ts-field is defined
     fields = {}
     try:
-        global gas_baseline
+        gas_baseline
         start_time = time.time()
         curr_time = time.time()
         max_time = 30 # max seconds to wait for heat_stable
@@ -169,6 +170,7 @@ def measure_bme680(sensor, ts_sensor, burn_in_time=30):
                     fields[ts_sensor["ts_field_air_pressure"]] = air_pressure
                 if 'ts_field_air_quality' in ts_sensor:
                     if not gas_baseline:
+                        logger.debug('BME680 Gas baseline did not exist, burning in')
                         gas_baseline = burn_in_bme680(sensor, burn_in_time)
                     # Calculate air_quality_score.
                     if gas_baseline:

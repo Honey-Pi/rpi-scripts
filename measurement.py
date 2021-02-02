@@ -12,7 +12,7 @@ import json
 
 import RPi.GPIO as GPIO
 
-from read_bme680 import measure_bme680, initBME680FromMain
+from read_bme680 import measure_bme680, initBME680FromMain, burn_in_bme680
 from read_bme280 import measure_bme280
 from read_ee895 import measure_ee895
 from read_pcf8591 import measure_voltage
@@ -66,9 +66,10 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            sensor = bme680Inits[sensorIndex]
+            sensor = bme680Inits[sensorIndex]['sensor']
+            gas_baseline = bme680Inits[sensorIndex]['gas_baseline']
             if bme680Inits[sensorIndex] != None:
-                bme680_values = measure_bme680(sensor, bme680Sensor, 30)
+                bme680_values = measure_bme680(sensor, gas_baseline, bme680Sensor, 30)
                 ts_fields.update(bme680_values)
 
         # measure every sensor with type 3 [DHT11/DHT22]
@@ -187,7 +188,11 @@ def measurement():
 
         # if bme680 is configured
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            bme680Init = initBME680FromMain(bme680Sensor)
+            bme680Init = {}
+            sensor = initBME680FromMain(bme680Sensor)
+            gas_baseline = burn_in_bme680(sensor, 30)
+            bme680Init['sensor'] = sensor
+            bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
 
         ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
