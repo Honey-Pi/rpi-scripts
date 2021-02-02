@@ -51,7 +51,7 @@ ip link set wlan0 up
 
 sleep 2 && echo '>>> Starting hostapd'
 # try it multiple times for raspberry zero
-(systemctl start hostapd.service || (sleep 5 && echo ">>> Starting hostapd 2" && systemctl start hostapd.service) || (sleep 5 && echo ">>> Starting hostapd 3" && systemctl start hostapd.service) || (sleep 5 && echo ">>> Starting hostapd 4" && hostapd /etc/hostapd/hostapd.conf))
+(systemctl start hostapd.service || (sleep 5 && echo ">>> Starting hostapd 2" && (systemctl unmask hostapd && systemctl start hostapd.service)) || (sleep 5 && echo ">>> Starting hostapd 3" && systemctl start hostapd.service) || (sleep 5 && echo ">>> Starting hostapd 4" && hostapd /etc/hostapd/hostapd.conf))
 # wait for hostapd to crash dhcpcd and restart it
 
 sleep 2 && echo '>>> Restarting dhcpcd'

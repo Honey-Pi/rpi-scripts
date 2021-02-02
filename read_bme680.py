@@ -25,10 +25,10 @@ def initBME680(ts_sensor):
 
             if i2c_addr == "0x76":
                 sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
-            if i2c_addr == "0x77":
+            elif i2c_addr == "0x77":
                 sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
             else:
-                logger.exception("Ivalid BME680 I2C Adress '" + i2c_addr + "'specified" + repr(ex))
+                logger.exception("Ivalid BME680 I2C Adress '" + i2c_addr + "'specified")
                 return None
         except IOError as ex:
             if str(ex) == "[Errno 121] Remote I/O error":
