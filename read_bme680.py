@@ -27,19 +27,19 @@ def initBME680(ts_sensor):
                 sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
             if i2c_addr == "0x77":
                 sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
-        except IOError:
-            # addess not found => try the opposite address (it might be the wrong value in i2c_addr)
-            if i2c_addr == "0x76":
-                sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY) # try opposite
-            if i2c_addr == "0x77":
-                sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY) # try opposite
+            else:
+                logger.exception("Ivalid BME680 I2C Adress '" + i2c_addr + "'specified" + repr(ex))
+                return None
+        except IOError as ex:
+            if str(ex) == "[Errno 121] Remote I/O error":
+                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "'failed: Most likely wrong Sensor Chip-ID or sensor not connected. " + repr(ex))
+            else:
+                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "'failed" + repr(ex))
 
-        try:
+        offset = 0
+        if 'offset' in ts_sensor:
             offset = float(ts_sensor["offset"])
-            logger.debug("BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
-        except:
-            offset = 0
-            logger.debug("BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
+        logger.debug("BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
 
         # These oversampling settings can be tweaked to change the balance between accuracy and noise in the data.
         sensor.set_humidity_oversample(bme680.OS_2X)
@@ -53,11 +53,6 @@ def initBME680(ts_sensor):
         sensor.select_gas_heater_profile(0)
 
         return sensor
-    except IOError as ex:
-        if str(ex) == "[Errno 121] Remote I/O error":
-            logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "'failed: Most likely wrong Sensor Chip-ID or sensor not connected. " + repr(ex))
-        else:
-            logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "'failed" + repr(ex))
     except Exception as ex:
         logger.exception("Unhandled Exception in initBME680 " + repr(ex))
     return sensor
