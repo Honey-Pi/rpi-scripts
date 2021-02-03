@@ -11,7 +11,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, get_default_gateway_linux, get_interface_upstatus_linux
+from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, start_wvdial, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model
 
 logger = logging.getLogger('HoneyPi.main')
 
@@ -153,13 +153,23 @@ def main():
         # add the handlers to the logger
         logger.addHandler(fh)
         logger.addHandler(ch)
-        logger.debug('HoneyPi Started. Debuglevel: "' + logging.getLevelName(debuglevel) + '", Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile)+'"')
 
         time.sleep(1)
+
         if debuglevel <= 10:
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
         else:
             debug = False # flag to enable debug mode (HDMI output enabled and no rebooting)
+
+        if debuglevel > 20:
+            # stop HDMI power (save energy)
+            logger.info('HoneyPi Started on ' + get_pi_model() + ', Debuglevel: "' + logging.getLevelName(debuglevel) + '", Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile)+'"')
+            stop_tv()
+            stop_hdd_led()
+        else:
+            logger.info('HoneyPi Started on ' + get_pi_model())
+            start_hdd_led()
+
 
         GPIO_BTN = settings["button_pin"]
         GPIO_LED = settings["led_pin"]
@@ -174,13 +184,6 @@ def main():
         # Call wvdial for surfsticks
         start_wvdial(settings)
 
-        if debuglevel > 20:
-            # stop HDMI power (save energy)
-            stop_tv()
-            stop_hdd_led()
-        else:
-            logger.info("Raspberry Pi has been powered on.")
-            start_hdd_led()
 
         logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
         logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))

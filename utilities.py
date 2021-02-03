@@ -109,12 +109,21 @@ def get_lsusb_linux():
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
 
+def get_pi_model():
+    model = ""
+    try:
+        with open('/proc/device-tree/model', 'r') as fh:
+            model = fh.readline()
+    except Exception as ex:
+        logger.exception("Exception in get_pi_model:" + repr(ex))
+    return model
+
 def is_zero():
     try:
-        with open('/proc/device-tree/model') as f:
-            if 'Zero' in f.read():
-                return True
-        return False
+        if 'Zero' in get_pi_model():
+            return True
+        else:
+            return False
     except Exception as ex:
         logger.exception("Exception in get_lsusb_linux:" + repr(ex))
 
@@ -269,7 +278,7 @@ def reboot():
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     os.system("sudo systemctl disable dnsmasq.service")
-    logger.debug('HoneyPi rebooting...')
+    logger.info('HoneyPi rebooting...')
     os.system("sudo reboot")
 
 def shutdown():
@@ -278,7 +287,7 @@ def shutdown():
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     os.system("sudo systemctl disable dnsmasq.service")
-    logger.debug('HoneyPi shutting down...')
+    logger.info('HoneyPi shutting down...')
     os.system("sudo shutdown -h 0")
 
 def decrease_nice():
