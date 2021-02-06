@@ -13,3 +13,4 @@ if [ "$(id -u)" != 0 ]; then
 fi
 
 echo '>>> Running post-upgrade script...'
+echo "postupdatefinished 1" >> /var/www/html/version.txt
