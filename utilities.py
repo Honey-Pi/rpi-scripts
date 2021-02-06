@@ -120,6 +120,20 @@ def get_rpiscripts_version():
         logger.exception("Exception in get_rpiscripts_version:" + repr(ex))
     return version
 
+def runpostupgradescript():
+    try:
+        runpostupgradescriptfile = scriptsFolder + '/' + get_rpiscripts_version() + '/post-upgrade.sh'
+        if os.path.isfile(runpostupgradescriptfile):
+            logger.warning("Unfinished post_upgrade found in : " + runpostupgradescriptfile + " Starting it again...")
+            process = subprocess.Popen(runpostupgradescriptfile, shell=True, stdout=subprocess.PIPE)
+            for line in process.stdout:
+                logger.debug(str(line).replace('\\n', ''))
+            process.wait()
+        else:
+            logger.debug(" No unfinished post_upgrade found in : " + runpostupgradescriptfile)
+    except Exception as ex:
+        logger.exception("Exception in runpostupgradescript:" + repr(ex))
+
 def get_pi_model():
     model = ""
     try:
