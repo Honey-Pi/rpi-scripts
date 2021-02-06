@@ -109,21 +109,49 @@ def get_lsusb_linux():
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
 
-def get_rpiscripts_version():
-    version = ""
+def get_version():
+    rpiscripts = ""
+    webinterface = ""
     lastinstalled = ""
+    postupdatefinished = "0"
     try:
         with open('/var/www/html/version.txt', 'r') as fh:
-            lastinstalled = fh.readline().strip()
-            version = fh.readline().strip().split()[1]
+            for line in fh:
+                #print(line)
+                if line.strip().split(": ")[0] == "last install on Raspi":
+                    lastinstalled = line.strip().split()[1]
+                elif line.strip().split()[0] == "rpi-scripts":
+                    rpiscripts = line.strip().split()[1]
+                elif line.strip().split()[0] == "rpi-webinterface":
+                    webinterface = line.strip().split()[1]
+                elif line.strip().split()[0] == "postupdatefinished":
+                    postupdatefinished = line.strip().split()[1]
+    except Exception as ex:
+        logger.exception("Exception in get_version:" + repr(ex))
+    return lastinstalled, rpiscripts, webinterface, postupdatefinished
+
+def get_postupdatefinished():
+    postupdatefinished = False
+    try:
+        lastinstalled, rpiscripts, webinterface, postupdatefinished = get_version()
+        postupdatefinished = int(postupdatefinished)
+        if postupdatefinished == 1:
+            postupdatefinished = True
+        return postupdatefinished
     except Exception as ex:
         logger.exception("Exception in get_rpiscripts_version:" + repr(ex))
-    return version
+
+def get_rpiscripts_version():
+    try:
+        lastinstalled, rpiscripts, webinterface, postupdatefinished = get_version()
+        return rpiscripts
+    except Exception as ex:
+        logger.exception("Exception in get_rpiscripts_version:" + repr(ex))
 
 def runpostupgradescript():
     try:
         runpostupgradescriptfile = scriptsFolder + '/' + get_rpiscripts_version() + '/post-upgrade.sh'
-        if os.path.isfile(runpostupgradescriptfile):
+        if os.path.isfile(runpostupgradescriptfile) and not get_postupdatefinished():
             logger.warning("Unfinished post_upgrade found in : " + runpostupgradescriptfile + " Starting it again...")
             process = subprocess.Popen(runpostupgradescriptfile, shell=True, stdout=subprocess.PIPE)
             for line in process.stdout:
