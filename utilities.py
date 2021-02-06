@@ -127,7 +127,7 @@ def runpostupgradescript():
             logger.warning("Unfinished post_upgrade found in : " + runpostupgradescriptfile + " Starting it again...")
             process = subprocess.Popen(runpostupgradescriptfile, shell=True, stdout=subprocess.PIPE)
             for line in process.stdout:
-                logger.debug(str(line).replace('\\n', ''))
+                logger.info(line.decode("utf-8"))
             process.wait()
         else:
             logger.debug(" No unfinished post_upgrade found in : " + runpostupgradescriptfile)
