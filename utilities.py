@@ -117,9 +117,10 @@ def get_version():
     try:
         with open('/var/www/html/version.txt', 'r') as fh:
             for line in fh:
-                #print(line)
-                if line.strip().split(": ")[0] == "last install on Raspi":
-                    lastinstalled = line.strip().split()[1]
+                print(line)
+                if line.strip().split(": ")[0] == "HoneyPi (last install on Raspi":
+                    print(line)
+                    lastinstalled = line.strip().split(": ")[1].replace(")", "")
                 elif line.strip().split()[0] == "rpi-scripts":
                     rpiscripts = line.strip().split()[1]
                 elif line.strip().split()[0] == "rpi-webinterface":
