@@ -109,6 +109,17 @@ def get_lsusb_linux():
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
 
+def get_rpiscripts_version():
+    version = ""
+    lastinstalled = ""
+    try:
+        with open('/var/www/html/version.txt', 'r') as fh:
+            lastinstalled = fh.readline().strip()
+            version = fh.readline().strip().split()[1]
+    except Exception as ex:
+        logger.exception("Exception in get_rpiscripts_version:" + repr(ex))
+    return version
+
 def get_pi_model():
     model = ""
     try:
