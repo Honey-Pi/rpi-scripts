@@ -4,7 +4,10 @@
 
 import Adafruit_DHT
 import os
+import logging
 os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
+
+logger = logging.getLogger('HoneyPi.read_dht')
 
 def measure_dht(ts_sensor):
     fields = {}
@@ -36,10 +39,10 @@ def measure_dht(ts_sensor):
                 humidity = float("{0:.2f}".format(humidity))
                 fields[ts_sensor["ts_field_humidity"]] = humidity
 
-        except Exception as e:
-            print("Reading DHT failed (DHT: " + str(dht_type) + "/" + str(sensorDHT) +", GPIO: " + str(pin) + "): " + str(e))
+        except Exception as ex:
+            logger.exception("Reading DHT failed (DHT: " + str(dht_type) + "/" + str(sensorDHT) + ", GPIO: " + str(pin))
 
-    except Exception as e:
-        print("DHT missing param: " + str(e))
+    except Exception as ex1:
+        logger.error("DHT missing param: " + repr(ex1))
 
     return fields
