@@ -135,13 +135,16 @@ def calc_air_quality(sensor, gas_baseline):
 
         else:
             gas_score = 100 - (hum_weighting * 100)
+            #Current gas value is greater than existing gas baseline value -> gas baseline value requires to be set to new value!
+            logger.debug("Current gas value: " + str(round(gas, 4)) + " is greater than existing gas baseline value: " + str(round(gas_baseline, 4)) + " Air quality increased since startup!")
+            gas_baseline = gas
 
         # Calculate air_quality_score.
         air_quality_score = hum_score + gas_score
         absoluteHumidity = computeAbsoluteHumidity(hum, temp)
 
         logger.debug('BME680 Gas: {0:.2f} Ohms, humidity: {1:.2f} %RH, air quality: {2:.2f}, absolute humidity: {3:.2f} g/m³'.format(gas,hum,air_quality_score,absoluteHumidity))
-        return air_quality_score
+        return air_quality_score, gas_baseline
     except Exception as ex:
         logger.exception("Unhandled Exception in calc_air_quality " + repr(ex))
     return 0
@@ -174,11 +177,11 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
                         gas_baseline = burn_in_bme680(sensor, burn_in_time)
                     # Calculate air_quality_score.
                     if gas_baseline:
-                        air_quality_score = calc_air_quality(sensor, gas_baseline)
+                        air_quality_score, gas_baseline = calc_air_quality(sensor, gas_baseline)
                         # round to 0 digits
                         fields[ts_sensor["ts_field_air_quality"]] = int(round(air_quality_score, 0))
 
-                return fields
+                return fields, gas_baseline
             # Waiting for heat_stable
             time.sleep(0.4)
        # error
