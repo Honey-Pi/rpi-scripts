@@ -31,7 +31,7 @@ def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
 
         return any(c == True for c in connectionErrorWithinAnyChannel)
     except Exception as ex:
-        logger.exception('Exception in transfer_all_channels_to_ts ' + repr(ex))
+        logger.exception("Exception in transfer_all_channels_to_ts")
 
 def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug):
     # do-while to retry failed transfer

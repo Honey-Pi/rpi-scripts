@@ -47,7 +47,7 @@ def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug):
 
         return connectionErrorHappened
     except Exception as ex:
-        logger.exception("Exception during manage_transfer_to_ts: " + repr(ex))
+        logger.exception("Exception during manage_transfer_to_ts")
 
 def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
@@ -61,7 +61,7 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
                     if s and debug:
                         logger.info("Data succesfully saved to CSV-File.")
                 except Exception as ex:
-                    logger.exception("Exception in measure / write_csv)" + repr(ex))
+                    logger.exception("Exception in measure / write_csv")
 
             # if transfer to thingspeak is set
             if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
@@ -90,11 +90,9 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
         elif debug:
             logger.info("No measurement data to send.")
 
-        measurementIsRunning.value = 0 # clear flag
-
     except Exception as ex:
-        logger.exception("Exception during measure (outer): " + repr(ex))
-        measurementIsRunning.value = 0 # clear flag
+        logger.exception("Exception during measure (outer).")
+    measurementIsRunning.value = 0 # clear flag
 
 def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer):
     try:
@@ -148,7 +146,7 @@ def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowV
 
         return (time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage)
     except Exception as ex:
-        logger.exception("Exception during check_wittypi_voltage: " + repr(ex))
+        logger.exception("Exception during check_wittypi_voltage")
         measurementIsRunning.value = 0 # clear flag
 
 def start_measurement(measurement_stop):
@@ -289,7 +287,7 @@ def start_measurement(measurement_stop):
         print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in start_measurement: " + repr(ex))
+        logger.exception("Unhandled Exception in start_measurement")
         if not debug:
             time.sleep(10)
             reboot()

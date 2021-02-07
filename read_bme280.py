@@ -28,7 +28,7 @@ def measure_bme280(ts_sensor):
                 logger.debug("Undefined BME280 I2C Adress '" + str(i2c_addr) + "'")
 
     except Exception as ex:
-        logger.exception("Error getting  I2C Adress, using default '" + str(i2c_addr) + "' " + repr(ex))
+        logger.error("Error getting I2C Adress, using default: '" + str(i2c_addr))
 
     try:
         temperature,pressure,humidity = readBME280All(i2c_addr)
@@ -47,6 +47,6 @@ def measure_bme280(ts_sensor):
     except OSError:
         logger.error("No BME280 Sensor connected on I2C Adress.")
     except Exception as ex:
-        logger.exception("Unhandled Exception in measure_bme280: " + repr(ex))
+        logger.exception("Unhandled Exception in measure_bme280")
 
     return fields

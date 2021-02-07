@@ -39,7 +39,7 @@ def diag():
         return diag
 
     except Exception as ex:
-        logger.exception("Unhandled exception in diag" + repr(ex))
+        logger.exception("Unhandled exception in diag")
 
     # Error occured
     return diag
@@ -52,4 +52,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as ex:
-        logger.exception("Unhandled exception in __main__" + repr(ex))
+        logger.exception("Unhandled exception in __main__")

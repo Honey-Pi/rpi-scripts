@@ -305,6 +305,6 @@ def write_settings(settings):
         outfile.close()
         return True
     except Exception as ex:
-        logger.exception("Exception in function write_settings " + repr(ex))
+        logger.exception("Exception in function write_settings")
 
     return False

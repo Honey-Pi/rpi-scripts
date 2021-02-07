@@ -33,7 +33,7 @@ def get_ip_address(ifname):
         ipv4 = os.popen('ip addr show ' + ifname + ' | grep "\<inet\>" | awk \'{ print $2 }\' | awk -F "/" \'{ print $1 }\'').read().strip()
         return(ipv4)
     except Exception as ex:
-        logger.exception("Exception in get_ip_address:" + repr(ex))
+        logger.exception("Exception in get_ip_address")
         pass
         return None
 
@@ -49,7 +49,7 @@ def get_default_gateway_linux():
 
                 return socket.inet_ntoa(struct.pack("<L", int(fields[2], 16)))
     except Exception as ex:
-        logger.exception("Exception in get_default_gateway_linux:" + repr(ex))
+        logger.exception("Exception in get_default_gateway_linux")
         pass
         return None
 
@@ -65,7 +65,7 @@ def get_default_gateway_interface_linux():
 
                 return str(fields[0])
     except Exception as ex:
-        logger.exception("Exception in get_default_gateway_interface_linux:" + repr(ex))
+        logger.exception("Exception in get_default_gateway_interface_linux")
         return None
 
 def get_interface_upstatus_linux(interfacename):
@@ -82,7 +82,7 @@ def get_interface_upstatus_linux(interfacename):
         logger.warning("FileNotFoundError in get_interface_upstatus_linux for "+ str(interfacename))
         return False
     except Exception as ex:
-        logger.exception("Exception in get_interface_upstatus_linux:" + repr(ex))
+        logger.exception("Exception in get_interface_upstatus_linux")
         return False
 
 def get_lsusb_linux():
@@ -103,7 +103,7 @@ def get_lsusb_linux():
         return devices
 
     except Exception as ex:
-        logger.exception("Exception in get_lsusb_linux:" + repr(ex))
+        logger.exception("Exception in get_lsusb_linux")
         return False
 
 def stop_tv():
@@ -128,7 +128,7 @@ def get_version():
                 elif line.strip().split()[0] == "postupdatefinished":
                     postupdatefinished = line.strip().split()[1]
     except Exception as ex:
-        logger.exception("Exception in get_version:" + repr(ex))
+        logger.exception("Exception in get_version")
     return lastinstalled, rpiscripts, webinterface, postupdatefinished
 
 def get_postupdatefinished():
@@ -140,14 +140,14 @@ def get_postupdatefinished():
             postupdatefinished = True
         return postupdatefinished
     except Exception as ex:
-        logger.exception("Exception in get_rpiscripts_version:" + repr(ex))
+        logger.exception("Exception in get_rpiscripts_version")
 
 def get_rpiscripts_version():
     try:
         lastinstalled, rpiscripts, webinterface, postupdatefinished = get_version()
         return rpiscripts
     except Exception as ex:
-        logger.exception("Exception in get_rpiscripts_version:" + repr(ex))
+        logger.exception("Exception in get_rpiscripts_version")
 
 def runpostupgradescript():
     try:
@@ -161,7 +161,7 @@ def runpostupgradescript():
         else:
             logger.debug(" No unfinished post_upgrade found in : " + runpostupgradescriptfile)
     except Exception as ex:
-        logger.exception("Exception in runpostupgradescript:" + repr(ex))
+        logger.exception("Exception in runpostupgradescript")
 
 def get_pi_model():
     model = ""
@@ -169,7 +169,7 @@ def get_pi_model():
         with open('/proc/device-tree/model', 'r') as fh:
             model = fh.readline()
     except Exception as ex:
-        logger.exception("Exception in get_pi_model:" + repr(ex))
+        logger.exception("Exception in get_pi_model")
     return model
 
 def is_zero():
@@ -179,7 +179,7 @@ def is_zero():
         else:
             return False
     except Exception as ex:
-        logger.exception("Exception in get_lsusb_linux:" + repr(ex))
+        logger.exception("Exception in get_lsusb_linux")
 
 def get_led_state(gpio=21):
    state = GPIO.input(gpio)
@@ -281,7 +281,7 @@ def start_wvdial(settings):
             with io.open(surfstick_file, encoding="utf-8") as data_file:
                 surfsticks = json.loads(data_file.read())
         except Exception as ex:
-            logger.exception("Exception in start_wvdial:" + repr(ex))
+            logger.exception("Exception in start_wvdial")
 
         if founddevices:
             devicefound = False
@@ -316,7 +316,7 @@ def start_wvdial(settings):
         else:
             logger.debug('Modem is enabled: ' + str(modemisenabled) + ' Modem path: ' + str(modempath) + ' Modem APN: ' + modemapn)
     except Exception as ex:
-        logger.exception("Exception in start_wvdial:" + repr(ex))
+        logger.exception("Exception in start_wvdial")
 
 def client_to_ap_mode():
     pause_wittypi_schedule()
@@ -373,7 +373,7 @@ def start_single(file_path=".isActive"):
         # create file to stop other HX711 readings
         f = open(file, "x")
     except Exception as ex:
-        logger.exception("Exception in start_single:" + repr(ex))
+        logger.exception("Exception in start_single")
         pass
     finally:
         decrease_nice()
@@ -387,7 +387,7 @@ def stop_single(file_path=".isActive"):
         else:
             logger.warning('stop_single: File does not exists.')
     except Exception as ex:
-        logger.exception("Exception in stop_single:" + repr(ex))
+        logger.exception("Exception in stop_single")
     finally:
         normal_nice()
 
@@ -411,7 +411,7 @@ def check_file(file, size=5, entries=25, skipFirst=0):
     except FileNotFoundError:
         pass
     except Exception as ex:
-        logger.exception("Exception in check_file:" + repr(ex))
+        logger.exception("Exception in check_file")
 
 def error_log(e=None, printText=None):
     try:
@@ -482,7 +482,7 @@ def check_internet_connection():
         if response == "Microsoft NCSI":
             return True
     except Exception as ex:
-        logger.exception("Exception check_internet_connection: " + repr(ex))
+        logger.exception("Exception check_internet_connection")
     return False
 
 def delete_settings():
@@ -521,7 +521,7 @@ def pause_wittypi_schedule():
             logger.debug("Pausing wittyPi schedule...")
 
     except Exception as ex:
-        logger.exception("Error in function pause_wittypi_schedule: " + repr(ex))
+        logger.exception("Error in function pause_wittypi_schedule")
 
 def continue_wittypi_schedule():
     try:
@@ -535,7 +535,7 @@ def continue_wittypi_schedule():
                 set_wittypi_schedule()
                 logger.debug("Continuing wittyPi schedule...")
     except Exception as ex:
-        logger.exception("Error in function continue_wittypi_schedule: " + repr(ex))
+        logger.exception("Error in function continue_wittypi_schedule")
 
 def set_wittypi_schedule():
     try:
@@ -561,7 +561,7 @@ def set_wittypi_schedule():
         else:
             logger.debug('wittyPi installation is missing files - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
     except Exception as ex:
-        logger.exception("Error in function set_wittypi_schedule: " + repr(ex))
+        logger.exception("Error in function set_wittypi_schedule")
     return False
 
 def update_wittypi_schedule(schedule):
@@ -579,7 +579,7 @@ def update_wittypi_schedule(schedule):
         set_wittypi_schedule()
         return True
     except Exception as ex:
-        logger.exception("Error in function update_wittypi_schedule: " + repr(ex))
+        logger.exception("Error in function update_wittypi_schedule")
 
     return False
 
@@ -593,7 +593,7 @@ def write_modeswitch_rule(id):
         outfile.close()
 
     except Exception as ex:
-        logger.exception("Error in function write_modeswitch_rule: " + repr(ex))
+        logger.exception("Error in function write_modeswitch_rule")
 
 def getStateFromStorage(variable, default_value=False):
     file = scriptsFolder + '/.' + variable
@@ -618,7 +618,7 @@ def getStateFromStorage(variable, default_value=False):
         else:
             logger.debug("Variable '" + variable + "' does not exists. default_value = " + str(default_value))
     except Exception as ex:
-        logger.exception("Error in function getStateFromStorage: " + repr(ex))
+        logger.exception("Error in function getStateFromStorage")
         pass
     return default_value
 
@@ -628,6 +628,6 @@ def setStateToStorage(variable, value):
         with open(file, 'w') as f:
             print(value, file=f)
     except Exception as ex:
-        logger.exception("Error in function setStateToStorage: " + repr(ex))
+        logger.exception("Error in function setStateToStorage")
         pass
     return value

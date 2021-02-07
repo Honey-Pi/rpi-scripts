@@ -32,7 +32,7 @@ def takeClosest(myList, myNumber):
                 closest = myList[i]
         return closest
     except Exception as e:
-        logger.exception('Error in takeClosest: ' + str(e))
+        logger.exception('Error in takeClosest.')
 
 def average(myList):
     # Finding the average of a list
@@ -40,7 +40,7 @@ def average(myList):
         total = sum(myList)
         return total / len(myList)
     except Exception as e:
-        logger.exception('Error in average: ' + str(e))
+        logger.exception('Error in average.')
 
 
 def findmax(myList):
@@ -52,7 +52,7 @@ def findmax(myList):
                 maximum = myList[i]
         return maximum
     except Exception as e:
-        logger.exception('Error in findmax: ' + str(e))
+        logger.exception('Error in findmax.')
 
 def findmin(myList):
     # from list of integers, get number closest to a given value
@@ -63,7 +63,7 @@ def findmin(myList):
                 minimum = myList[i]
         return minimum
     except Exception as e:
-        logger.exception('Error in findmin: ' + str(e))
+        logger.exception('Error in findmin.')
 
 
 def easy_weight(weight_sensor):
@@ -80,7 +80,7 @@ def easy_weight(weight_sensor):
         reference_unit = float(weight_sensor["reference_unit"])
         offset = int(weight_sensor["offset"])
     except Exception as e:
-        logger.exception('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' missing param: ' + str(e))
+        logger.error('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' missing param: ' + str(e))
 
     try:
         GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
@@ -94,7 +94,7 @@ def easy_weight(weight_sensor):
             return round(weight, 1)
 
     except Exception as e:
-        logger.exception('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Fallback failed: ' + str(e))
+        logger.error('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Fallback failed: ' + str(e))
 
     finally:
         pass
@@ -107,8 +107,8 @@ def get_temp(weight_sensor, ts_fields):
             field_name = weight_sensor["ts_field_temperature"]
             return float(ts_fields[field_name])
 
-    except Exception as e:
-        logger.exception("Exeption while getting temperature field: " + str(e))
+    except Exception as ex:
+        logger.error("Exeption while getting temperature field: " + repr(ex))
 
     return None
 
@@ -126,7 +126,7 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
         reference_unit = float(weight_sensor["reference_unit"])
         offset = int(weight_sensor["offset"])
     except Exception as e:
-        logger.exception('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' compensate_temperature missing param: ' + str(e))
+        logger.error('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' compensate_temperature missing param: ' + str(e))
     try:
         if 'compensation' in weight_sensor:
             compensation = weight_sensor["compensation"]
@@ -151,8 +151,8 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
                 else:
                     logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Temperature Compensation: No temperature in given field.')
 
-    except Exception as e:
-        logger.exception("Exeption while compensate_temperature: " + str(e))
+    except Exception as ex:
+        logger.exception("Exeption in compensate_temperature")
 
     return set_ts_field(weight_sensor, weight)
 
@@ -165,8 +165,8 @@ def set_ts_field(weight_sensor, weight):
             if 'ts_field' in weight_sensor:
                 return ({weight_sensor["ts_field"]: weight})
         return {}
-    except Exception as e:
-        logger.exception('Error in set_ts_field: ' + str(e))
+    except Exception as ex:
+        logger.exception('Unhandled Exception in set_ts_field.')
 
 def init_hx711(weight_sensor):
     # HX711 GPIO
@@ -185,7 +185,7 @@ def init_hx711(weight_sensor):
             pin_sck = int(weight_sensor["pin_sck"])
             channel = weight_sensor["channel"]
         except Exception as e:
-            logger.exception("init_hx711 missing param: " + str(e))
+            logger.error("init_hx711 missing param: " + str(e))
 
         logger.debug('Init HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' started')
         loops = 0
@@ -210,14 +210,14 @@ def init_hx711(weight_sensor):
         logger.error('Returning empty HX711 for DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
         return None
     except Exception as e:
-        logger.exception('Error in init_hx711: ' + str(e))
+        logger.exception("Unhandled Exception in init_hx711")
 
 
 def measure_weight(weight_sensor, hx=None):
     try:
         weight_sensor
     except Exception as e:
-        logger.exception("measure_weight is missing param weight_sensor: " + str(e))
+        logger.error("measure_weight is missing param weight_sensor: " + str(e))
 
     if 'reference_unit' in weight_sensor:
         reference_unit = float(weight_sensor["reference_unit"])

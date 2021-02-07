@@ -53,7 +53,7 @@ def measure_voltage(ts_sensor):
         return fields
 
     except Exception as ex:
-        logger.exception("Unhaldled exception while measure_voltage PCF8591 (Voltage) on I2C Adress '" + i2c_addr + "' Is the Sensor connected?" + repr(ex))
+        logger.exception("Unhaldled exception while measure_voltage PCF8591 (Voltage) on I2C Adress '" + i2c_addr + "' Is the Sensor connected?")
 
     return None
 
@@ -93,6 +93,6 @@ def get_raw_voltage(ts_sensor):
         return voltage
 
     except Exception as ex:
-        logger.exception("Unhaldled exception in get_raw_voltage / PCF8591 (Voltage) on I2C Adress '" + i2c_addr + "':" + repr(ex))
+        logger.exception("Unhaldled exception in get_raw_voltage / PCF8591 (Voltage) on I2C Adress '" + i2c_addr + "'")
 
     return None

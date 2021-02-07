@@ -20,7 +20,7 @@ def get_weight(sensor):
         # return weight in gramms
         return weight
     except Exception as ex:
-        logger.exception("Unhandled exception in get_weight: " + repr(ex))
+        logger.exception("Unhandled exception in get_weight")
 
 if __name__ == '__main__':
     try:
@@ -38,4 +38,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as ex:
-        logger.exception("Unhandled exception in measurement_weight main: " + repr(ex))
+        logger.exception("Unhandled exception in measurement_weight main")

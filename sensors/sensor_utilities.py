@@ -38,7 +38,7 @@ def isSMBusConnected():
         bus = smbus.SMBus(get_smbus())
         return 1
     except Exception as ex:
-        logger.exception("Unhandled Exception in isSMBusConnected " + repr(ex))
+        logger.exception("Unhandled Exception in isSMBusConnected")
         pass
     return 0
 

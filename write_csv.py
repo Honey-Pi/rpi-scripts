@@ -22,7 +22,7 @@ def write_csv(ts_fields, ts_channels):
             success = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'])
         return success
     except Exception as ex:
-        logger.exception("Unhandled exception in write_csv" + repr(ex))
+        logger.exception("Unhandled exception in write_csv")
 
 def write_singlechannel_csv(ts_fields_cleaned, channelId):
     try:
@@ -47,7 +47,7 @@ def write_singlechannel_csv(ts_fields_cleaned, channelId):
 
         return True
     except IOError as ex1:
-        logger.exception("IOError in write_singlechannel_csv" + repr(ex1))
+        logger.error("IOError in write_singlechannel_csv: " + repr(ex1))
     except Exception as ex:
-        logger.exception("Unhandled exception in write_singlechannel_csv" + repr(ex))
+        logger.exception("Unhandled exception in write_singlechannel_csv")
     return False

@@ -28,16 +28,16 @@ def initBME680(ts_sensor):
             elif i2c_addr == "0x77":
                 sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
             else:
-                logger.exception("Ivalid BME680 I2C Adress '" + i2c_addr + "'specified")
+                logger.error("Ivalid BME680 I2C Adress '" + i2c_addr + "' specified.")
                 return sensor
         except IOError as ex:
             if str(ex) == "[Errno 121] Remote I/O error":
-                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely wrong Sensor Chip-ID or sensor not connected.")
+                logger.error("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely wrong Sensor Chip-ID or sensor not connected.")
             else:
-                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed" + repr(ex))
+                logger.error("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: " + repr(ex))
             return sensor
         except Exception as ex:
-            logger.exception("Unhandled Exception initBME680 during initializing of BME680 on I2C Adress '" + i2c_addr + "' + repr(ex)")
+            logger.exception("Unhandled Exception initBME680 during initializing of BME680")
             return sensor
         offset = 0
         if 'offset' in ts_sensor:
@@ -57,7 +57,7 @@ def initBME680(ts_sensor):
 
         return sensor
     except Exception as ex:
-        logger.exception("Unhandled Exception in initBME680 " + repr(ex))
+        logger.exception("Unhandled Exception in initBME680")
     return sensor
 
 def initBME680FromMain(ts_sensor):
@@ -94,11 +94,11 @@ def burn_in_bme680(sensor, burn_in_time):
         logger.debug('Bruning in BME680 finished, Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
         return gas_baseline
     except NameError:
-        logger.exception("Sensor BME680 is not connected.")
+        logger.error("Sensor BME680 is not connected.")
     except KeyboardInterrupt:
-        logger.exception("Burning BME680 interruped by Keyboard.")
+        logger.error("Burning BME680 interruped by Keyboard.")
     except Exception as ex:
-        logger.exception("Unhandled Exception in burn_in_bme680 " + repr(ex))
+        logger.exception("Unhandled Exception in burn_in_bme680")
     return None
 
 def calc_air_quality(sensor, gas_baseline):
@@ -143,7 +143,7 @@ def calc_air_quality(sensor, gas_baseline):
         logger.debug('BME680 Gas: {0:.2f} Ohms, humidity: {1:.2f} %RH, air quality: {2:.2f}, absolute humidity: {3:.2f} g/m³'.format(gas,hum,air_quality_score,absoluteHumidity))
         return air_quality_score
     except Exception as ex:
-        logger.exception("Unhandled Exception in calc_air_quality " + repr(ex))
+        logger.exception("Unhandled Exception in calc_air_quality")
     return 0
 
 def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
@@ -183,5 +183,5 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
             time.sleep(0.4)
        # error
     except Exception as ex:
-        logger.exception("Unhandled Exception in calc_air_quality " + repr(ex))
+        logger.exception("Unhandled Exception in calc_air_quality")
     return fields

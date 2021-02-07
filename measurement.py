@@ -41,7 +41,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
                 filter_temperatur_values(sensorIndex)
         except Exception as ex:
-           logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors filter_temperatur_values: " + repr(ex))
+           logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors filter_temperatur_values")
 
         try:
             for (sensorIndex, sensor) in enumerate(ds18b20Sensors):
@@ -62,7 +62,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                         ds18b20_temperature = float("{0:.2f}".format(ds18b20_temperature)) # round to two decimals
                         ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
         except Exception as ex:
-            logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors " + repr(ex))
+            logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors")
 
         # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
@@ -133,7 +133,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         # print all measurement values stored in ts_fields
         logger.debug("Measurement for all configured sensors finished...")
-        
+
         if debug:
             ts_fields_content = ""
             for key, value in ts_fields.items():
@@ -141,7 +141,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             logger.debug(ts_fields_content)
         return ts_fields
     except Exception as ex:
-        logger.exception("Unhandled Exception in measure_all_sensors: " + repr(ex))
+        logger.exception("Unhandled Exception in measure_all_sensors")
         return ts_fields
 
 def measurement():
@@ -198,7 +198,7 @@ def measurement():
         ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in offline measurement: " + repr(ex))
+        logger.exception("Unhandled Exception in offline measurement")
 
     return json.dumps(ts_fields)
 
@@ -210,4 +210,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in offline measurement __main__: " + repr(ex))
+        logger.exception("Unhandled Exception in offline measurement __main__")
