@@ -42,7 +42,7 @@ def average(myList):
     except Exception as e:
         logger.exception('Error in average: ' + str(e))
 
-    
+
 def findmax(myList):
     # from list of integers, get number closest to a given value
     try:
@@ -53,7 +53,7 @@ def findmax(myList):
         return maximum
     except Exception as e:
         logger.exception('Error in findmax: ' + str(e))
-    
+
 def findmin(myList):
     # from list of integers, get number closest to a given value
     try:
@@ -231,7 +231,7 @@ def measure_weight(weight_sensor, hx=None):
     pin_dt = 0
     pin_sck = 0
     channel = ''
-    
+
     try:
         pin_dt = int(weight_sensor["pin_dt"])
         pin_sck = int(weight_sensor["pin_sck"])
@@ -327,7 +327,7 @@ def measure_weight(weight_sensor, hx=None):
 
     except Exception as e:
         if str(e) == "no median for empty data":
-            logger.exception('Could not read enough data from HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ')
+            logger.error('Could not read enough data from HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
         else:
             logger.error('Reading HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
     finally:
