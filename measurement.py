@@ -12,7 +12,7 @@ import json
 
 import RPi.GPIO as GPIO
 
-from read_bme680 import measure_bme680, initBME680FromMain, burn_in_bme680
+from read_bme680 import measure_bme680, initBME680FromMain, burn_in_bme680, burn_in_time
 from read_bme280 import measure_bme280
 from read_ee895 import measure_ee895
 from read_pcf8591 import measure_voltage
@@ -148,6 +148,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 def measurement():
     # dict with all fields and values which will be tranfered to ThingSpeak later
     ts_fields = {}
+    global burn_in_time
     try:
 
         # read settings
@@ -190,8 +191,10 @@ def measurement():
         # if bme680 is configured
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
             bme680Init = {}
+            if 'burn_in_time' in bme680Sensor:
+                burn_in_time = bme680Sensor["burn_in_time"]
             sensor = initBME680FromMain(bme680Sensor)
-            gas_baseline = burn_in_bme680(sensor, 30)
+            gas_baseline = burn_in_bme680(sensor, burn_in_time)
             bme680Init['sensor'] = sensor
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)

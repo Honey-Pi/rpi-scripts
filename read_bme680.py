@@ -13,6 +13,7 @@ logger = logging.getLogger('HoneyPi.read_bme680')
 
 # global vars
 #gas_baseline = 0
+burn_in_time = 2 #reduced burn_in_time to 2 seconds as the default 30 seconds from pimoroni are used for a measurment each second which puts the internal heater to a much higher temperature, which will never be reached with our measurement cycle
 
 def initBME680(ts_sensor):
     sensor = None
@@ -54,6 +55,7 @@ def initBME680(ts_sensor):
         sensor.set_gas_heater_temperature(320)
         sensor.set_gas_heater_duration(150)
         sensor.select_gas_heater_profile(0)
+        sensor.set_power_mode(bme680.FORCED_MODE)
 
         return sensor
     except Exception as ex:
@@ -78,7 +80,7 @@ def burn_in_bme680(sensor, burn_in_time):
         curr_time = time.time()
 
         burn_in_data = []
-        logger.debug('Bruning in BME680 for Gas Baseline for ' + str(burn_in_time) + ' seconds')
+        logger.debug('Burning in BME680 for Gas Baseline for ' + str(burn_in_time) + ' seconds')
         while curr_time - start_time < burn_in_time:
             curr_time = time.time()
             if sensor.get_sensor_data() and sensor.data.heat_stable:
@@ -91,7 +93,7 @@ def burn_in_bme680(sensor, burn_in_time):
             else:
                 time.sleep(0.4) # wait 400ms for heat_stable
         gas_baseline = sum(burn_in_data[-burn_in_time:]) / burn_in_time
-        logger.debug('Bruning in BME680 finished, Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
+        logger.debug('Burning in BME680 finished, Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
         return gas_baseline
     except NameError:
         logger.error("Sensor BME680 is not connected.")
@@ -110,7 +112,6 @@ def calc_air_quality(sensor, gas_baseline):
         hum_weighting = 0.25
 
         temp = sensor.data.temperature
-
         gas = sensor.data.gas_resistance
         gas_offset = gas_baseline - gas
 
