@@ -49,11 +49,11 @@ def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug):
     except Exception as ex:
         logger.exception("Exception during manage_transfer_to_ts")
 
-def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
     ts_fields = {}
     try:
-        ts_fields = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680IsInitialized, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits)
+        ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits)
         if len(ts_fields) > 0:
             if offline == 1 or offline == 3:
                 try:
@@ -93,6 +93,9 @@ def measure(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds
     except Exception as ex:
         logger.exception("Exception during measure (outer).")
     measurementIsRunning.value = 0 # clear flag
+    #print("put")
+    #q.put(bme680Inits, False)
+    #print("afterput")
 
 def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer):
     try:
@@ -257,9 +260,14 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
+                    #print("start")
+                    #bme680Inits = q.get_nowait()
+                    #print("get" + bme680Inits)
                     p.join()
+                    #print("join")
+                    
                 else:
                     logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")
 

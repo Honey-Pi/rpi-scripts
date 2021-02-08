@@ -33,6 +33,7 @@ logger = logging.getLogger('HoneyPi.measurement')
 def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits):
 
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
+    global burn_in_time
     try:
 
         # measure every sensor with type 0 (Ds18b20)
@@ -66,12 +67,16 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
-            sensor = bme680Inits[sensorIndex]['sensor']
-            gas_baseline = bme680Inits[sensorIndex]['gas_baseline']
             if bme680Inits[sensorIndex] != None:
-                bme680_values, gas_baseline = measure_bme680(sensor, gas_baseline, bme680Sensor, 30)
+                print(bme680Inits)
+                bme680Init = bme680Inits[sensorIndex]
+                sensor = bme680Init['sensor']
+                gas_baseline = bme680Init['gas_baseline']
+                bme680_values, gas_baseline = measure_bme680(sensor, gas_baseline, bme680Sensor, burn_in_time)
                 ts_fields.update(bme680_values)
-                bme680Inits[sensorIndex]['gas_baseline'] = gas_baseline
+                bme680Init['gas_baseline'] = gas_baseline
+                bme680Inits[sensorIndex]=bme680Init
+                print(bme680Inits)
 
         # measure every sensor with type 3 [DHT11/DHT22]
         for (i, sensor) in enumerate(dhtSensors):
@@ -140,10 +145,10 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             for key, value in ts_fields.items():
                 ts_fields_content = ts_fields_content + key + ": " + str(value) + " "
             logger.debug(ts_fields_content)
-        return ts_fields
+        return ts_fields, bme680Inits
     except Exception as ex:
         logger.exception("Unhandled Exception in measure_all_sensors")
-        return ts_fields
+        return ts_fields, bme680Inits
 
 def measurement():
     # dict with all fields and values which will be tranfered to ThingSpeak later
@@ -199,7 +204,7 @@ def measurement():
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
 
-        ts_fields = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
+        ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
 
     except Exception as ex:
         logger.exception("Unhandled Exception in offline measurement")
