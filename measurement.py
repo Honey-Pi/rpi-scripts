@@ -15,7 +15,7 @@ import RPi.GPIO as GPIO
 from read_bme680 import measure_bme680, initBME680FromMain, burn_in_bme680, burn_in_time
 from read_bme280 import measure_bme280
 from read_ee895 import measure_ee895
-from read_pcf8591 import measure_voltage
+from read_pcf8591 import measure_pcf8591
 from read_ds18b20 import measure_temperature, filter_temperatur_values
 from read_hx711 import measure_weight, compensate_temperature
 from read_dht import measure_dht
@@ -30,7 +30,7 @@ import logging
 
 logger = logging.getLogger('HoneyPi.measurement')
 
-def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits):
+def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits):
 
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     global burn_in_time
@@ -94,11 +94,12 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if bme280_values is not None:
                 ts_fields.update(bme280_values)
 
-        # measure YL-40 PFC8591 (can only be one) [type 6]
-        if voltageSensors and len(voltageSensors) == 1:
-            voltage = measure_voltage(voltageSensors[0])
-            if voltage is not None:
-                ts_fields.update(voltage)
+        # measure YL-40 PCF8591 (can only be one) [type 6]
+        for (i, sensor) in enumerate(pcf8591Sensors):
+            print(" measure YL-40 PCF8591" + str(sensor))
+            pcf8591_values = measure_pcf8591(sensor)
+            if pcf8591_values is not None:
+                ts_fields.update(pcf8591_values)
 
         # measure EE895 (can only be one) [type 7]
         if ee895Sensors and len(ee895Sensors) == 1:
@@ -186,7 +187,7 @@ def measurement():
         dhtSensors = get_sensors(settings, 3)
         tcSensors = get_sensors(settings, 4)
         bme280Sensors = get_sensors(settings, 5)
-        voltageSensors = get_sensors(settings, 6)
+        pcf8591Sensors = get_sensors(settings, 6)
         ee895Sensors = get_sensors(settings, 7)
         aht10Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
@@ -204,7 +205,7 @@ def measurement():
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
 
-        ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, None)
+        ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, None)
 
     except Exception as ex:
         logger.exception("Unhandled Exception in offline measurement")

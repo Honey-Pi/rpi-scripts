@@ -16,7 +16,7 @@ import RPi.GPIO as GPIO
 import requests
 import json
 
-from read_pcf8591 import measure_voltage, get_raw_voltage
+from read_pcf8591 import get_raw_voltage
 from read_bme680 import initBME680FromMain, burn_in_bme680, burn_in_time
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
@@ -49,11 +49,11 @@ def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug):
     except Exception as ex:
         logger.exception("Exception during manage_transfer_to_ts")
 
-def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
     ts_fields = {}
     try:
-        ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits)
+        ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits)
         if len(ts_fields) > 0:
             if offline == 1 or offline == 3:
                 try:
@@ -97,15 +97,16 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
     #q.put(bme680Inits, False)
     #print("afterput")
 
-def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer):
+def check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowVoltage, interval, shutdownAfterTransfer, pcf8591Sensorforvoltagecheck=0):
     try:
         if wittyPi["voltagecheck_enabled"] and wittyPi["enabled"]:
             intervalVoltageCheck = 60
             time_now = time.time()
             isTimeToCheckVoltage = (time_now-time_measured_Voltage >= intervalVoltageCheck)
             if isTimeToCheckVoltage:
-                if voltageSensors and len(voltageSensors) == 1:
-                    voltage = get_raw_voltage(voltageSensors[0])
+                if pcf8591Sensors and len(pcf8591Sensors) > 0:
+                    print(str(pcf8591Sensors[pcf8591Sensorforvoltagecheck]))
+                    voltage = get_raw_voltage(pcf8591Sensors[pcf8591Sensorforvoltagecheck])
                     if voltage is not None:
                         now = time.strftime("%H:%M", time.localtime(time_now))
                         logger.debug("Voltage Check at " + str(now) + ": " + str(voltage) + " Volt")
@@ -142,7 +143,7 @@ def check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowV
                     else:
                         logger.error("Voltagesensor did not return a value!")
                 else:
-                    logger.error("WittyPi Voltage checks enabled but no VoltageSensors configured")
+                    logger.error("WittyPi Voltage checks enabled but no pcf8591Sensors configured")
                     time_measured_Voltage = time.time()
             else:
                 logger.debug("No Voltage Check due")
@@ -197,7 +198,7 @@ def start_measurement(measurement_stop):
         dhtSensors = get_sensors(settings, 3)
         tcSensors = get_sensors(settings, 4)
         bme280Sensors = get_sensors(settings, 5)
-        voltageSensors = get_sensors(settings, 6)
+        pcf8591Sensors = get_sensors(settings, 6)
         ee895Sensors = get_sensors(settings, 7)
         aht10Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
@@ -223,8 +224,8 @@ def start_measurement(measurement_stop):
             hxInits.append(_hx)
 
         # PCF8591
-        if voltageSensors and len(voltageSensors) == 1:
-            voltage = get_raw_voltage(voltageSensors[0]) # initial measurement as first measurement is always wrong
+        if pcf8591Sensors and len(pcf8591Sensors) == 1:
+            voltage = get_raw_voltage(pcf8591Sensors[0]) # initial measurement as first measurement is always wrong
 
         # -- End Pre Configuration --
 
@@ -243,7 +244,7 @@ def start_measurement(measurement_stop):
                 if 'device_id' in sensor:
                     read_unfiltered_temperatur_values(sensorIndex, sensor)
 
-            time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage = check_wittypi_voltage(time_measured_Voltage, wittyPi, voltageSensors, isLowVoltage, interval, shutdownAfterTransfer)
+            time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage = check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowVoltage, interval, shutdownAfterTransfer)
 
             # wait seconds of interval before next check
             # free ThingSpeak account has an upload limit of 15 seconds
@@ -260,7 +261,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, voltageSensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     #print("start")
                     #bme680Inits = q.get_nowait()
