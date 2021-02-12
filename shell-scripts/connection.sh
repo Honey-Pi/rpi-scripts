@@ -60,17 +60,7 @@ start_wvdial () {
 }
 
 # main routine
-if [ "$1" = "run" ] ; then
-	if [ -f /var/run/connection.pid ] ; then
-		if ( ps -p $(cat /var/run/connection.pid) | grep pts ) ; then
-			echo ">>>Process already running with PID $(cat /var/run/connection.pid)..."
-		else
-			echo ">>>Pid file existed but process was dead!"
-			echo $$ >/var/run/connection.pid
-			wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
-		fi
-	else
-		echo $$ >/var/run/connection.pid
+run () {
 		while true; do
 			# Run usb_modewitch rule for specific surfsticks
 			connect_modems
@@ -83,6 +73,19 @@ if [ "$1" = "run" ] ; then
 			reconnect_modem "12d1" "14dc"
 			reconnect_modem "12d1" "1506"
 		done
+}
+if [ "$1" = "run" ] ; then
+	if [ -f /var/run/connection.pid ] ; then
+		if ( ps -p $(cat /var/run/connection.pid) | grep pts ) ; then
+			echo ">>>Process already running with PID $(cat /var/run/connection.pid)..."
+		else
+			echo ">>>Pid file existed but process was dead!"
+			echo $$ >/var/run/connection.pid
+			run
+		fi
+	else
+		echo $$ >/var/run/connection.pid
+		run
 	fi
 elif [ "$1" = "start" ] ; then
 	if [ -f /var/run/connection.pid ] ; then
@@ -91,11 +94,11 @@ elif [ "$1" = "start" ] ; then
 		else
 			echo ">>>Pid file existed but process with PID $(cat /var/run/connection.pid) was dead!"
 			echo $$ >/var/run/connection.pid
-			wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
+			run
 		fi
 	else
 		echo $$ >/var/run/connection.pid
-		wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
+		run
 	fi
 elif [ "$1" = "stop" ] ; then
 	if [ -f /var/run/connection.pid ] ; then
