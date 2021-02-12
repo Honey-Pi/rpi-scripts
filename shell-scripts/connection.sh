@@ -61,24 +61,48 @@ start_wvdial () {
 
 # main routine
 if [ "$1" = "run" ] ; then
-    while true; do
-		# Run usb_modewitch rule for specific surfsticks
-		connect_modems
-		# Check if wvdial process is running
-		start_wvdial
-    sleep 180
-		# Kill a old wvdial process if ppp0 does not show up anymore
-    kill_old_wvdial
-    sleep 5
-		reconnect_modem "12d1" "14dc"
-		reconnect_modem "12d1" "1506"
-    done
+	if [ -f /var/run/connection.pid ] ; then
+		if ( ps -p $(cat /var/run/connection.pid) | grep pts ) ; then
+			echo ">>>Process already running with PID $(cat /var/run/connection.pid)..."
+		else
+			echo ">>>Pid file existed but process was dead!"
+			echo $$ >/var/run/connection.pid
+			wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
+		fi
+	else
+		echo $$ >/var/run/connection.pid
+		while true; do
+			# Run usb_modewitch rule for specific surfsticks
+			connect_modems
+			# Check if wvdial process is running
+			start_wvdial
+		sleep 180
+			# Kill a old wvdial process if ppp0 does not show up anymore
+		kill_old_wvdial
+		sleep 5
+			reconnect_modem "12d1" "14dc"
+			reconnect_modem "12d1" "1506"
+		done
+	fi
 elif [ "$1" = "start" ] ; then
-    wvdial &
-
+	if [ -f /var/run/connection.pid ] ; then
+		if ( ps -p $(cat /var/run/connection.pid) | grep pts ) ; then
+			echo ">>>Process already running with PID $(cat /var/run/connection.pid)..."
+		else
+			echo ">>>Pid file existed but process with PID $(cat /var/run/connection.pid) was dead!"
+			echo $$ >/var/run/connection.pid
+			wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
+		fi
+	else
+		echo $$ >/var/run/connection.pid
+		wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
+	fi
 elif [ "$1" = "stop" ] ; then
-    killall wvdial
-
+	if [ -f /var/run/connection.pid ] ; then
+		killall wvdial
+		kill -9 $(cat /var/run/connection.pid)
+		rm /var/run/connection.pid
+	fi
 elif [ "$1" = "set-apn" ] ; then
     if [ -z "$2" ] ; then
     	echo "Warning: Missing argument APN."
