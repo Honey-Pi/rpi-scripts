@@ -76,14 +76,12 @@ def get_interface_upstatus_linux(interfacename):
                 status= line.strip()
                 if status == "up":
                     return True
-                else:
-                    return False
     except FileNotFoundError:
-        logger.warning("FileNotFoundError in get_interface_upstatus_linux for "+ str(interfacename))
-        return False
+        #logger.warning("FileNotFoundError in get_interface_upstatus_linux for " + str(interfacename))
+        pass
     except Exception as ex:
         logger.exception("Exception in get_interface_upstatus_linux")
-        return False
+    return False
 
 def get_lsusb_linux():
     try:
@@ -138,7 +136,7 @@ def get_postupdatefinished():
             postupdatefinished = True
         return postupdatefinished
     except Exception as ex:
-        logger.exception("Exception in get_rpiscripts_version")
+        logger.exception("Exception in get_postupdatefinished")
 
 def get_rpiscripts_version():
     try:
@@ -151,13 +149,13 @@ def runpostupgradescript():
     try:
         runpostupgradescriptfile = scriptsFolder + '/' + get_rpiscripts_version() + '/post-upgrade.sh'
         if os.path.isfile(runpostupgradescriptfile) and not get_postupdatefinished():
-            logger.warning("Unfinished post_upgrade found in : " + runpostupgradescriptfile + " Starting it again...")
+            logger.warning("Unfinished post_upgrade found in '" + runpostupgradescriptfile + "' Starting it again...")
             process = subprocess.Popen(runpostupgradescriptfile, shell=True, stdout=subprocess.PIPE)
             for line in process.stdout:
                 logger.info(line.decode("utf-8"))
             process.wait()
         else:
-            logger.debug(" No unfinished post_upgrade found in : " + runpostupgradescriptfile)
+            logger.debug("A finished post_upgrade found in (all good): " + runpostupgradescriptfile)
     except Exception as ex:
         logger.exception("Exception in runpostupgradescript")
 
@@ -259,62 +257,80 @@ def blink_led(gpio=21, duration=0.25):
     time.sleep(duration)
     stop_led(gpio)
 
-def start_wvdial(settings):
+def run_wvdial(modem):
+    modemapn = modem['apn']
+    modempath = str(modem['ttyUSB'])
+    founddevices = get_lsusb_linux()
+    #print(founddevices)
+    surfsticks = {}
+
+    surfstick_file = Path(scriptsFolder + '/surfstick.json')
+    surfstick_abs_path = surfstick_file.resolve()
+
     try:
-        internet = {}
-        internet = settings['internet']
-        modem = {}
-        modem = internet['modem']
-        modemapn = modem['apn']
-        modempath = str(modem['ttyUSB'])
-        modemisenabled = modem['enabled']
-        founddevices = get_lsusb_linux()
-        #print(founddevices)
-        surfsticks = {}
-
-        surfstick_file = Path(scriptsFolder + '/surfstick.json')
-        surfstick_abs_path = surfstick_file.resolve()
-
-        try:
-            with io.open(surfstick_file, encoding="utf-8") as data_file:
-                surfsticks = json.loads(data_file.read())
-        except Exception as ex:
-            logger.exception("Exception in start_wvdial")
-        if modemisenabled:
-            if founddevices:
-                devicefound = False
-                for device in founddevices:
-                    deviceid = device['id']
-                    for surfstick in surfsticks:
-                        surfstickmodemid = surfstick['id']
-                        surfstickstorgaeid = surfstick['id-storage']
-                        if deviceid == surfstickmodemid:
-                            if os.path.exists('/dev/'+ modempath):
-                                logger.debug('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'])
-                                devicefound = True
-                                break
-                            else:
-                                if surfstick['modem'] != modempath:
-                                    if os.path.exists('/dev/'+ surfstick['modem']):
-                                        logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] +' with /dev/'+ surfstick['modem'] + ' as interface but /dev/' + modempath + 'is configured in settings. Please update settings!')
-                                    else:
-                                        logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + modempath + ' is missing')
-                                else:
-                                    logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + surfstick['modem'] + ' is missing')
-                        elif deviceid ==  surfstickstorgaeid:
-                            if modemisenabled:
-                                logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ', ' + surfstick['name'] + ', ' + surfstick['alternatename'] + ' found in Storage / Ethernet mode on ' + device['device'] + ' A modeswitch rule is required to use this stick with wvdial!')
-                if not devicefound:
-                    logger.debug('No known Surfstick found!')
-            if os.path.exists('/dev/'+ modempath): #Modem attatched to UART will not be found usíng above routine, but will work with configuration settings
-                logger.info('Starting wvdial for Modem on path ' + str(modempath) + ' with APN ' + modemapn)
-                os.system("(sudo sh " + scriptsFolder + "/shell-scripts/connection.sh run)&")
-            else:
-                logger.error("Not starting wvdial as no modem on configured path /dev/" + str(modempath) + " found! Please check configuration or modem")
-        else:
-            logger.debug('Use of surfstick is disabled in configuration')
+        with io.open(surfstick_file, encoding="utf-8") as data_file:
+            surfsticks = json.loads(data_file.read())
     except Exception as ex:
-        logger.exception("Exception in start_wvdial")
+        logger.exception("Exception in connect_internet_modem reading surfstick_file.")
+
+    if founddevices:
+        devicefound = False
+        for device in founddevices:
+            deviceid = device['id']
+            for surfstick in surfsticks:
+                surfstickmodemid = surfstick['id']
+                surfstickstorgaeid = surfstick['id-storage']
+                if deviceid == surfstickmodemid:
+                    if os.path.exists('/dev/'+ modempath):
+                        logger.debug('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'])
+                        devicefound = True
+                        break
+                    else:
+                        if surfstick['modem'] != modempath:
+                            if os.path.exists('/dev/'+ surfstick['modem']):
+                                logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] +' with /dev/'+ surfstick['modem'] + ' as interface but /dev/' + modempath + 'is configured in settings. Please update settings!')
+                            else:
+                                logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + modempath + ' is missing')
+                        else:
+                            logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + surfstick['modem'] + ' is missing')
+                elif deviceid ==  surfstickstorgaeid:
+                    if modemisenabled:
+                        logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ', ' + surfstick['name'] + ', ' + surfstick['alternatename'] + ' found in Storage / Ethernet mode on ' + device['device'] + ' A modeswitch rule is required to use this stick with wvdial!')
+        if not devicefound:
+            logger.debug('No known Surfstick found!')
+    if os.path.exists('/dev/'+ modempath): #Modem attatched to UART will not be found usíng above routine, but will work with configuration settings
+        logger.info('Starting wvdial for Modem on path ' + str(modempath) + ' with APN ' + modemapn)
+        os.system("(sudo sh " + scriptsFolder + "/shell-scripts/connection.sh run)&")
+    else:
+        logger.error("Not starting wvdial as no modem on configured path /dev/" + str(modempath) + " found! Please check configuration or modem")
+
+def connect_internet_modem(settings):
+    try:
+        modem = settings['internet']['modem']
+        modem_mode = modem['enabled']
+
+        if modem_mode == 2:
+            # if modem mode is wvdial
+            run_wvdial(modem)
+            logger.debug("Interface ppp0 is up: " +  str(get_interface_upstatus_linux('ppp0')))
+        elif modem_mode == 1:
+            # if modem mode is Hi.Link mode
+            logger.debug('Surfstick is configured to be used in HiLink mode.')
+            logger.info("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
+            logger.debug("Interface wwan0 is up: " +  str(get_interface_upstatus_linux('wwan0')))
+            logger.debug("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
+            logger.debug("Interface wlan1 is up: " +  str(get_interface_upstatus_linux('wlan1')))
+            logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
+            logger.debug("Interface eth1 is up: " +  str(get_interface_upstatus_linux('eth1')))
+        elif modem_mode == 0:
+            logger.debug('Use of surfstick is configured as disabled.')
+            logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
+            logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
+            logger.debug("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
+        else:
+            logger.warning('Undefined state for surfstick mode.')
+    except Exception as ex:
+        logger.exception("Exception in connect_internet_modem")
 
 def client_to_ap_mode():
     pause_wittypi_schedule()
@@ -454,8 +470,8 @@ def check_undervoltage():
             logger.warning(message)
 
     except Exception as ex:
-        message = "Exception in function check_undervoltage:" + repr(ex)
-        logger.exception(message)
+        message = "Exception in function check_undervoltage: " + repr(ex)
+        logger.warning(message)
     return message
 
 def wait_for_internet_connection(maxTime=10):
