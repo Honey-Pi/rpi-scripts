@@ -155,7 +155,10 @@ def runpostupgradescript():
                 logger.info(line.decode("utf-8"))
             process.wait()
         else:
-            logger.debug("A finished post_upgrade found in (all good): " + runpostupgradescriptfile)
+            if os.path.isfile(runpostupgradescriptfile):
+                logger.debug("A finished post_upgrade found in '" + runpostupgradescriptfile + "' (all good)")
+            else:
+                logger.debug("No post_upgrade file found in '" + runpostupgradescriptfile + "' (all good)")
     except Exception as ex:
         logger.exception("Exception in runpostupgradescript")
 
