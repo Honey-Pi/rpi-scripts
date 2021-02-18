@@ -76,12 +76,12 @@ def get_settings():
         my_file = Path(settingsFile)
         my_abs_path = my_file.resolve()
 
-        if str(getpwuid(os.stat(settingsFile).st_uid).pw_name) != "www-data":
-            os.system("sudo chown www-data " + str(settingsFile))
-        if str(getgrgid(os.stat(settingsFile).st_gid).gr_name) != "www-data":
-            os.system("sudo chgrp www-data " + str(settingsFile))
+        if os.path.exists(settingsFile):
+            if str(getpwuid(os.stat(settingsFile).st_uid).pw_name) != "www-data":
+                os.system("sudo chown www-data " + str(settingsFile))
+            if str(getgrgid(os.stat(settingsFile).st_gid).gr_name) != "www-data":
+                os.system("sudo chgrp www-data " + str(settingsFile))
 
-        # Check wittypi_scheduleFile
         if os.path.exists(wittypi_scheduleFile):
             if str(getpwuid(os.stat(wittypi_scheduleFile).st_uid).pw_name) != "www-data":
                 os.system("sudo chown www-data " + str(wittypi_scheduleFile))
@@ -90,8 +90,9 @@ def get_settings():
 
         with io.open(settingsFile, encoding="utf-8") as data_file:
             settings = json.loads(data_file.read())
+
     except Exception as ex:
-        logger.debug("Loading default settings because settings.json file does not exist.")
+        logger.info("Loading default settings because settings.json file does not exist.")
         # FileNotFoundError: doesn't exist => default values
         # FileReadError / json.loads Error => default values
         settings = get_defaults()
@@ -300,7 +301,7 @@ def get_sensors(settings, type):
 def write_settings(settings):
     try:
         # write values to file
-        outfile = open(settingsFile, "w")
+        outfile = open(settingsFile, "w+")
         outfile.write(json.dumps(settings, indent=4, sort_keys=True))
         outfile.close()
         return True
