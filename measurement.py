@@ -94,9 +94,8 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if bme280_values is not None:
                 ts_fields.update(bme280_values)
 
-        # measure YL-40 PCF8591 (can only be one) [type 6]
+        # measure PCF8591 [type 6]
         for (i, sensor) in enumerate(pcf8591Sensors):
-            print(" measure YL-40 PCF8591" + str(sensor))
             pcf8591_values = measure_pcf8591(sensor)
             if pcf8591_values is not None:
                 ts_fields.update(pcf8591_values)
@@ -178,7 +177,7 @@ def measurement():
         logger.addHandler(fh)
         logger.addHandler(ch)
 
-        logger.info('Offline measurement started.')
+        logger.info('Direct measurement started from webinterface.')
 
         # read configured sensors from settings.json
         ds18b20Sensors = get_sensors(settings, 0)
@@ -208,7 +207,7 @@ def measurement():
         ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, None)
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in offline measurement")
+        logger.exception("Unhandled Exception in direct measurement")
 
     return json.dumps(ts_fields)
 
@@ -220,4 +219,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as ex:
-        logger.exception("Unhandled Exception in offline measurement __main__")
+        logger.exception("Unhandled Exception in direct measurement __main__")
