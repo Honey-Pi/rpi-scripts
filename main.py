@@ -170,6 +170,7 @@ def main():
         else:
             logger.info('HoneyPi '+ get_rpiscripts_version() + ' Started on ' + get_pi_model())
             start_hdd_led()
+            
         check_undervoltage()
         runpostupgradescript()
 

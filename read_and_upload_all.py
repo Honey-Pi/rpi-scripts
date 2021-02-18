@@ -26,7 +26,7 @@ from read_sht31 import measure_sht31
 from read_hdc1008 import measure_hdc1008
 
 from read_settings import get_settings, get_sensors
-from utilities import reboot, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led
+from utilities import reboot, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led, check_undervoltage
 from write_csv import write_csv
 from measurement import measure_all_sensors
 from thingspeak import transfer_all_channels_to_ts
@@ -244,6 +244,8 @@ def start_measurement(measurement_stop):
                 if 'device_id' in sensor:
                     read_unfiltered_temperatur_values(sensorIndex, sensor)
 
+            check_undervoltage('0x7')
+
             time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage = check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowVoltage, interval, shutdownAfterTransfer)
 
             # wait seconds of interval before next check
@@ -268,7 +270,7 @@ def start_measurement(measurement_stop):
                     #print("get" + bme680Inits)
                     p.join()
                     #print("join")
-                    
+
                 else:
                     logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")
 
