@@ -322,7 +322,6 @@ def connect_internet_modem(settings):
             logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
             logger.debug("Interface wwan0 is up: " +  str(get_interface_upstatus_linux('wwan0')))
             logger.debug("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
-            logger.debug("Interface wlan1 is up: " +  str(get_interface_upstatus_linux('wlan1')))
             logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
             logger.debug("Interface eth1 is up: " +  str(get_interface_upstatus_linux('eth1')))
         elif modem_mode == 0:
@@ -463,7 +462,6 @@ def check_undervoltage(since_last_check=""):
         undervoltage = str(os.popen("sudo vcgencmd get_throttled " + since_last_check).readlines())
         if "0x0" in undervoltage:
             message = "No undervoltage alarm"
-            logger.debug(message)
 
         elif "0x50000" in undervoltage:
             if since_last_check == "":

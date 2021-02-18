@@ -170,8 +170,7 @@ def main():
         else:
             logger.info('HoneyPi '+ get_rpiscripts_version() + ' Started on ' + get_pi_model())
             start_hdd_led()
-            
-        check_undervoltage()
+
         runpostupgradescript()
 
         GPIO_BTN = settings["button_pin"]
@@ -186,6 +185,9 @@ def main():
 
         # Call wvdial for surfsticks
         connect_internet_modem(settings)
+
+        # check undervolate for since system start
+        check_undervoltage()
 
         # start as seperate background thread
         # because Taster pressing was not recognised

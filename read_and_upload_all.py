@@ -244,8 +244,6 @@ def start_measurement(measurement_stop):
                 if 'device_id' in sensor:
                     read_unfiltered_temperatur_values(sensorIndex, sensor)
 
-            check_undervoltage('0x7')
-
             time_measured_Voltage, interval, shutdownAfterTransfer, isLowVoltage = check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowVoltage, interval, shutdownAfterTransfer)
 
             # wait seconds of interval before next check
@@ -260,6 +258,8 @@ def start_measurement(measurement_stop):
                     print("Last measurement was at " + str(lastMeasurement))
                     print("Time over for a new measurement. Time is now: " + str(now))
                 time_measured = time.time()
+
+                check_undervoltage('0x7')
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
