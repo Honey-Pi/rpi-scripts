@@ -288,11 +288,9 @@ class HX711:
         """
         if flag == False:
             self._debug_mode = False
-            print('Debug mode DISABLED')
             return
         elif flag == True:
             self._debug_mode = True
-            print('Debug mode ENABLED')
             return
         else:
             raise ValueError('Parameter "flag" can be only BOOL value. '
