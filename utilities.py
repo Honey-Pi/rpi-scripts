@@ -456,16 +456,20 @@ def error_log(e=None, printText=None):
     except Exception:
         pass
 
-def check_undervoltage():
+def check_undervoltage(since_last_check=""):
+    #since_last_check = '0x7' #for check since last check
     message = ""
     try:
-        undervoltage = str(os.popen("sudo vcgencmd get_throttled").readlines())
+        undervoltage = str(os.popen("sudo vcgencmd get_throttled " + since_last_check).readlines())
         if "0x0" in undervoltage:
             message = "No undervoltage alarm"
             logger.debug(message)
 
         elif "0x50000" in undervoltage:
-            message = "Undervoltage alarm had happened since system start " + undervoltage
+            if since_last_check == "":
+                message = "Undervoltage alarm had happened since system start " + undervoltage
+            else:
+                message = "Undervoltage alarm had happened since last check " + undervoltage
             logger.warning(message)
 
         elif "0x50005" in undervoltage:

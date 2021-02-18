@@ -24,7 +24,7 @@ from read_sht31 import measure_sht31
 from read_hdc1008 import measure_hdc1008
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import logfile, start_single, stop_single, scriptsFolder
+from utilities import logfile, start_single, stop_single, scriptsFolder, check_undervoltage
 
 import logging
 
@@ -140,6 +140,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         # print all measurement values stored in ts_fields
         logger.debug("Measurement for all configured sensors finished...")
+        check_undervoltage('0x7')
 
         if debug:
             ts_fields_content = ""
@@ -205,6 +206,7 @@ def measurement():
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
 
+        check_undervoltage()
         ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, None)
 
     except Exception as ex:
