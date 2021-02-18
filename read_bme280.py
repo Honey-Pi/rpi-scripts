@@ -19,13 +19,13 @@ def measure_bme280(ts_sensor):
             i2c_addr = ts_sensor["i2c_addr"]
 
             if i2c_addr == "0x76":
-                logger.debug("BM2680 on I2C Adress '" + i2c_addr + "'")
+                logger.debug("BM2680 is configured for I2C Address '" + i2c_addr + "'")
                 i2c_addr = 0x76
             elif i2c_addr == "0x77":
-                logger.debug("BME280 on I2C Adress '" + i2c_addr + "'")
+                logger.debug("BME280 is configured for I2C Address '" + i2c_addr + "'")
                 i2c_addr = 0x77
             else:
-                logger.debug("Undefined BME280 I2C Adress '" + str(i2c_addr) + "'")
+                logger.debug("Undefined BME280 I2C Address '" + str(i2c_addr) + "'")
 
     except Exception as ex:
         logger.error("Error getting I2C Adress, using default: '" + str(i2c_addr))
