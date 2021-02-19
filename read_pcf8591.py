@@ -2,16 +2,16 @@
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
+# Main Source: http://www.diyblueprints.net/measuring-voltage-with-raspberry-pi/#Measure_Voltage_Python
+
 import smbus
 import time
 from sensors.sensor_utilities import get_smbus
 import logging
 
-logger = logging.getLogger('HoneyPi.utilities')
+logger = logging.getLogger('HoneyPi.read_pcf8591')
 
-
-# Main Source: http://www.diyblueprints.net/measuring-voltage-with-raspberry-pi/#Measure_Voltage_Python
-
+# used for regular measurement
 def measure_pcf8591(ts_sensor):
     fields = {}
     try:
@@ -38,10 +38,11 @@ def measure_pcf8591(ts_sensor):
             return fields
 
     except Exception as ex:
-        logger.exception("Unhaldled exception in measure_pcf8591: ")
+        logger.exception("Unhaldled exception in measure_pcf8591")
 
     return None
 
+# used by check_wittypi_voltage and initial voltage check
 def get_raw_voltage(ts_sensor):
     try:
         if 'pin' in ts_sensor:
@@ -95,6 +96,6 @@ def measure(pin):
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Reading PCF8591 failed: Most likely I2C Bus needs a reboot.")
-            return None
     except Exception as ex:
         logger.exception("Unhaldled exception measure / PCF8591")
+    return None
