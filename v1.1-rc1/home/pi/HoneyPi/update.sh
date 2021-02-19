@@ -19,7 +19,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 STABLE=${1:-1} # default: 1 (stable)
 
 # Update CA certs for a secure connection to GitHub
-update-ca-certificates -f
+echo '>>> Update CA certs for a secure connection to GitHub'
+update-ca-certificates
 
 function get_latest_release() {
     REPO=$1
@@ -39,8 +40,8 @@ ScriptsTag=$(get_latest_release $REPO $STABLE)
 echo ">>> Install latest HoneyPi runtime measurement scripts ($ScriptsTag) from $REPO stable=$STABLE"
 if [ ! -z "$ScriptsTag" ]; then
     [ -f $DIR/rpi-scripts/error.log ] && mv $DIR/rpi-scripts/error.log $DIR/error.log.backup
-    CURRENTDATETIME='date +"%Y-%m-%d_%T"'
-    mv $DIR/rpi-scripts $DIR/rpi-scripts.$CURRENTDATETIME
+    CURRENTDATETIME=`date +%Y-%m-%d_%T`
+    mv $DIR/rpi-scripts "$DIR/rpi-scripts-$CURRENTDATETIME"
     rm -rf $DIR/rpi-scripts # remove folder to download latest
     echo ">>> Downloading latest rpi-scripts ($ScriptsTag)"
     wget -q "https://codeload.github.com/$REPO/zip/$ScriptsTag" -O $DIR/HoneyPiScripts.zip
@@ -83,8 +84,8 @@ else
 fi
 
 # Create File with version information
-DATE=`date +%d-%m-%y`
-echo "HoneyPi (last install on RPi: $DATE)" > /var/www/html/version.txt
+DATE=`date +%Y-%m-%d`
+echo "HoneyPi (last install on Raspi: $DATE)" > /var/www/html/version.txt
 echo "rpi-scripts $ScriptsTag" >> /var/www/html/version.txt
 echo "rpi-webinterface $WebinterfaceTag" >> /var/www/html/version.txt
 
