@@ -75,7 +75,7 @@ def measure_pcf8591(ts_sensor):
         voltage = get_raw_voltage(ts_sensor)
         if voltage is not None:
             if 'ts_field' in ts_sensor and isinstance(voltage, (int, float)):
-                fields[ts_sensor["ts_field"]] = round(data, 4)
+                fields[ts_sensor["ts_field"]] = round(voltage, 4)
 
             return fields
 
