@@ -76,7 +76,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                 ts_fields.update(bme680_values)
                 bme680Init['gas_baseline'] = gas_baseline
                 bme680Inits[sensorIndex]=bme680Init
-                print(bme680Inits)
+                #print(bme680Inits)
 
         # measure every sensor with type 3 [DHT11/DHT22]
         for (i, sensor) in enumerate(dhtSensors):
