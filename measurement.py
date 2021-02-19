@@ -68,7 +68,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
             if bme680Inits[sensorIndex] != None:
-                print(bme680Inits)
+                #print(bme680Inits)
                 bme680Init = bme680Inits[sensorIndex]
                 sensor = bme680Init['sensor']
                 gas_baseline = bme680Init['gas_baseline']
