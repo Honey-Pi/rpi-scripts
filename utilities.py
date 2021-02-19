@@ -321,6 +321,7 @@ def connect_internet_modem(settings):
             logger.debug('Surfstick is configured to be used in HiLink mode.')
             logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
             logger.debug("Interface wwan0 is up: " +  str(get_interface_upstatus_linux('wwan0')))
+            logger.debug("Interface usb0 is up: " +  str(get_interface_upstatus_linux('usb0')))
             logger.debug("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
             logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
             logger.debug("Interface eth1 is up: " +  str(get_interface_upstatus_linux('eth1')))
