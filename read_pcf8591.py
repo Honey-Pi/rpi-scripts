@@ -28,13 +28,14 @@ def measure_pcf8591(ts_sensor):
             factor = float(ts_sensor['I2CVoltage']) / 256
 
         data_8bit = measure(pin)
-        data = data_8bit*factor # convert 8 bit number to voltage
-        logger.debug("PCF8591 PIN: AIN" + str(pin) + " data with factor applied: " + str(data_8bit))
+        if data_8bit is not None:
+            data = data_8bit*factor # convert 8 bit number to voltage
+            logger.debug("PCF8591 PIN: AIN" + str(pin) + " data with factor applied: " + str(data_8bit))
 
-        if 'ts_field' in ts_sensor and isinstance(data, (int, float)):
-            fields[ts_sensor["ts_field"]] = round(data, 4)
+            if 'ts_field' in ts_sensor and isinstance(data, (int, float)):
+                fields[ts_sensor["ts_field"]] = round(data, 4)
 
-        return fields
+            return fields
 
     except Exception as ex:
         logger.exception("Unhaldled exception in measure_pcf8591: ")
@@ -56,13 +57,13 @@ def get_raw_voltage(ts_sensor):
             factor = float(ts_sensor['I2CVoltage']) / 256
 
         Voltage_8bit = measure(pin)
-        voltage = Voltage_8bit*factor # convert 8 bit number to voltage
+        if Voltage_8bit is not None:
+            voltage = Voltage_8bit*factor # convert 8 bit number to voltage
+            if isinstance(voltage, (int, float)):
+                voltage=round(voltage, 4)
+            logger.debug("PCF8591 PIN: AIN" + str(pin) + " voltage: " + str(voltage))
 
-        if isinstance(voltage, (int, float)):
-            voltage=round(voltage, 4)
-        logger.debug("PCF8591 PIN: AIN" + str(pin) + " voltage: " + str(voltage))
-
-        return voltage
+            return voltage
 
     except Exception as ex:
         logger.exception("Unhaldled exception in get_raw_voltage / PCF8591 (Voltage)")
@@ -91,6 +92,9 @@ def measure(pin):
             data=data_8bit
 
         return data
-
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Reading PCF8591 failed: Most likely I2C Bus needs a reboot.")
+            return None
     except Exception as ex:
         logger.exception("Unhaldled exception measure / PCF8591")

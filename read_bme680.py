@@ -58,6 +58,10 @@ def initBME680(ts_sensor):
         sensor.set_power_mode(bme680.FORCED_MODE)
 
         return sensor
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Reading BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely I2C Bus needs a reboot") 
+        return sensor
     except Exception as ex:
         logger.exception("Unhandled Exception in initBME680")
     return sensor
@@ -76,25 +80,28 @@ def burn_in_bme680(sensor, burn_in_time):
         # gas_baseline.
 
         # start_time and curr_time ensure that the burn_in_time (in seconds) is kept track of.
-        start_time = time.time()
-        curr_time = time.time()
-
-        burn_in_data = []
-        logger.debug('Burning in BME680 for Gas Baseline for ' + str(burn_in_time) + ' seconds')
-        while curr_time - start_time < burn_in_time:
+        if sensor is not None:
+            start_time = time.time()
             curr_time = time.time()
-            if sensor.get_sensor_data() and sensor.data.heat_stable:
-                gas = sensor.data.gas_resistance
-                burn_in_data.append(gas)
-                # log time for burning process
-                #print("Burning BME680 in for " + str(int(round(burn_in_time - (curr_time - start_time)))) + "s.")
-                #print('Gas: {0:.2f}Ohms'.format(gas))
-                time.sleep(1)
-            else:
-                time.sleep(0.4) # wait 400ms for heat_stable
-        gas_baseline = sum(burn_in_data[-burn_in_time:]) / burn_in_time
-        logger.debug('Burning in BME680 finished, Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
-        return gas_baseline
+
+            burn_in_data = []
+            logger.debug('Burning in BME680 for Gas Baseline for ' + str(burn_in_time) + ' seconds')
+            while curr_time - start_time < burn_in_time:
+                curr_time = time.time()
+                if sensor.get_sensor_data() and sensor.data.heat_stable:
+                    gas = sensor.data.gas_resistance
+                    burn_in_data.append(gas)
+                    # log time for burning process
+                    #print("Burning BME680 in for " + str(int(round(burn_in_time - (curr_time - start_time)))) + "s.")
+                    #print('Gas: {0:.2f}Ohms'.format(gas))
+                    time.sleep(1)
+                else:
+                    time.sleep(0.4) # wait 400ms for heat_stable
+            gas_baseline = sum(burn_in_data[-burn_in_time:]) / burn_in_time
+            logger.debug('Burning in BME680 finished, Gas Baseline: {0:.2f} Ohms'.format(gas_baseline))
+            return gas_baseline
+        else:
+            logger.error("Reading BME680 failed, Sensor is 'None': Most likely I2C Bus needs a reboot")
     except NameError:
         logger.error("Sensor BME680 is not connected.")
     except KeyboardInterrupt:
@@ -105,87 +112,97 @@ def burn_in_bme680(sensor, burn_in_time):
 
 def calc_air_quality(sensor, gas_baseline):
     try:
-        # Set the humidity baseline to 40%, an optimal indoor humidity.
-        hum_baseline = 40.0
-        # This sets the balance between humidity and gas reading in the
-        # calculation of air_quality_score (25:75, humidity:gas)
-        hum_weighting = 0.25
+        if sensor is not None:
+            # Set the humidity baseline to 40%, an optimal indoor humidity.
+            hum_baseline = 40.0
+            # This sets the balance between humidity and gas reading in the
+            # calculation of air_quality_score (25:75, humidity:gas)
+            hum_weighting = 0.25
 
-        temp = sensor.data.temperature
-        gas = sensor.data.gas_resistance
-        gas_offset = gas_baseline - gas
+            temp = sensor.data.temperature
+            gas = sensor.data.gas_resistance
+            gas_offset = gas_baseline - gas
 
-        hum = sensor.data.humidity
-        hum_offset = hum - hum_baseline
+            hum = sensor.data.humidity
+            hum_offset = hum - hum_baseline
 
-        # Calculate hum_score as the distance from the hum_baseline.
-        if hum_offset > 0:
-            hum_score = (100 - hum_baseline - hum_offset)
-            hum_score /= (100 - hum_baseline)
-            hum_score *= (hum_weighting * 100)
+            # Calculate hum_score as the distance from the hum_baseline.
+            if hum_offset > 0:
+                hum_score = (100 - hum_baseline - hum_offset)
+                hum_score /= (100 - hum_baseline)
+                hum_score *= (hum_weighting * 100)
 
+            else:
+                hum_score = (hum_baseline + hum_offset)
+                hum_score /= hum_baseline
+                hum_score *= (hum_weighting * 100)
+
+            # Calculate gas_score as the distance from the gas_baseline.
+            if gas_offset > 0:
+                gas_score = (gas / gas_baseline)
+                gas_score *= (100 - (hum_weighting * 100))
+
+            else:
+                gas_score = 100 - (hum_weighting * 100)
+                #Current gas value is greater than existing gas baseline value -> gas baseline value requires to be set to new value!
+                logger.debug("Current gas value: " + str(round(gas, 4)) + " is greater than existing gas baseline value: " + str(round(gas_baseline, 4)) + " Air quality increased since startup!")
+                gas_baseline = gas
+
+            # Calculate air_quality_score.
+            air_quality_score = hum_score + gas_score
+            absoluteHumidity = computeAbsoluteHumidity(hum, temp)
+
+            logger.debug('BME680 Gas: {0:.2f} Ohms, humidity: {1:.2f} %RH, air quality: {2:.2f}, absolute humidity: {3:.2f} g/m³'.format(gas,hum,air_quality_score,absoluteHumidity))
+            return air_quality_score, gas_baseline
         else:
-            hum_score = (hum_baseline + hum_offset)
-            hum_score /= hum_baseline
-            hum_score *= (hum_weighting * 100)
-
-        # Calculate gas_score as the distance from the gas_baseline.
-        if gas_offset > 0:
-            gas_score = (gas / gas_baseline)
-            gas_score *= (100 - (hum_weighting * 100))
-
-        else:
-            gas_score = 100 - (hum_weighting * 100)
-            #Current gas value is greater than existing gas baseline value -> gas baseline value requires to be set to new value!
-            logger.debug("Current gas value: " + str(round(gas, 4)) + " is greater than existing gas baseline value: " + str(round(gas_baseline, 4)) + " Air quality increased since startup!")
-            gas_baseline = gas
-
-        # Calculate air_quality_score.
-        air_quality_score = hum_score + gas_score
-        absoluteHumidity = computeAbsoluteHumidity(hum, temp)
-
-        logger.debug('BME680 Gas: {0:.2f} Ohms, humidity: {1:.2f} %RH, air quality: {2:.2f}, absolute humidity: {3:.2f} g/m³'.format(gas,hum,air_quality_score,absoluteHumidity))
-        return air_quality_score, gas_baseline
+            logger.error("Reading BME680 failed, Sensor is 'None': Most likely I2C Bus needs a reboot")
     except Exception as ex:
         logger.exception("Unhandled Exception in calc_air_quality")
-    return 0
+    return 0, gas_baseline
 
 def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
     # ThingSpeak fields
     # Create returned dict if ts-field is defined
     fields = {}
     try:
-        gas_baseline
-        start_time = time.time()
-        curr_time = time.time()
-        max_time = 30 # max seconds to wait for heat_stable
-        while curr_time - start_time < max_time:
+        if sensor is not None:
+            gas_baseline
+            start_time = time.time()
             curr_time = time.time()
-            if sensor.get_sensor_data() and sensor.data.heat_stable:
-                temperature = sensor.data.temperature
-                humidity = sensor.data.humidity
-                air_pressure = sensor.data.pressure
+            max_time = 30 # max seconds to wait for heat_stable
+            while curr_time - start_time < max_time:
+                curr_time = time.time()
+                if sensor.get_sensor_data() and sensor.data.heat_stable:
+                    temperature = sensor.data.temperature
+                    humidity = sensor.data.humidity
+                    air_pressure = sensor.data.pressure
 
-                if 'ts_field_temperature' in ts_sensor:
-                    fields[ts_sensor["ts_field_temperature"]] = temperature
-                if 'ts_field_humidity' in ts_sensor:
-                    fields[ts_sensor["ts_field_humidity"]] = humidity
-                if 'ts_field_air_pressure' in ts_sensor:
-                    fields[ts_sensor["ts_field_air_pressure"]] = air_pressure
-                if 'ts_field_air_quality' in ts_sensor:
-                    if not gas_baseline:
-                        logger.debug('BME680 Gas baseline did not exist, burning in')
-                        gas_baseline = burn_in_bme680(sensor, burn_in_time)
-                    # Calculate air_quality_score.
-                    if gas_baseline:
-                        air_quality_score, gas_baseline = calc_air_quality(sensor, gas_baseline)
-                        # round to 0 digits
-                        fields[ts_sensor["ts_field_air_quality"]] = int(round(air_quality_score, 0))
+                    if 'ts_field_temperature' in ts_sensor:
+                        fields[ts_sensor["ts_field_temperature"]] = temperature
+                    if 'ts_field_humidity' in ts_sensor:
+                        fields[ts_sensor["ts_field_humidity"]] = humidity
+                    if 'ts_field_air_pressure' in ts_sensor:
+                        fields[ts_sensor["ts_field_air_pressure"]] = air_pressure
+                    if 'ts_field_air_quality' in ts_sensor:
+                        if not gas_baseline:
+                            logger.debug('BME680 Gas baseline did not exist, burning in')
+                            gas_baseline = burn_in_bme680(sensor, burn_in_time)
+                        # Calculate air_quality_score.
+                        if gas_baseline:
+                            air_quality_score, gas_baseline = calc_air_quality(sensor, gas_baseline)
+                            # round to 0 digits
+                            fields[ts_sensor["ts_field_air_quality"]] = int(round(air_quality_score, 0))
 
-                return fields, gas_baseline
-            # Waiting for heat_stable
-            time.sleep(0.4)
-       # error
+                    return fields, gas_baseline
+                # Waiting for heat_stable
+                time.sleep(0.4)
+           # error
+        else:
+            logger.error("Reading BME680 failed, Sensor is 'None': Most likely I2C Bus needs a reboot")
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Reading BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely I2C Bus needs a reboot") 
+        return fields, gas_baseline
     except Exception as ex:
         logger.exception("Unhandled Exception in calc_air_quality")
-    return fields
+    return fields, gas_baseline
