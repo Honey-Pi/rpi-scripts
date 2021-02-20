@@ -336,12 +336,24 @@ def connect_internet_modem(settings):
         logger.exception("Exception in connect_internet_modem")
 
 def client_to_ap_mode():
+    logger.info("Starting HoneyPi maintenance webinterface...")
     pause_wittypi_schedule()
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/client_to_ap_mode.sh")
+    #schould be change to :
+    #process = subprocess.Popen(scriptsFolder + "/shell-scripts/client_to_ap_mode.sh", shell=True, stdout=subprocess.PIPE)
+    #for line in process.stdout:
+    #    logger.debug(line.decode("utf-8"))
+    #process.wait()
 
 def ap_to_client_mode():
-    continue_wittypi_schedule()
+    logger.info("Stopping HoneyPi maintenance webinterface...")
     os.system("sudo sh " + scriptsFolder + "/shell-scripts/ap_to_client_mode.sh")
+    #schould be change to :
+    #process = subprocess.Popen(scriptsFolder + "/shell-scripts/ap_to_client_mode.sh", shell=True, stdout=subprocess.PIPE)
+    #for line in process.stdout:
+    #    logger.debug(line.decode("utf-8"))
+    #process.wait()
+    continue_wittypi_schedule()
 
 def reboot():
     set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
