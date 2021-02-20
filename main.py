@@ -34,7 +34,7 @@ def start_ap():
     t1.start()
     t1.join()
     isActive = 1 # measurement shall start next time
-    print(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
+    logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
     isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
 
 def stop_ap():
@@ -61,12 +61,12 @@ def close_script():
 def toggle_measurement():
     global isActive, measurement_stop, measurement, GPIO_LED
     if isActive == 0:
-        print(">>> Button was pressed: Stop measurement / start AccessPoint")
+        logger.info(">>> Button was pressed: Stop measurement / start AccessPoint")
         # stop the measurement by setting event's flag
         measurement_stop.set()
         start_ap() # finally start AP
     elif isActive == 1:
-        print(">>> Button was pressed: Start measurement / stop AccessPoint")
+        logger.info(">>> Button was pressed: Start measurement / stop AccessPoint")
         if measurement.is_alive():
             logger.warning("Thread should not be active anymore")
         # start the measurement by clearing event's flag
