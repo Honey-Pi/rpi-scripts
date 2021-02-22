@@ -10,6 +10,7 @@ def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
         defaultgatewayinterface = get_default_gateway_interface_linux()
         if defaultgatewayinterface == None:
             logger.error('No default gateway, thingspeak upload will end in error!')
+            defaultgatewayinterfaceip = ""
         else:
             defaultgatewayinterfaceip = get_ip_address(str(defaultgatewayinterface))
             if defaultgatewayinterfaceip == None:
