@@ -14,57 +14,57 @@ fi
 
 echo '>>> Running post-upgrade script...'
 
-if cmp -s /etc/network/interfaces /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/etc/network/interfaces 
+if cmp -s /etc/network/interfaces /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/etc/network/interfaces 
 then
    echo "The interfaces file is already the correct file..."
 else
    echo "The interfaces file is different..."
    mv /etc/network/interfaces /etc/network/interfaces.orig
-   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/etc/network/interfaces /etc/network/interfaces
+   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/etc/network/interfaces /etc/network/interfaces
 
 fi
-if cmp -s /home/pi/HoneyPi/update.sh /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/update.sh 
+if cmp -s /home/pi/HoneyPi/update.sh /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/update.sh 
 then
    echo "The update.sh file is already the correct file..."
 else
    echo "The update.sh file is different..."
    mv /home/pi/HoneyPi/update.sh /home/pi/HoneyPi/update.sh.orig
-   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/update.sh /home/pi/HoneyPi/update.sh
+   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/update.sh /home/pi/HoneyPi/update.sh
    chmod a+x /home/pi/HoneyPi/update.sh
 
 fi
-if cmp -s /etc/dhcpcd.conf /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/dhcpcd.conf 
+if cmp -s /etc/dhcpcd.conf /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/dhcpcd.conf 
 then
    echo "The dhcpcd.conf file is already the correct file..."
 else
    echo "The dhcpcd.conf file is different..."
    mv /etc/dhcpcd.conf /etc/dhcpcd.conf.orig
-   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/dhcpcd.conf /etc/dhcpcd.conf
+   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/dhcpcd.conf /etc/dhcpcd.conf
 fi
-if cmp -s /etc/dnsmasq.conf /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/dnsmasq.conf 
+if cmp -s /etc/dnsmasq.conf /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/dnsmasq.conf 
 then
    echo "The dnsmasq.conf file is already the correct file..."
 else
    echo "The dnsmasq.conf file is different..."
    mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/dnsmasq.conf /etc/dnsmasq.conf
+   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/dnsmasq.conf /etc/dnsmasq.conf
 
 fi
-if cmp -s /etc/default/hostapd /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/hostapd 
+if cmp -s /etc/default/hostapd /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/hostapd 
 then
    echo "The hostapd default conf file is already the correct file..."
 else
    echo "The hostapd default conf file is different..."
    mv /etc/default/hostapd /etc/default/hostapd.orig
-   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/hostapd /etc/default/hostapd
+   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/hostapd /etc/default/hostapd
 fi
-if cmp -s /etc/hostapd/hostapd.conf.tmpl /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/hostapd.conf.tmpl 
+if cmp -s /etc/hostapd/hostapd.conf.tmpl /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/hostapd.conf.tmpl 
 then
    echo "The hostapd.conf.tmpl default conf file is already the correct file..."
 else
    echo "The hostapd.conf.tmpl default conf file is different..."
    mv /etc/hostapd/hostapd.conf.tmpl /etc/hostapd/hostapd.conf.tmpl.orig
-   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc1/home/pi/HoneyPi/overlays/hostapd.conf.tmpl /etc/hostapd/hostapd.conf.tmpl
+   cp /home/pi/HoneyPi/rpi-scripts/v1.1-rc3/home/pi/HoneyPi/overlays/hostapd.conf.tmpl /etc/hostapd/hostapd.conf.tmpl
 fi
 
 
