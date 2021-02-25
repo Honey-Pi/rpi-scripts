@@ -27,7 +27,7 @@ def get_defaults():
     router['password'] = None
     router['wpa_type'] = 0
     modem = {}
-    modem['enabled'] = 1 # default: hiLink mode
+    modem['enabled'] = 0 # default: no surfstick, 1 = hilink, 2 = wvdial
     modem['ttyUSB'] = "ttyUSB0"
     modem['apn'] = "pinternet.interkom.de"
     honeypi = {}
