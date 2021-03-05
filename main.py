@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import logging
+from logging.handlers import RotatingFileHandler
 
 import RPi.GPIO as GPIO
 
@@ -142,7 +143,8 @@ def main():
 
         logger = logging.getLogger('HoneyPi')
         logger.setLevel(logging.DEBUG)
-        fh = logging.FileHandler(logfile)
+        #fh = logging.FileHandler(logfile)
+        fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=365)
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
         # create console handler with a higher log level
         ch = logging.StreamHandler()
