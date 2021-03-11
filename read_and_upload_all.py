@@ -93,9 +93,7 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
     except Exception as ex:
         logger.exception("Exception during measure (outer).")
     measurementIsRunning.value = 0 # clear flag
-    #print("put")
-    #q.put(bme680Inits, False)
-    #print("afterput")
+
 
 def check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowVoltage, interval, shutdownAfterTransfer, pcf8591Sensorforvoltagecheck=0):
     try:
@@ -167,7 +165,7 @@ def start_measurement(measurement_stop):
             debug = True # flag to enable debug mode (HDMI output enabled and no rebooting)
         else:
             debug = False # flag to enable debug mode (HDMI output enabled and no rebooting)
-        #debug = settings["debug"] # flag to enable debug mode (HDMI output enabled and no rebooting)
+
         wittyPi = settings["wittyPi"]
         offline = settings["offline"] # flag to enable offline csv storage
 
@@ -265,11 +263,7 @@ def start_measurement(measurement_stop):
                     q = Queue()
                     p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
-                    #print("start")
-                    #bme680Inits = q.get_nowait()
-                    #print("get" + bme680Inits)
                     p.join()
-                    #print("join")
 
                 else:
                     logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")
