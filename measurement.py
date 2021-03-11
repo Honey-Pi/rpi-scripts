@@ -68,7 +68,6 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
             if bme680Inits[sensorIndex] != None:
-                #print(bme680Inits)
                 bme680Init = bme680Inits[sensorIndex]
                 sensor = bme680Init['sensor']
                 gas_baseline = bme680Init['gas_baseline']
@@ -76,7 +75,6 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                 ts_fields.update(bme680_values)
                 bme680Init['gas_baseline'] = gas_baseline
                 bme680Inits[sensorIndex]=bme680Init
-                #print(bme680Inits)
 
         # measure every sensor with type 3 [DHT11/DHT22]
         for (i, sensor) in enumerate(dhtSensors):
@@ -170,7 +168,7 @@ def measurement():
         ch = logging.StreamHandler()
         ch.setLevel(logging.getLevelName(debuglevel))
         # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         # add the handlers to the logger

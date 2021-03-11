@@ -143,14 +143,13 @@ def main():
 
         logger = logging.getLogger('HoneyPi')
         logger.setLevel(logging.DEBUG)
-        #fh = logging.FileHandler(logfile)
         fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=365)
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
         # create console handler with a higher log level
         ch = logging.StreamHandler()
         ch.setLevel(logging.getLevelName(debuglevel))
         # create formatter and add it to the handlers
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+        formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(message)s')
         fh.setFormatter(formatter)
         ch.setFormatter(formatter)
         # add the handlers to the logger
