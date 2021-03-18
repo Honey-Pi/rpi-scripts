@@ -27,6 +27,7 @@ $RECYCLE.BIN/
 # Logfiles
 # =========================
 *.log
+*.log.*
 *.csv
 
 # =========================
@@ -41,5 +42,6 @@ $RECYCLE.BIN/
 .isMaintenanceActive
 .isLowVoltage
 .isActive
+
 
 
