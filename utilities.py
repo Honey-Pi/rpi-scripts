@@ -97,7 +97,6 @@ def get_lsusb_linux():
                     dinfo['name'] = dinfo['name'].decode("utf-8", errors="ignore")
                     dinfo['device'] = '/dev/bus/usb/%s/%s' % (dinfo.pop('bus').decode("utf-8", errors="ignore"), dinfo.pop('device').decode("utf-8", errors="ignore"))
                     devices.append(dinfo)
-        #print(devices)
         return devices
 
     except Exception as ex:
@@ -264,7 +263,6 @@ def run_wvdial(modem):
     modemapn = modem['apn']
     modempath = str(modem['ttyUSB'])
     founddevices = get_lsusb_linux()
-    #print(founddevices)
     surfsticks = {}
 
     surfstick_file = Path(scriptsFolder + '/surfstick.json')
@@ -444,26 +442,12 @@ def check_file(file, size=5, entries=25, skipFirst=0):
 
 def error_log(e=None, printText=None):
     try:
-        """file = scriptsFolder + '/error.log'
-        check_file(file) # reset file if it gets to big
-
-        # generate printed text"""
         if printText and e:
             printText = printText + " | " + repr(e)
         elif e:
             printText = e
         else:
             printText = "No Text defined."
-        """
-        print(printText)
-
-        dt = datetime.now()
-        timestamp = dt.replace(microsecond=0)
-
-        # write to file
-        with open(file, "a") as myfile:
-            myfile.write (str(timestamp) + " | " + printText + "\n")
-        """
         logger.info(printText)
     except Exception:
         pass

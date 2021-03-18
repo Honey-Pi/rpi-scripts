@@ -248,7 +248,6 @@ def measure_weight(weight_sensor, hx=None):
 
         # init hx711
         if not hx:
-            #print("HX711 was not initialized.")
             hx = init_hx711(weight_sensor)
 
         if hx:

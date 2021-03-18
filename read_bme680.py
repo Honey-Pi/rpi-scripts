@@ -12,7 +12,6 @@ import logging
 logger = logging.getLogger('HoneyPi.read_bme680')
 
 # global vars
-#gas_baseline = 0
 burn_in_time = 2 #reduced burn_in_time to 2 seconds as the default 30 seconds from pimoroni are used for a measurment each second which puts the internal heater to a much higher temperature, which will never be reached with our measurement cycle
 
 def initBME680(ts_sensor):
