@@ -175,8 +175,8 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
                 curr_time = time.time()
                 if sensor.get_sensor_data() and sensor.data.heat_stable:
                     temperature = sensor.data.temperature
-                    humidity = sensor.data.humidity
-                    air_pressure = sensor.data.pressure
+                    humidity = round(sensor.data.humidity, 2)
+                    air_pressure = round(sensor.data.pressure,0)
 
                     if 'ts_field_temperature' in ts_sensor:
                         fields[ts_sensor["ts_field_temperature"]] = temperature

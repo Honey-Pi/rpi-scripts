@@ -2,8 +2,38 @@ import requests
 from utilities import wait_for_internet_connection, clean_fields, get_default_gateway_interface_linux, get_ip_address
 import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import logging
+import struct
+import math
 
 logger = logging.getLogger('HoneyPi.thingspeak')
+
+def convert_lorawan(write_key, ts_fields):
+    try:
+        loraWANstring=""
+        mumbytespervalue=3
+        numfiledsmissingnew = 0
+        numfiledsmissing = 0
+        for (fieldIndex, field) in enumerate (sorted(ts_fields)):
+            hexstr = ""
+            fieldNumber = int(field.replace('field',''))
+            numfiledsmissing = fieldNumber - (fieldIndex + 1 + numfiledsmissing)
+            numfiledsmissingnew = numfiledsmissing
+            while numfiledsmissingnew > 0 :
+                numfiledsmissingnew = numfiledsmissingnew - 1
+                for i in range (mumbytespervalue):
+                    hexstr = hexstr + "00"
+            loraWANstring = loraWANstring + hexstr
+            value = ts_fields[field]*100
+            if not isinstance(value, int):
+                value = int(value)
+            hexstr = str(value.to_bytes(mumbytespervalue, byteorder='big').hex())
+            logger.debug(' field: ' + str(field) + ' content: '+ str(ts_fields[field]) + ' Hex: ' + hexstr)
+            loraWANstring = loraWANstring + hexstr
+        logger.debug('loraWANstring for this channel: '+ loraWANstring)
+    except Exception as ex:
+        logger.exception("Exception in convert_lorawan")
+    
+
 
 def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
     try:
@@ -41,6 +71,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug):
     isConnectionError = True
     while isConnectionError:
         try:
+            convert_lorawan(write_key, ts_fields_cleaned)
             thingspeak_update(write_key, ts_fields_cleaned, server_url)
             logger.info("Data succesfully transfered to ThingSpeak.")
             # break because transfer succeded
