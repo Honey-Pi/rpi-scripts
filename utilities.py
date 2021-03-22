@@ -295,8 +295,7 @@ def run_wvdial(modem):
                         else:
                             logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + surfstick['modem'] + ' is missing')
                 elif deviceid ==  surfstickstorgaeid:
-                    if modemisenabled:
-                        logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ', ' + surfstick['name'] + ', ' + surfstick['alternatename'] + ' found in Storage / Ethernet mode on ' + device['device'] + ' A modeswitch rule is required to use this stick with wvdial!')
+                    logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ', ' + surfstick['name'] + ', ' + surfstick['alternatename'] + ' found in Storage / Ethernet mode on ' + device['device'] + ' A modeswitch rule is required to use this stick with wvdial!')
         if not devicefound:
             logger.debug('No known Surfstick found!')
     if os.path.exists('/dev/'+ modempath): #Modem attatched to UART will not be found usíng above routine, but will work with configuration settings
