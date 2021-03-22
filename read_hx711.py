@@ -9,19 +9,10 @@ import time
 import logging
 
 # global var
-ledState = False
-GPIO_PIN = 20 # debug pin
 logger = logging.getLogger('HoneyPi.read_hx711')
 
 # setup GPIO
 GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
-#GPIO.setup(GPIO_PIN, GPIO.OUT) # Set pin 20 to led output
-
-def triggerPIN():
-    global ledState, GPIO_PIN
-    # Method for Alex
-    ledState = not ledState
-    GPIO.output(GPIO_PIN, ledState)
 
 def takeClosest(myList, myNumber):
     # from list of integers, get number closest to a given value
@@ -202,9 +193,9 @@ def init_hx711(weight_sensor):
                     return hx
             except Exception as e:
                 if str(e) == "no median for empty data":
-                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Could not read enough data from HX711 => Try again: ' + str(loops) + '/3')
+                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Could not read enough data from HX711 => Try again: ' + str(loops) + '/3')
                 else:
-                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Initializing HX711 failed: ' + str(e))
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Initializing HX711 failed: ' + str(e))
             time.sleep(1)
 
         logger.error('Returning empty HX711 for DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
@@ -254,7 +245,7 @@ def measure_weight(weight_sensor, hx=None):
             temp_reading = hx.get_raw_data_mean(6) # measure just for fun
 
         if not isinstance(temp_reading, (int, float)): # always check if you get correct value or only False
-            logger.debug('Initialized HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' again because shit data.')
+            logger.debug('Initialized HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' again because of bad data.')
             if hx:
                 hx.reset()
             hx = init_hx711(weight_sensor)
@@ -274,23 +265,19 @@ def measure_weight(weight_sensor, hx=None):
             LOOP_AVG = 3
             while count_avg < LOOP_AVG and count_avg < 6: # Break after max. 6 loops
                 count_avg += 1
-                # use outliers_filter and do average over 41 measurements
                 num_measurements = 41
-                reading = hx.get_weight_mean(num_measurements)
-                logger.debug('Number of elements removed by filter within HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': ' + str(hx.get_num_data_filtered_out()))
+                reading = hx.get_weight_mean(num_measurements) # use outliers_filter and do average over 41 measurements
                 if isinstance(reading, (int, float)): # always check if you get correct value or only False
                     weightMeasures.append(reading)
                     num_data_filtered_out = hx.get_num_data_filtered_out()
                     percentage_filtered_out = round((num_data_filtered_out / num_measurements * 100),2)
-                    if percentage_filtered_out > 34:
-                        logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
-                        logger.warning('You might need to check your power supply or cabling setup for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+                    if percentage_filtered_out >= 40:
+                        logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711. You might need to check your power supply or cabling setup.')
                     else:
                         logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + str(percentage_filtered_out) + '%, in total ' + str(num_data_filtered_out) + ' of ' + str(num_measurements) + ' elements removed by filter within hx711')
                 else: # returned False
                     LOOP_AVG += 1 # increase loops because of failured measurement (returned False)
-                    logger.error('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Failured measurement, you might need to check your hx711 setup')
-                #time.sleep(0.5) # wait 500ms before next measurement
+                    logger.error('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Failured measurement, you might need to check your hx711 setup')
 
             # take "best" measure
             average_weight = round(average(weightMeasures), 1)
@@ -304,19 +291,15 @@ def measure_weight(weight_sensor, hx=None):
             # bei reference_unit=1 soll ALLOWED_DIVERGENCE=300
             if abs(average_weight-weight) > ALLOWED_DIVERGENCE:
                 # if difference between avg weight and chosen weight is bigger than ALLOWED_DIVERGENCE
-                # triggerPIN() # debug method
-                logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + 'Difference between average weight ('+ str(average_weight)+'g) and chosen weight (' + str(weight) + 'g) is more than ' + str(ALLOWED_DIVERGENCE) + 'g. => Try again ('+str(count)+'/'+str(LOOP_TRYS)+')')
-                #time.sleep(0.5) # sleep 500ms
+                logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Difference between average weight ('+ str(average_weight)+'g) and chosen weight (' + str(weight) + 'g) is more than ' + str(ALLOWED_DIVERGENCE) + 'g. => Try again ('+str(count)+'/'+str(LOOP_TRYS)+')')
 
                 if LOOP_TRYS == count: # last loop
                     # 3 loops and still no chosen weight => fallback measurement
                     weight = easy_weight(weight_sensor)
-                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' ' + 'Difference between average weight ('+ str(average_weight)+'g) and chosen weight (' + str(weight) + 'g) is more than ' + str(ALLOWED_DIVERGENCE) + 'g. after ' +str(count) + ' loops, Fallback weight: ' + str(weight) + 'g')
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Difference between average weight ('+ str(average_weight)+'g) and chosen weight (' + str(weight) + 'g) is more than ' + str(ALLOWED_DIVERGENCE) + 'g. after ' +str(count) + ' loops, Fallback weight: ' + str(weight) + 'g')
             else:
                 # divergence is OK => skip
                 break
-
-        #hx.power_down()
 
         # invert weight if flag is set
         if 'invert' in weight_sensor and weight_sensor['invert'] == True and isinstance(weight, (int, float)):
