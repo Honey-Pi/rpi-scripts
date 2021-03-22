@@ -280,7 +280,7 @@ def run_wvdial(modem):
             deviceid = device['id']
             for surfstick in surfsticks:
                 surfstickmodemid = surfstick['id']
-                surfstickstorgaeid = surfstick['id-storage']
+                surfstickstorageid = surfstick['id-storage']
                 if deviceid == surfstickmodemid:
                     if os.path.exists('/dev/'+ modempath):
                         logger.debug('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'])
@@ -294,7 +294,7 @@ def run_wvdial(modem):
                                 logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + modempath + ' is missing')
                         else:
                             logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ' found in Modem mode on ' + device['device'] + ' but /dev/' + surfstick['modem'] + ' is missing')
-                elif deviceid ==  surfstickstorgaeid:
+                elif deviceid ==  surfstickstorageid:
                     logger.warning('Surfstick with ID ' + deviceid + ' ' + device['name'] + ', ' + surfstick['name'] + ', ' + surfstick['alternatename'] + ' found in Storage mode on ' + device['device'] + '. A modeswitch rule is required to use this stick with wvdial! You can save a modeswitch file to this path: /etc/usb_modeswitch.d/')
         if not devicefound:
             logger.debug('No known Surfstick found!')
