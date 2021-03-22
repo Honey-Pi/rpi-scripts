@@ -32,7 +32,7 @@ def convert_lorawan(write_key, ts_fields):
         logger.debug('loraWANstring for this channel: '+ loraWANstring)
     except Exception as ex:
         logger.exception("Exception in convert_lorawan")
-    
+
 
 
 def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
@@ -106,6 +106,7 @@ def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', 
     """
     if write_key is not None:
         data['api_key'] = write_key
+        # created_at
     url = '{ts}/update.{fmt}'.format(
         ts=server_url,
         fmt=fmt,
