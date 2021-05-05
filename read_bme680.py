@@ -6,7 +6,6 @@ import time
 import bme680
 import smbus
 from sensors.sensor_utilities import get_smbus, computeAbsoluteHumidity, isSMBusConnected
-
 import logging
 
 logger = logging.getLogger('HoneyPi.read_bme680')

@@ -8,7 +8,6 @@ import RPi.GPIO as GPIO # import GPIO
 import time
 import logging
 
-# global var
 logger = logging.getLogger('HoneyPi.read_hx711')
 
 # setup GPIO

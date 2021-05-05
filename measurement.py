@@ -22,6 +22,7 @@ from read_dht import measure_dht
 from read_aht10 import measure_aht10
 from read_sht31 import measure_sht31
 from read_hdc1008 import measure_hdc1008
+from read_bh1750 import measure_bh1750
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
 from utilities import logfile, start_single, stop_single, scriptsFolder
@@ -30,8 +31,8 @@ import logging
 
 logger = logging.getLogger('HoneyPi.measurement')
 
-def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits):
-
+def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits):
+    
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     global burn_in_time
     try:
@@ -122,6 +123,12 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if hdc1008_fields is not None:
                 ts_fields.update(hdc1008_fields)
 
+        # measure bh1750 (can only be one) [type 11]
+        if bh1750Sensors and len(bh1750Sensors) == 1:
+            bh1750_fields = measure_bh1750(bh1750Sensors[0])
+            if bh1750_fields is not None:
+                ts_fields.update(bh1750_fields)
+
         # measure every sensor with type 2 [HX711]
         start_single()
         for (i, sensor) in enumerate(weightSensors):
@@ -189,6 +196,7 @@ def measurement():
         aht10Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
         hdc1008Sensors = get_sensors(settings, 10)
+        bh1750Sensors = get_sensors(settings, 11)
         bme680Inits = []
 
         # if bme680 is configured
@@ -202,7 +210,7 @@ def measurement():
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
 
-        ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, None)
+        ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, None)
 
     except Exception as ex:
         logger.exception("Unhandled Exception in direct measurement")
