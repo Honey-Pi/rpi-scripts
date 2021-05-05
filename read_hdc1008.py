@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import smbus
 import time
-from utilities import error_log
+import logging
 from sensors.sensor_utilities import get_smbus
+
+logger = logging.getLogger('HoneyPi.read_hdc1008')
 
 # select address according to jumper setting
 # address  (40,41,42,43) can be found with
@@ -53,7 +55,7 @@ def measure_hdc1008(ts_sensor):
 
 
     except Exception as e:
-        error_log(e, 'Error: Error while reading HDC1080 Sensor. Is it connected?')
+        logger.error('Error while reading HDC1080 Sensor. Is it connected?')
     return None
 
 
@@ -68,4 +70,4 @@ if __name__ == '__main__':
        pass
 
    except Exception as e:
-       error_log(e, "Unhandled Exception in hdc1008 Measurement")
+       logger.exception("Unhandled Exception in hdc1008 Measurement")

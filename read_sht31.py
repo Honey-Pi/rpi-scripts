@@ -6,8 +6,10 @@
 
 import smbus
 import time
-from utilities import error_log
+import logging
 from sensors.sensor_utilities import get_smbus
+
+logger = logging.getLogger('HoneyPi.read_sht31')
 
 # SHT31 address, 0x44(68)
 DEVICE=0x44
@@ -47,9 +49,9 @@ def measure_sht31(ts_sensor):
         if 'ts_field_humidity' in ts_sensor and isinstance(humidity, (int, float)):
             fields[ts_sensor["ts_field_humidity"]] = round(humidity, 2)
         return fields
-        
+
     except Exception as e:
-        error_log(e, 'Error: Error while reading SHT3x Sensor. Is it connected?')
+        logger.error('Error while reading SHT3x Sensor. Is it connected?')
     return None
 
 if __name__ == '__main__':
@@ -64,4 +66,4 @@ if __name__ == '__main__':
        pass
 
    except Exception as e:
-       error_log(e, "Unhandled Exception in SHT31 Measurement")
+       logger.exception("Unhandled Exception in SHT31 Measurement")

@@ -4,8 +4,10 @@
 
 import smbus
 import time
-from utilities import error_log
+import logging
 from sensors.sensor_utilities import get_smbus
+
+logger = logging.getLogger('HoneyPi.read_aht10')
 
 DEVICE = 0x38 # Default device I2C address
 
@@ -42,11 +44,11 @@ def measure_aht10(ts_sensor):
         if 'ts_field_humidity' in ts_sensor and isinstance(humidity, (int, float)):
             fields[ts_sensor["ts_field_humidity"]] = round(humidity, 2)
         return fields
-        
+
     except Exception as e:
-        error_log(e, 'Error: Error while reading AHT10 Sensor. Is it connected?')
+        logger.error('Error while reading AHT10 Sensor. Is it connected?')
     return None
-    
+
 
 if __name__ == '__main__':
    try:
@@ -60,4 +62,4 @@ if __name__ == '__main__':
        pass
 
    except Exception as e:
-       error_log(e, "Unhandled Exception in AHT10 Measurement")
+       logger.exception("Unhandled Exception in AHT10 Measurement")

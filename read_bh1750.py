@@ -5,7 +5,9 @@
 
 import smbus
 import time
-from utilities import error_log
+import logging
+
+logger = logging.getLogger('HoneyPi.read_bh1750')
 
 device     = 0x23 # 0x5C 
 power_down = 0x00
@@ -27,24 +29,24 @@ def measure_bh1750(ts_sensor):
         #***0x20	 0b00100000 //OTH: One Time H-Resolution Mode ***
         #	0x21	 0b00100001 //OTH_2: One Time H-Resolution Mode2
         #	0x23	 0b00100011 //OTL: One Time L-Resolution Mode
-        #   For the beginning, the one time high resolution mode (OTH) was chosen.  
-        data = bus.read_i2c_block_data(device, 0x20)  # Start initial measurement 
-        time.sleep(0.200) # Measurement take ~120 ms / 200 ms was chosen as a safe value. 
+        #   For the beginning, the one time high resolution mode (OTH) was chosen.
+        data = bus.read_i2c_block_data(device, 0x20)  # Start initial measurement
+        time.sleep(0.200) # Measurement take ~120 ms / 200 ms was chosen as a safe value.
         data = bus.read_i2c_block_data(device, 0x20) # Collecting the value
-        # The address must be accessed a 2nd time so that the values are up-to-date. 
- 
+        # The address must be accessed a 2nd time so that the values are up-to-date.
+
         # ThingSpeak fields
         # Create returned dict if ts_field is defined
         if 'ts_field' in ts_sensor and isinstance(convertToNumber(data), (int, float)):
             if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
                 data = convertToNumber(data)-ts_sensor["offset"]
             fields[ts_sensor["ts_field"]] = round(data, 1)
-        return fields  
-        
+        return fields
+
     except Exception as e:
-        error_log(e, 'Error: Error while reading BH1750 Sensor. Is it connected?')
+        logger.error('Error while reading BH1750 Sensor. Is it connected?')
     return None
-     
+
 if __name__ == '__main__':
    try:
         lightLevel=convertToNumber(bus.read_i2c_block_data(device, 0x20))
@@ -57,4 +59,4 @@ if __name__ == '__main__':
        pass
 
    except Exception as e:
-       error_log(e, "Unhandled Exception in BH1750 Measurement")
+       logger.exception("Unhandled Exception in BH1750 Measurement")
