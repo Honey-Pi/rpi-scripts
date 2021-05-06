@@ -16,3 +16,5 @@ rm -rf /home/pi/HoneyPi/rpi-scripts
 cd /home/pi/HoneyPi/
 git clone --depth=1 https://github.com/Honey-Pi/rpi-scripts
 ```
+
+Your settings won't be lost because they are stored at `/var/www/html/backend/settings.json`.
