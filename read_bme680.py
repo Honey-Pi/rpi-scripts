@@ -198,7 +198,6 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Reading BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely I2C Bus needs a reboot")
-        return fields, gas_baseline
     except Exception as ex:
         logger.exception("Unhandled Exception in calc_air_quality")
     return fields, gas_baseline
