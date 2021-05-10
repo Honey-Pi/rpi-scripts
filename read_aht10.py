@@ -34,6 +34,8 @@ def read_aht10(addr=DEVICE):
 def measure_aht10(ts_sensor):
     try:
         fields = {}
+        if 'i2c_addr' in ts_sensor and ts_sensor["i2c_addr"] is not None:
+            DEVICE = hex(int(ts_sensor["i2c_addr"], 16))
         temperature,humidity = read_aht10(DEVICE)
         # ThingSpeak fields
         # Create returned dict if ts_field is defined

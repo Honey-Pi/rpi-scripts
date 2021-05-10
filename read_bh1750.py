@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger('HoneyPi.read_bh1750')
 
-device     = 0x23 # 0x5C 
+DEVICE     = 0x23 # 0x5C 
 power_down = 0x00
 power_on   = 0x01
 reset      = 0x07
@@ -23,6 +23,8 @@ def measure_bh1750(ts_sensor):
     try:
 
         fields = {}
+        if 'i2c_addr' in ts_sensor and ts_sensor["i2c_addr"] is not None:
+            DEVICE = hex(int(ts_sensor["i2c_addr"], 16))
         #	0x10	 0b00010000 //CHM: Continuously H-Resolution Mode
         #	0x11	 0b00010001 //CHM_2: Continuously H-Resolution Mode2
         #	0x13	 0b00010011 //CLM: Continuously L-Resolution Mode
@@ -30,9 +32,9 @@ def measure_bh1750(ts_sensor):
         #	0x21	 0b00100001 //OTH_2: One Time H-Resolution Mode2
         #	0x23	 0b00100011 //OTL: One Time L-Resolution Mode
         #   For the beginning, the one time high resolution mode (OTH) was chosen.
-        data = bus.read_i2c_block_data(device, 0x20)  # Start initial measurement
+        data = bus.read_i2c_block_data(DEVICE, 0x20)  # Start initial measurement
         time.sleep(0.200) # Measurement take ~120 ms / 200 ms was chosen as a safe value.
-        data = bus.read_i2c_block_data(device, 0x20) # Collecting the value
+        data = bus.read_i2c_block_data(DEVICE, 0x20) # Collecting the value
         # The address must be accessed a 2nd time so that the values are up-to-date.
 
         # ThingSpeak fields
@@ -49,10 +51,10 @@ def measure_bh1750(ts_sensor):
 
 if __name__ == '__main__':
    try:
-        lightLevel=convertToNumber(bus.read_i2c_block_data(device, 0x20))
+        lightLevel=convertToNumber(bus.read_i2c_block_data(DEVICE, 0x20))
         print (format(lightLevel,'.2f') + " lux")
         time.sleep(0.200)
-        lightLevel=convertToNumber(bus.read_i2c_block_data(device, 0x20))
+        lightLevel=convertToNumber(bus.read_i2c_block_data(DEVICE, 0x20))
         print (format(lightLevel,'.2f') + " lux")
 
    except (KeyboardInterrupt, SystemExit):
