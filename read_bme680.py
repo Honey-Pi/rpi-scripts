@@ -10,8 +10,7 @@ import logging
 
 logger = logging.getLogger('HoneyPi.read_bme680')
 
-# global vars
-burn_in_time = 2 #reduced burn_in_time to 2 seconds as the default 30 seconds from pimoroni are used for a measurment each second which puts the internal heater to a much higher temperature, which will never be reached with our measurement cycle
+burn_in_time = 2 # reduced burn_in_time to 2 seconds as the default 30 seconds from pimoroni are used for a measurment each second which puts the internal heater to a much higher temperature, which will never be reached with our measurement cycle
 
 def initBME680(ts_sensor):
     sensor = None
@@ -27,19 +26,19 @@ def initBME680(ts_sensor):
             elif i2c_addr == "0x77":
                 sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
             else:
-                logger.error("Ivalid BME680 I2C Adress '" + i2c_addr + "' specified.")
-                return sensor
+                logger.error("Invalid BME680 I2C Adress '" + i2c_addr + "' specified.")
         except IOError as ex:
             if str(ex) == "[Errno 121] Remote I/O error":
                 logger.error("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely wrong Sensor Chip-ID or sensor not connected.")
             else:
-                logger.error("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: " + repr(ex))
-            return sensor
+                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed")
         except Exception as ex:
             logger.exception("Unhandled Exception initBME680 during initializing of BME680")
+        finally:
             return sensor
+
         offset = 0
-        if 'offset' in ts_sensor:
+        if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
             offset = float(ts_sensor["offset"])
         logger.debug("BME680 on I2C Adress '" + i2c_addr + "': The Temperature Offset is " + str(offset) + " °C")
 
@@ -55,11 +54,9 @@ def initBME680(ts_sensor):
         sensor.select_gas_heater_profile(0)
         sensor.set_power_mode(bme680.FORCED_MODE)
 
-        return sensor
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Reading BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely I2C Bus needs a reboot")
-        return sensor
     except Exception as ex:
         logger.exception("Unhandled Exception in initBME680")
     return sensor
