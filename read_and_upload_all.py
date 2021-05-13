@@ -199,9 +199,9 @@ def start_measurement(measurement_stop):
         bme280Sensors = get_sensors(settings, 5)
         pcf8591Sensors = get_sensors(settings, 6)
         ee895Sensors = get_sensors(settings, 7)
-        aht10Sensors = get_sensors(settings, 8)
+        hdc1008Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
-        hdc1008Sensors = get_sensors(settings, 10)
+        aht10Sensors = get_sensors(settings, 10)
         bh1750Sensors = get_sensors(settings, 11)
         bme680Inits = []
 

@@ -32,7 +32,7 @@ import logging
 logger = logging.getLogger('HoneyPi.measurement')
 
 def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits):
-    
+
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     global burn_in_time
     try:
@@ -193,9 +193,9 @@ def measurement():
         bme280Sensors = get_sensors(settings, 5)
         pcf8591Sensors = get_sensors(settings, 6)
         ee895Sensors = get_sensors(settings, 7)
-        aht10Sensors = get_sensors(settings, 8)
+        hdc1008Sensors = get_sensors(settings, 8)
         sht31Sensors = get_sensors(settings, 9)
-        hdc1008Sensors = get_sensors(settings, 10)
+        aht10Sensors = get_sensors(settings, 10)
         bh1750Sensors = get_sensors(settings, 11)
         bme680Inits = []
 
