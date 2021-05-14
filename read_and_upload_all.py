@@ -27,7 +27,7 @@ from read_hdc1008 import measure_hdc1008
 from read_bh1750 import measure_bh1750
 
 from read_settings import get_settings, get_sensors
-from utilities import reboot, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led, check_undervoltage
+from utilities import reboot, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led, check_undervoltage, thingspeak_datetime
 from write_csv import write_csv
 from measurement import measure_all_sensors
 from thingspeak import transfer_all_channels_to_ts
@@ -56,7 +56,7 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
     try:
         ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits)
         if len(ts_fields) > 0:
-            ts_datetime=datetime.now()
+            ts_datetime=thingspeak_datetime()
             if offline == 1 or offline == 3:
                 try:
                     s = write_csv(ts_fields, ts_channels, ts_datetime)

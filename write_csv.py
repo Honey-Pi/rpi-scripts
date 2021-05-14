@@ -7,7 +7,7 @@ import time
 import os, sys
 import io
 from datetime import datetime
-from utilities import scriptsFolder, check_file, clean_fields
+from utilities import scriptsFolder, check_file, clean_fields, thingspeak_datetime
 import logging
 
 logger = logging.getLogger('HoneyPi.write_csv')
@@ -36,7 +36,7 @@ def write_singlechannel_csv(ts_fields_cleaned, channelId, ts_datetime=None):
         if ts_datetime is not None:
             row['datetime']=ts_datetime
         else:
-            row['datetime']=datetime.now()
+            row['datetime']=thingspeak_datetime()
 
         for key, value in ts_fields_cleaned.items():
             row[key]=str(value)

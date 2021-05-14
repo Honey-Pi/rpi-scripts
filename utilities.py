@@ -28,6 +28,9 @@ settingsFile = backendFolder + '/settings.json'
 wittypi_scheduleFile = backendFolder + "/schedule.wpi"
 logfile = scriptsFolder + '/error.log'
 
+def thingspeak_datetime():
+    return datetime.utcnow().replace(microsecond=0).isoformat()
+
 def get_ip_address(ifname):
     try:
         ipv4 = os.popen('ip addr show ' + ifname + ' | grep "\<inet\>" | awk \'{ print $2 }\' | awk -F "/" \'{ print $1 }\'').read().strip()
@@ -562,19 +565,17 @@ def set_wittypi_schedule():
         elif os.path.exists(homeFolder + '/wittypi'):
             wittyPiPath = homeFolder + '/wittypi'
             logger.debug("wittypi 3 or 3 Mini installation detected in: " + wittyPiPath)
-        else:
-            logger.debug("No WittyPi software installed.")
 
         if os.path.isfile(wittyPiPath + '/wittyPi.sh') and os.path.isfile(wittyPiPath + '/syncTime.sh') and os.path.isfile(wittyPiPath + '/runScript.sh'):
             if schedulefile_exists:
-                logger.debug("Setting  wittyPi schedule...")
+                logger.debug("Setting wittyPi schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
             else:
-                logger.debug("Pausing  wittyPi schedule ...")
+                logger.debug("Pausing wittyPi schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
             return True
         else:
-            logger.debug('wittyPi installation is missing files - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
+            logger.debug('WittyPi is not installed - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
     except Exception as ex:
         logger.exception("Error in function set_wittypi_schedule")
     return False
@@ -622,16 +623,16 @@ def getStateFromStorage(variable, default_value=False):
                     elif content == "False":
                         content = False
                     else:
-                        logger.warning("Variable '" + variable + "' Fallback to default value")
+                        logger.warning("Variable '" + variable + "': Fallback to default value")
                         content = default_value
                     logger.debug("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
                     return content
                 else:
-                    logger.debug("Variable '" + variable + "' has initial state because file is empty.")
+                    logger.debug("Variable '" + variable + "' has initial state because file is empty")
                     return None
 
         else:
-            logger.debug("Variable '" + variable + "' does not exists. default_value = " + str(default_value))
+            logger.debug("Variable '" + variable + "' does not exists. Use default:" + str(default_value))
     except Exception as ex:
         logger.exception("Error in function getStateFromStorage")
         pass
