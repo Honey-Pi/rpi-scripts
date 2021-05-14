@@ -50,9 +50,9 @@ def measure_hdc1008(ts_sensor):
         if 'ts_field_temperature' in ts_sensor and isinstance(temperature, (int, float)):
             if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
                 temperature = temperature-ts_sensor["offset"]
-            fields[ts_sensor["ts_field_temperature"]] = round(temperature, 2)
+            fields[ts_sensor["ts_field_temperature"]] = round(temperature, 1)
         if 'ts_field_humidity' in ts_sensor and isinstance(humidity, (int, float)):
-            fields[ts_sensor["ts_field_humidity"]] = round(humidity, 2)
+            fields[ts_sensor["ts_field_humidity"]] = round(humidity)
         return fields
 
 

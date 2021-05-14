@@ -44,11 +44,10 @@ def measure_tc(tc_sensor):
             if 'offset' in tc_sensor:
                 offset = float(tc_sensor["offset"])
                 tc_temperature = tc_temperature-offset
-            tc_temperature = float('%6.2f' % tc_temperature)
 
         except Exception as ex:
             logger.exception("Reading MAX6675/MAX31855 failed.")
 
         if 'ts_field' in tc_sensor and tc_temperature is not None:
-            return ({tc_sensor["ts_field"]: tc_temperature})
+            return ({tc_sensor["ts_field"]: round(tc_temperature, 1)})
     return {}

@@ -34,13 +34,9 @@ def measure_dht(ts_sensor):
         if 'ts_field_temperature' in ts_sensor and temperature is not None:
             if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
                 temperature = temperature-float(ts_sensor["offset"])
-            # limit to 2 digits
-            temperature = float("{0:.2f}".format(temperature))
-            fields[ts_sensor["ts_field_temperature"]] = temperature
+            fields[ts_sensor["ts_field_temperature"]] = round(temperature, 1)
         if 'ts_field_humidity' in ts_sensor and humidity is not None:
-            # limit to 2 digits
-            humidity = float("{0:.2f}".format(humidity))
-            fields[ts_sensor["ts_field_humidity"]] = humidity
+            fields[ts_sensor["ts_field_humidity"]] = round(humidity)
 
     except Exception as ex:
         logger.exception("Reading DHT failed. DHT: " + str(dht_type) + " " + str(sensorDHT) + ", GPIO: " + str(pin))

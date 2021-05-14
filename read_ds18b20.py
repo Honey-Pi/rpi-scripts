@@ -47,7 +47,7 @@ def measure_temperature(sensor):
                     # read temperature and convert temperature
                     string_value = file_content.split("\n")[1].split(" ")[9]
                     temperature = float(string_value[2:]) / 1000
-                    temperature = float('%6.2f' % temperature)
+                    temperature = round(temperature, 1)
 
                     return temperature
 

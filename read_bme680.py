@@ -171,9 +171,9 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
             while curr_time - start_time < max_time:
                 curr_time = time.time()
                 if sensor.get_sensor_data() and sensor.data.heat_stable:
-                    temperature = sensor.data.temperature
-                    humidity = round(sensor.data.humidity, 2)
-                    air_pressure = round(sensor.data.pressure,0)
+                    temperature = round(sensor.data.temperature, 1)
+                    humidity = round(sensor.data.humidity)
+                    air_pressure = round(sensor.data.pressure)
 
                     if 'ts_field_temperature' in ts_sensor:
                         fields[ts_sensor["ts_field_temperature"]] = temperature
@@ -189,7 +189,7 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
                         if gas_baseline:
                             air_quality_score, gas_baseline = calc_air_quality(sensor, gas_baseline)
                             # round to 0 digits
-                            fields[ts_sensor["ts_field_air_quality"]] = int(round(air_quality_score, 0))
+                            fields[ts_sensor["ts_field_air_quality"]] = round(air_quality_score)
 
                     return fields, gas_baseline
                 # Waiting for heat_stable
