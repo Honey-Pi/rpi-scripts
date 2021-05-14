@@ -7,34 +7,6 @@ import math
 
 logger = logging.getLogger('HoneyPi.thingspeak')
 
-def convert_lorawan(write_key, ts_fields):
-    try:
-        loraWANstring=""
-        mumbytespervalue=3
-        numfiledsmissingnew = 0
-        numfiledsmissing = 0
-        for (fieldIndex, field) in enumerate (sorted(ts_fields)):
-            hexstr = ""
-            fieldNumber = int(field.replace('field',''))
-            numfiledsmissing = fieldNumber - (fieldIndex + 1 + numfiledsmissing)
-            numfiledsmissingnew = numfiledsmissing
-            while numfiledsmissingnew > 0 :
-                numfiledsmissingnew = numfiledsmissingnew - 1
-                for i in range (mumbytespervalue):
-                    hexstr = hexstr + "00"
-            loraWANstring = loraWANstring + hexstr
-            value = ts_fields[field]*100
-            if not isinstance(value, int):
-                value = int(value)
-            hexstr = str(value.to_bytes(mumbytespervalue, byteorder='big').hex())
-            logger.debug(' field: ' + str(field) + ' content: '+ str(ts_fields[field]) + ' Hex: ' + hexstr)
-            loraWANstring = loraWANstring + hexstr
-        logger.debug('loraWANstring for this channel: '+ loraWANstring)
-    except Exception as ex:
-        logger.exception("Exception in convert_lorawan")
-
-
-
 def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug, ts_datetime):
     try:
         defaultgatewayinterface = get_default_gateway_interface_linux()
@@ -71,7 +43,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_da
     isConnectionError = True
     while isConnectionError:
         try:
-            convert_lorawan(write_key, ts_fields_cleaned)
+            # convert_lorawan(ts_fields_cleaned)
             thingspeak_update(write_key, ts_fields_cleaned, server_url, ts_datetime)
             logger.info("Data succesfully transfered to ThingSpeak.")
             # break because transfer succeded
@@ -98,7 +70,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_da
 
     return isConnectionError
 
-def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', timeout=None, fmt='json', ts_datetime=None):
+def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', ts_datetime=None, timeout=None, fmt='json'):
     """Update channel feed.
 
     Full reference:
