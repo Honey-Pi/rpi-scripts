@@ -320,16 +320,11 @@ def connect_internet_modem(settings):
             # if modem mode is Hi.Link mode
             logger.debug('Surfstick is configured to be used in HiLink mode.')
             logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
-            logger.debug("Interface wwan0 is up: " +  str(get_interface_upstatus_linux('wwan0')))
-            logger.debug("Interface usb0 is up: " +  str(get_interface_upstatus_linux('usb0')))
-            logger.debug("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
-            logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
-            logger.debug("Interface eth1 is up: " +  str(get_interface_upstatus_linux('eth1')))
+            logger.debug("Check Interface status - wwan0 is up: " +  str(get_interface_upstatus_linux('wwan0')) + " usb0 is up: " +  str(get_interface_upstatus_linux('usb0')) + " wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')) + " eth0 is up: " +  str(get_interface_upstatus_linux('eth0')) + " eth1 is up: " +  str(get_interface_upstatus_linux('eth1')))
         elif modem_mode == 0:
             logger.debug('Use of surfstick is configured as disabled.')
             logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
-            logger.debug("Interface eth0 is up: " +  str(get_interface_upstatus_linux('eth0')))
-            logger.debug("Interface wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
+            logger.debug("Check Interface status - eth0 is up: " +  str(get_interface_upstatus_linux('eth0')) + " wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
         else:
             logger.warning('Undefined state for surfstick mode.')
     except Exception as ex:
@@ -514,7 +509,7 @@ def clean_fields(ts_fields, countChannels, debug):
         fieldNumberNew = fieldNumber - (8 * countChannels)
         if fieldNumberNew <= 8 and fieldNumberNew > 0 :
             ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
-    logger.debug('Cleaned dictionary:' + json.dumps(ts_fields_cleaned))
+    #logger.debug('Cleaned dictionary: ' + json.dumps(ts_fields_cleaned))
     return ts_fields_cleaned
 
 # decorater used to block function printing to the console
