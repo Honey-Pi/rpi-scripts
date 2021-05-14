@@ -34,15 +34,15 @@ from thingspeak import transfer_all_channels_to_ts
 
 logger = logging.getLogger('HoneyPi.read_and_upload_all')
 
-def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug):
+def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug, ts_datetime):
     try:
         # update ThingSpeak / transfer values
-        connectionErrorHappened = transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug)
+        connectionErrorHappened = transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug, ts_datetime)
 
         if connectionErrorHappened:
             # Write to CSV-File if ConnectionError occured
             if offline == 2:
-                s = write_csv(ts_fields, ts_channels)
+                s = write_csv(ts_fields, ts_channels, ts_datetime)
                 if s and debug:
                     logger.info("Data succesfully saved to CSV-File.")
 
@@ -56,9 +56,10 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
     try:
         ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits)
         if len(ts_fields) > 0:
+            ts_datetime=datetime.now()
             if offline == 1 or offline == 3:
                 try:
-                    s = write_csv(ts_fields, ts_channels)
+                    s = write_csv(ts_fields, ts_channels, ts_datetime)
                     if s and debug:
                         logger.info("Data succesfully saved to CSV-File.")
                 except Exception as ex:
@@ -67,7 +68,7 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
             # if transfer to thingspeak is set
             if (offline == 0 or offline == 1 or offline == 2) and ts_channels:
                 # update ThingSpeak / transfer values
-                connectionErrorHappened = manage_transfer_to_ts(ts_channels, ts_fields, ts_server_url, offline, debug)
+                connectionErrorHappened = manage_transfer_to_ts(ts_channels, ts_fields, ts_server_url, offline, debug, ts_datetime)
 
                 if connectionErrorHappened:
                     MAX_RETRIES_IN_A_ROW = 3

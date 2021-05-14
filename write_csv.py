@@ -14,17 +14,17 @@ logger = logging.getLogger('HoneyPi.write_csv')
 
 
 
-def write_csv(ts_fields, ts_channels):
+def write_csv(ts_fields, ts_channels, ts_datetime=None):
     try:
         success = True
         for (channelIndex, channel) in enumerate(ts_channels, 0):
             ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
-            success = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'])
+            success = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'], ts_datetime)
         return success
     except Exception as ex:
         logger.exception("Unhandled exception in write_csv")
 
-def write_singlechannel_csv(ts_fields_cleaned, channelId):
+def write_singlechannel_csv(ts_fields_cleaned, channelId, ts_datetime=None):
     try:
         csv_file = scriptsFolder + '/offline-' + str(channelId) + '.csv'
         # Allowed ThingSpeak fields:
@@ -33,7 +33,11 @@ def write_singlechannel_csv(ts_fields_cleaned, channelId):
 
         # Create row with data
         row = {}
-        row['datetime']=datetime.now()
+        if ts_datetime is not None:
+            row['datetime']=ts_datetime
+        else:
+            row['datetime']=datetime.now()
+
         for key, value in ts_fields_cleaned.items():
             row[key]=str(value)
 

@@ -35,7 +35,7 @@ def convert_lorawan(write_key, ts_fields):
 
 
 
-def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
+def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug, ts_datetime):
     try:
         defaultgatewayinterface = get_default_gateway_interface_linux()
         if defaultgatewayinterface == None:
@@ -53,7 +53,7 @@ def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
                 logger.info('Channel ' + str(channelIndex) + ' with ID ' + str(channel_id) + ' transfer with source IP ' + defaultgatewayinterfaceip + ' using default gateway on ' + str(defaultgatewayinterface))
                 ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
                 if ts_fields_cleaned:
-                    connectionError = upload_single_channel(write_key, ts_fields_cleaned, server_url, debug)
+                    connectionError = upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_datetime)
                     connectionErrorWithinAnyChannel.append(connectionError)
                 else:
                     logger.warning('No ThingSpeak data transfer because no fields defined for Channel ' + str(channelIndex) + ' with ID ' + str(channel_id))
@@ -64,7 +64,7 @@ def transfer_all_channels_to_ts(ts_channels, ts_fields, server_url, debug):
     except Exception as ex:
         logger.exception("Exception in transfer_all_channels_to_ts")
 
-def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug):
+def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_datetime):
     # do-while to retry failed transfer
     retries = 0
     MAX_RETRIES = 3
@@ -72,7 +72,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug):
     while isConnectionError:
         try:
             convert_lorawan(write_key, ts_fields_cleaned)
-            thingspeak_update(write_key, ts_fields_cleaned, server_url)
+            thingspeak_update(write_key, ts_fields_cleaned, server_url, ts_datetime)
             logger.info("Data succesfully transfered to ThingSpeak.")
             # break because transfer succeded
             isConnectionError = False
@@ -98,7 +98,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug):
 
     return isConnectionError
 
-def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', timeout=None, fmt='json'):
+def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', timeout=None, fmt='json', ts_datetime=None):
     """Update channel feed.
 
     Full reference:
@@ -106,7 +106,8 @@ def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', 
     """
     if write_key is not None:
         data['api_key'] = write_key
-        # created_at
+    if ts_datetime is not None:
+        data['created_at'] = ts_datetime
     url = '{ts}/update.{fmt}'.format(
         ts=server_url,
         fmt=fmt,
