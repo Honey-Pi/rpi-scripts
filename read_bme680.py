@@ -18,7 +18,7 @@ def initBME680(ts_sensor):
     try:
         # setup BME680 sensor
         try:
-            if 'i2c_addr' in ts_sensor:
+            if 'i2c_addr' in ts_sensor and ts_sensor["i2c_addr"] is not None:
                 i2c_addr = ts_sensor["i2c_addr"]
 
             if i2c_addr == "0x76":
@@ -27,6 +27,8 @@ def initBME680(ts_sensor):
                 sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
             else:
                 logger.error("Invalid BME680 I2C Adress '" + i2c_addr + "' specified.")
+                # using default I2C address
+                sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
         except IOError as ex:
             if str(ex) == "[Errno 121] Remote I/O error":
                 logger.error("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely wrong Sensor Chip-ID or sensor not connected.")

@@ -43,7 +43,7 @@ def measure(pin):
 # used by check_wittypi_voltage and initial voltage check
 def get_raw_voltage(ts_sensor):
     try:
-        if 'pin' in ts_sensor:
+        if 'pin' in ts_sensor and ts_sensor['pin'] is not None:
             pin = int(ts_sensor['pin'])
         else:
             pin = 2
@@ -77,9 +77,7 @@ def measure_pcf8591(ts_sensor):
             if 'ts_field' in ts_sensor and isinstance(voltage, (int, float)):
                 fields[ts_sensor["ts_field"]] = round(voltage, 4)
 
-            return fields
-
     except Exception as ex:
         logger.exception("Unhaldled exception in measure_pcf8591")
 
-    return None
+    return fields

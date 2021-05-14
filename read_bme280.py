@@ -15,15 +15,15 @@ def measure_bme280(ts_sensor):
     offset = 0
 
     try:
-        if 'i2c_addr' in ts_sensor:
-            i2c_addr = ts_sensor["i2c_addr"]
+        if 'i2c_addr' in ts_sensor and ts_sensor["i2c_addr"] is not None:
+            i2c_addr_string = ts_sensor["i2c_addr"]
 
-            if i2c_addr == "0x76":
+            if i2c_addr_string == "0x76":
                 i2c_addr = 0x76
-            elif i2c_addr == "0x77":
+            elif i2c_addr_string == "0x77":
                 i2c_addr = 0x77
             else:
-                logger.warning("Undefined BME280 I2C Address '" + str(i2c_addr) + "'")
+                logger.warning("Undefined BME280 I2C Address '" + str(i2c_addr_string) + "'")
 
     except Exception as ex:
         logger.error("Error getting I2C Adress, using default: '" + str(i2c_addr))

@@ -24,7 +24,7 @@ def measure_bh1750(ts_sensor):
 
         fields = {}
         if 'i2c_addr' in ts_sensor and ts_sensor["i2c_addr"] is not None:
-            DEVICE = hex(int(ts_sensor["i2c_addr"], 16))
+            DEVICE = int(ts_sensor["i2c_addr"], 16) # convert string to hexadecimal integer
         #	0x10	 0b00010000 //CHM: Continuously H-Resolution Mode
         #	0x11	 0b00010001 //CHM_2: Continuously H-Resolution Mode2
         #	0x13	 0b00010011 //CLM: Continuously L-Resolution Mode
