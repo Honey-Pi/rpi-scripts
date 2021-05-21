@@ -34,11 +34,14 @@ def initBME680(ts_sensor):
                 logger.error("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely wrong Sensor Chip-ID or sensor not connected.")
             else:
                 logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed")
+            return sensor
         except Exception as ex:
             logger.exception("Unhandled Exception initBME680 during initializing of BME680")
-        finally:
             return sensor
-
+        #finally:
+            #The finally block, if specified, will be executed regardless if the try block raises an error or not. So a return here ends the function!
+            #return sensor
+            
         offset = 0
         if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
             offset = float(ts_sensor["offset"])
