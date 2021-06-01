@@ -41,7 +41,7 @@ def initBME680(ts_sensor):
         #finally:
             #The finally block, if specified, will be executed regardless if the try block raises an error or not. So a return here ends the function!
             #return sensor
-            
+
         offset = 0
         if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
             offset = float(ts_sensor["offset"])
@@ -175,8 +175,8 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
                 curr_time = time.time()
                 if sensor.get_sensor_data() and sensor.data.heat_stable:
                     temperature = round(sensor.data.temperature, 1)
-                    humidity = round(sensor.data.humidity)
-                    air_pressure = round(sensor.data.pressure)
+                    humidity = round(sensor.data.humidity, 1)
+                    air_pressure = round(sensor.data.pressure, 1)
 
                     if 'ts_field_temperature' in ts_sensor:
                         fields[ts_sensor["ts_field_temperature"]] = temperature

@@ -150,7 +150,7 @@ def set_ts_field(weight_sensor, weight):
     try:
         if weight and type(weight) in (float, int):
             weight = weight/1000  # gramms to kg
-            weight = float("{0:.2f}".format(weight)) # float only 2 decimals
+            weight = float("{0:.3f}".format(weight)) # float only 3 decimals
 
             if 'ts_field' in weight_sensor:
                 return ({weight_sensor["ts_field"]: weight})

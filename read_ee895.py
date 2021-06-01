@@ -62,11 +62,11 @@ def measure_ee895(ts_sensor):
         # ThingSpeak fields
         # Create returned dict if ts-field is defined
         if 'ts_field' in ts_sensor and isinstance(co2, (int, float)):
-            fields[ts_sensor["ts_field"]] = round(co2)
+            fields[ts_sensor["ts_field"]] = round(co2, 2)
         if 'ts_field_temperature' in ts_sensor and isinstance(temp, (int, float)):
             fields[ts_sensor["ts_field_temperature"]] = round(temp, 1)
         if 'ts_field_air_pressure' in ts_sensor and isinstance(pressure, (int, float)):
-            fields[ts_sensor["ts_field_air_pressure"]] = round(pressure)
+            fields[ts_sensor["ts_field_air_pressure"]] = round(pressure, 1)
     except OSError:
         error_log('Warning: No EE895 Sensor connected.')
     except Exception as ex:

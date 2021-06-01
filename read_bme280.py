@@ -39,9 +39,9 @@ def measure_bme280(ts_sensor):
                 temperature = temperature-offset
             fields[ts_sensor["ts_field_temperature"]] = round(temperature, 1)
         if 'ts_field_humidity' in ts_sensor and isinstance(humidity, (int, float)):
-            fields[ts_sensor["ts_field_humidity"]] = round(humidity)
+            fields[ts_sensor["ts_field_humidity"]] = round(humidity, 1)
         if 'ts_field_air_pressure' in ts_sensor and isinstance(pressure, (int, float)):
-            fields[ts_sensor["ts_field_air_pressure"]] = round(pressure)
+            fields[ts_sensor["ts_field_air_pressure"]] = round(pressure, 1)
     except OSError:
         logger.error("No BME280 Sensor connected on I2C Adress.")
     except Exception as ex:
