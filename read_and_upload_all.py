@@ -217,7 +217,7 @@ def start_measurement(measurement_stop):
             if 'ts_field_air_quality' in bme680Sensor:
                 gas_baseline = burn_in_bme680(sensor, burn_in_time)
             else:
-                gas_baseline = None            bme680Init['sensor'] = sensor
+                gas_baseline = None
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
 
