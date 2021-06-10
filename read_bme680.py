@@ -52,16 +52,17 @@ def initBME680(ts_sensor):
         sensor.set_pressure_oversample(bme680.OS_4X)
         sensor.set_temperature_oversample(bme680.OS_8X)
         sensor.set_filter(bme680.FILTER_SIZE_3)
-        sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
         sensor.set_temp_offset(offset)
-        sensor.set_gas_heater_temperature(320)
-        sensor.set_gas_heater_duration(150)
-        sensor.select_gas_heater_profile(0)
         sensor.set_power_mode(bme680.FORCED_MODE)
-
-    except IOError as ex:
-        if str(ex) == "[Errno 121] Remote I/O error":
-            logger.error("Reading BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely I2C Bus needs a reboot")
+        
+        if 'ts_field_air_quality' in ts_sensor:
+            sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
+            sensor.set_gas_heater_temperature(320)
+            sensor.set_gas_heater_duration(150)
+            sensor.select_gas_heater_profile(0)
+        else:
+            sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
+        return sensor
     except Exception as ex:
         logger.exception("Unhandled Exception in initBME680")
     return sensor
@@ -150,9 +151,8 @@ def calc_air_quality(sensor, gas_baseline):
 
             # Calculate air_quality_score.
             air_quality_score = hum_score + gas_score
-            absoluteHumidity = computeAbsoluteHumidity(hum, temp)
+            logger.debug('BME680 Gas: {0:.2f} Ohms, humidity: {1:.2f} %RH, air quality: {2:.2f}'.format(gas,hum,air_quality_score))
 
-            logger.debug('BME680 Gas: {0:.2f} Ohms, humidity: {1:.2f} %RH, air quality: {2:.2f}, absolute humidity: {3:.2f} g/m³'.format(gas,hum,air_quality_score,absoluteHumidity))
 
             return air_quality_score, gas_baseline
         else:
@@ -173,15 +173,18 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
             max_time = 30 # max seconds to wait for heat_stable
             while curr_time - start_time < max_time:
                 curr_time = time.time()
-                if sensor.get_sensor_data() and sensor.data.heat_stable:
+                if sensor.get_sensor_data():
                     temperature = round(sensor.data.temperature, 1)
                     humidity = round(sensor.data.humidity, 1)
                     air_pressure = round(sensor.data.pressure, 1)
+                    absoluteHumidity = computeAbsoluteHumidity(humidity, temperature)
 
                     if 'ts_field_temperature' in ts_sensor:
                         fields[ts_sensor["ts_field_temperature"]] = temperature
                     if 'ts_field_humidity' in ts_sensor:
                         fields[ts_sensor["ts_field_humidity"]] = humidity
+                    if 'ts_field_absolutehumidity' in ts_sensor:
+                        fields[ts_sensor["ts_field_absolutehumidity"]] = absoluteHumidity
                     if 'ts_field_air_pressure' in ts_sensor:
                         fields[ts_sensor["ts_field_air_pressure"]] = air_pressure
                     if 'ts_field_air_quality' in ts_sensor:
@@ -189,10 +192,11 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
                             logger.debug('BME680 Gas baseline did not exist, burning in')
                             gas_baseline = burn_in_bme680(sensor, burn_in_time)
                         # Calculate air_quality_score.
-                        if gas_baseline:
+                        if gas_baseline and sensor.data.heat_stable:
                             air_quality_score, gas_baseline = calc_air_quality(sensor, gas_baseline)
                             # round to 0 digits
                             fields[ts_sensor["ts_field_air_quality"]] = round(air_quality_score)
+                    logger.debug('BME680 temperature: {0:.2f} °C, humidity: {1:.2f} %RH, absolute humidity: {2:.2f} g/m³'.format(temperature,humidity,absoluteHumidity))
 
                     return fields, gas_baseline
                 # Waiting for heat_stable
