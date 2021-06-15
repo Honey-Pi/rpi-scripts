@@ -203,8 +203,7 @@ def init_hx711(weight_sensor):
         logger.exception("Unhandled Exception in init_hx711")
 
 
-def measure_hx711(weight_sensor, ts_fields, hx=None):
-    fields = {}
+def measure_weight(weight_sensor, hx=None):
     try:
         weight_sensor
     except Exception as e:
@@ -306,6 +305,34 @@ def measure_hx711(weight_sensor, ts_fields, hx=None):
                 weight = weight*-1;
         logger.debug('measure HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
 
+    except Exception as e:
+        if str(e) == "no median for empty data":
+            logger.error('Could not read enough data from HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+        else:
+            logger.error('Reading HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
+    finally:
+        pass
+
+    return weight
+
+
+def measure_hx711(weight_sensor, ts_fields, hx=None):
+    fields = {}
+    pin_dt = 0
+    pin_sck = 0
+    channel = ''
+
+    try:
+        pin_dt = int(weight_sensor["pin_dt"])
+        pin_sck = int(weight_sensor["pin_sck"])
+        channel = weight_sensor["channel"]
+    except Exception as e:
+        logger.error("HX711 missing param: " + str(e))
+        pass
+
+    try:
+        weight = measure_weight(weight_sensor, hx=None)
+ 
         if 'ts_field_uncompensated' in weight_sensor:
             fields[weight_sensor["ts_field_uncompensated"]] = weight
         weight = compensate_temperature(weight_sensor, weight, ts_fields)
@@ -316,10 +343,7 @@ def measure_hx711(weight_sensor, ts_fields, hx=None):
 
 
     except Exception as e:
-        if str(e) == "no median for empty data":
-            logger.error('Could not read enough data from HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
-        else:
-            logger.error('Reading HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
+        logger.error('Measure HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
     finally:
         pass
 
