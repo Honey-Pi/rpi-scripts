@@ -144,7 +144,7 @@ def compensate_temperature(weight_sensor, weight, ts_fields):
     except Exception as ex:
         logger.exception("Exeption in compensate_temperature")
 
-    return set_ts_field(weight_sensor, weight)
+    return weight
 
 def set_ts_field(weight_sensor, weight):
     try:
@@ -203,11 +203,12 @@ def init_hx711(weight_sensor):
         logger.exception("Unhandled Exception in init_hx711")
 
 
-def measure_weight(weight_sensor, hx=None):
+def measure_hx711(weight_sensor, ts_fields, hx=None):
+    fields = {}
     try:
         weight_sensor
     except Exception as e:
-        logger.error("measure_weight is missing param weight_sensor: " + str(e))
+        logger.error("measure_hx711 is missing param weight_sensor: " + str(e))
 
     if 'reference_unit' in weight_sensor:
         reference_unit = float(weight_sensor["reference_unit"])
@@ -233,7 +234,7 @@ def measure_weight(weight_sensor, hx=None):
     temp_reading = None
     weight = None
     try:
-        logger.debug('measure_weight HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' started')
+        logger.debug('measure HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' started')
         GPIO.setmode(GPIO.BCM) # set GPIO pin mode to BCM numbering
 
         # init hx711
@@ -303,7 +304,15 @@ def measure_weight(weight_sensor, hx=None):
         # invert weight if flag is set
         if 'invert' in weight_sensor and weight_sensor['invert'] == True and isinstance(weight, (int, float)):
                 weight = weight*-1;
-        logger.debug('measure_weight HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
+        logger.debug('measure HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
+
+        if 'ts_field_uncompensated' in weight_sensor:
+            fields[weight_sensor["ts_field_uncompensated"]] = weight
+        weight = compensate_temperature(weight_sensor, weight, ts_fields)
+        if 'ts_field' in weight_sensor:
+            fields[weight_sensor["ts_field"]] = weight
+
+
 
 
     except Exception as e:
@@ -314,4 +323,4 @@ def measure_weight(weight_sensor, hx=None):
     finally:
         pass
 
-    return weight
+    return fields

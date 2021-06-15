@@ -17,7 +17,7 @@ from read_bme280 import measure_bme280
 from read_ee895 import measure_ee895
 from read_pcf8591 import measure_pcf8591
 from read_ds18b20 import measure_temperature, filter_temperatur_values
-from read_hx711 import measure_weight, compensate_temperature
+from read_hx711 import measure_hx711
 from read_dht import measure_dht
 from read_aht10 import measure_aht10
 from read_sht31 import measure_sht31
@@ -133,13 +133,13 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
         start_single()
         for (i, sensor) in enumerate(weightSensors):
             if hxInits is not None:
-                weight = measure_weight(sensor, hxInits[i])
-                weight = compensate_temperature(sensor, weight, ts_fields)
-                ts_fields.update(weight)
+                hx711_fields = measure_hx711(sensor, ts_fields, hxInits[i])
+                # hx711_fields = compensate_temperature(sensor, weight, ts_fields)
+                ts_fields.update(hx711_fields)
             else:
-                weight = measure_weight(sensor)
-                weight = compensate_temperature(sensor, weight, ts_fields)
-                ts_fields.update(weight)
+                hx711_fields = measure_hx711(sensor, ts_fields)
+                # hx711_fields = compensate_temperature(sensor, weight, ts_fields)
+                ts_fields.update(hx711_fields)
         stop_single()
 
         # print all measurement values stored in ts_fields
