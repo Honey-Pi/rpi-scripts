@@ -333,11 +333,11 @@ def measure_hx711(weight_sensor, ts_fields, hx=None):
     try:
         weight = measure_weight(weight_sensor, hx=None)
  
-        if 'ts_field_uncompensated' in weight_sensor:
-            fields[weight_sensor["ts_field_uncompensated"]] = weight
+        if 'ts_field_uncompensated' in weight_sensor and type(weight) in (float, int):
+            fields[weight_sensor["ts_field_uncompensated"]] = float("{0:.3f}".format(weight/1000)) # float only 3 decimals
         weight = compensate_temperature(weight_sensor, weight, ts_fields)
-        if 'ts_field' in weight_sensor:
-            fields[weight_sensor["ts_field"]] = weight
+        if 'ts_field' in weight_sensor and type(weight) in (float, int):
+            fields[weight_sensor["ts_field"]] = float("{0:.3f}".format(weight/1000)) # float only 3 decimals
 
 
 
