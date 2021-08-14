@@ -143,7 +143,7 @@ def main():
 
         logger = logging.getLogger('HoneyPi')
         logger.setLevel(logging.DEBUG)
-        fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=365)
+        fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
         # create console handler with a higher log level
         ch = logging.StreamHandler()

@@ -6,7 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
-from utilities import settingsFile, wittypi_scheduleFile
+from utilities import settingsFile, wittypi_scheduleFile, logfile
 import logging
 from pwd import getpwuid
 from grp import getgrgid
@@ -81,6 +81,10 @@ def get_settings():
                 os.system("sudo chown www-data " + str(settingsFile))
             if str(getgrgid(os.stat(settingsFile).st_gid).gr_name) != "www-data":
                 os.system("sudo chgrp www-data " + str(settingsFile))
+
+        if os.path.exists(logfile):
+            if str(getpwuid(os.stat(settingsFile).st_uid).pw_name) != "pi":
+                os.system("udo chown -R pi:pi " + str(logfile))
 
         if os.path.exists(wittypi_scheduleFile):
             if str(getpwuid(os.stat(wittypi_scheduleFile).st_uid).pw_name) != "www-data":
