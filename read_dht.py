@@ -25,17 +25,18 @@ def measure_dht(ts_sensor):
 
         # setup sensor
         if dht_type == 2302:
-            dht = adafruit_dht.DHT22(pin=SENSOR_PIN, use_pulseio=True)
+            dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
         elif dht_type == 11:
-            dht = adafruit_dht.DHT11(pin=SENSOR_PIN, use_pulseio=True)
+            dht = adafruit_dht.DHT11(SENSOR_PIN, use_pulseio=True)
         else:
-            dht = adafruit_dht.DHT22(pin=SENSOR_PIN, use_pulseio=True)
+            dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
 
         while timer <= 8:
             try:
 
                 temperature = dht.temperature
                 humidity = dht.humidity
+                dht.exit()
 
                 # Create returned dict if ts-field is defined
                 if 'ts_field_temperature' in ts_sensor and temperature is not None:
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     try:
 
         SENSOR_PIN = digitalio.Pin(4) # change GPIO pin
-        dht = adafruit_dht.DHT22(pin=SENSOR_PIN, use_pulseio=True)
+        dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
 
         timer = 0
         while timer <= 10:
@@ -78,6 +79,7 @@ if __name__ == '__main__':
                 temperature = dht.temperature
                 temperature_f = temperature * (9 / 5) + 32
                 humidity = dht.humidity
+                dht.exit()
 
                 print("Temp: {:.1f} F / {:.1f} °C    Humidity: {}% ".format(temperature_f, temperature, humidity))
 
