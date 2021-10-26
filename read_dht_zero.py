@@ -14,7 +14,7 @@ os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
 
 logger = logging.getLogger('HoneyPi.read_dht_zero')
 
-def measure_dht(ts_sensor):
+def measure_dht_zero(ts_sensor):
     fields = {}
 
     try:
@@ -44,6 +44,6 @@ def measure_dht(ts_sensor):
             fields[ts_sensor["ts_field_humidity"]] = round(humidity, 1)
 
     except Exception as ex:
-        logger.exception("Reading DHT failed. DHT: " + str(dht_type) + " " + str(sensorDHT) + ", GPIO: " + str(pin))
+        logger.exception("Reading DHT (running on Raspi Zero) failed. DHT: " + str(dht_type) + " " + str(sensorDHT) + ", GPIO: " + str(pin))
 
     return fields

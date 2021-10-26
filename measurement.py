@@ -19,13 +19,14 @@ from read_pcf8591 import measure_pcf8591
 from read_ds18b20 import measure_temperature, filter_temperatur_values
 from read_hx711 import measure_hx711
 from read_dht import measure_dht
+from read_dht_zero import measure_dht_zero
 from read_aht10 import measure_aht10
 from read_sht31 import measure_sht31
 from read_hdc1008 import measure_hdc1008
 from read_bh1750 import measure_bh1750
 from read_max import measure_tc
 from read_settings import get_settings, get_sensors
-from utilities import logfile, start_single, stop_single, scriptsFolder
+from utilities import logfile, start_single, stop_single, scriptsFolder, is_zero
 
 import logging
 
@@ -79,7 +80,10 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
 
         # measure every sensor with type 3 [DHT11/DHT22]
         for (i, sensor) in enumerate(dhtSensors):
-            tempAndHum = measure_dht(sensor)
+            if is_zero():
+                tempAndHum = measure_dht_zero(sensor)
+            else:
+                tempAndHum = measure_dht(sensor)
             ts_fields.update(tempAndHum)
 
         # measure every sensor with type 4 [MAX6675]
