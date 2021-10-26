@@ -328,23 +328,21 @@ def measure_hx711(weight_sensor, ts_fields, hx=None):
         channel = weight_sensor["channel"]
     except Exception as e:
         logger.error("HX711 missing param: " + str(e))
-        pass
 
     try:
         weight = measure_weight(weight_sensor, hx=None)
- 
+
         if 'ts_field_uncompensated' in weight_sensor and type(weight) in (float, int):
             fields[weight_sensor["ts_field_uncompensated"]] = float("{0:.3f}".format(weight/1000)) # float only 3 decimals
         weight = compensate_temperature(weight_sensor, weight, ts_fields)
+
+        if 'filter_negative' in weight_sensor and weight_sensor['filter_negative'] and weight < -1: # filter negative measurements
+            weight = None
+
         if 'ts_field' in weight_sensor and type(weight) in (float, int):
             fields[weight_sensor["ts_field"]] = float("{0:.3f}".format(weight/1000)) # float only 3 decimals
 
-
-
-
     except Exception as e:
         logger.error('Measure HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
-    finally:
-        pass
 
     return fields
