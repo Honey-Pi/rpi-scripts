@@ -46,6 +46,13 @@ def measure_temperature(sensor):
 
                     # read temperature and convert temperature
                     string_value = file_content.split("\n")[1].split(" ")[9]
+
+                    # workaround for w1_therm.ko issue:
+                    check_neg = int(string_value[2:])         # Temperatur in milligrad Celsius
+                    if check_neg > 85000:                     # Temperatur kann nicht größer 85°C sein
+                        check_neg = check_neg - 4096000       # Umrechung in negative Temperatur
+                        string_value = 't='+str(check_neg)
+
                     temperature = float(string_value[2:]) / 1000
                     temperature = round(temperature, 1)
 
