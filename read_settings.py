@@ -84,7 +84,7 @@ def get_settings():
 
         if os.path.exists(logfile):
             if str(getpwuid(os.stat(settingsFile).st_uid).pw_name) != "pi":
-                os.system("udo chown -R pi:pi " + str(logfile))
+                os.system("sudo chown -R pi:pi " + str(logfile))
 
         if os.path.exists(wittypi_scheduleFile):
             if str(getpwuid(os.stat(wittypi_scheduleFile).st_uid).pw_name) != "www-data":
