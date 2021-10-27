@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-VERSION="v1.3.4"
+VERSION="v1.3.5"
 
 echo '>>> Running post-upgrade script...'
 
@@ -78,6 +78,11 @@ else
    cp /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/lighttpd.conf /etc/lighttpd/lighttpd.conf
    service lighttpd force-reload
 fi
+
+echo "Install required modules after v1.3.4..."
+apt-get -y install libgpiod2
+pip3 install adafruit-circuitpython-dht
+echo "Finished installing modules"
 
 
 echo "postupdatefinished 1" >> /var/www/html/version.txt
