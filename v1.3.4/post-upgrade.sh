@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-VERSION="v1.3.3"
+VERSION="v1.3.4"
 
 echo '>>> Running post-upgrade script...'
 
@@ -67,6 +67,15 @@ else
    echo "The hostapd.conf.tmpl default conf file is different..."
    mv /etc/hostapd/hostapd.conf.tmpl /etc/hostapd/hostapd.conf.tmpl.orig
    cp /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/hostapd.conf.tmpl /etc/hostapd/hostapd.conf.tmpl
+fi
+
+# changes after v1.3.4
+if cmp -s /etc/lighttpd/lighttpd.conf /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/lighttpd.conf
+then
+   echo "The lighttpd.conf default conf file is already the correct file..."
+else
+   echo "The lighttpd.conf default conf file is different..."
+   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/lighttpd.conf /etc/lighttpd/lighttpd.conf
 fi
 
 
