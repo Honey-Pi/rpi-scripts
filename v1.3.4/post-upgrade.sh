@@ -76,6 +76,7 @@ then
 else
    echo "The lighttpd.conf default conf file is different..."
    cp /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/lighttpd.conf /etc/lighttpd/lighttpd.conf
+   service lighttpd force-reload
 fi
 
 
