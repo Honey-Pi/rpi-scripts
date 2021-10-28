@@ -180,7 +180,7 @@ def is_zero():
         else:
             return False
     except Exception as ex:
-        logger.exception("Exception in get_lsusb_linux")
+        logger.exception("Exception in is_zero")
 
 def get_led_state(gpio=21):
    state = GPIO.input(gpio)
