@@ -41,6 +41,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_da
     retries = 0
     MAX_RETRIES = 3
     isConnectionError = True
+    logger.debug("Start of upload_single_channel")
     while isConnectionError:
         try:
             # convert_lorawan(ts_fields_cleaned)
@@ -76,6 +77,7 @@ def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', 
     Full reference:
     https://mathworks.com/help/thingspeak/update-channel-feed.html
     """
+    logger.debug("Start of thingspeak_update")
     if write_key is not None:
         data['api_key'] = write_key
     if ts_datetime is not None:
@@ -84,8 +86,10 @@ def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', 
         ts=server_url,
         fmt=fmt,
     )
+    logger.debug("Start of post request")
     r = requests.post(url, params=data, timeout=timeout)
     r.raise_for_status()
+    logger.debug("End of post request")
     if fmt == 'json':
         return r.json()
     else:
