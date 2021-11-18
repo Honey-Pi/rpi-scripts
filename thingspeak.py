@@ -57,6 +57,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_da
         except requests.exceptions.HTTPError as errh:
             logger.warning('Propaply a wrong ThingSpeak WRITE API-Key.' + repr(errh))
         except requests.exceptions.ConnectionError as errc:
+            logger.error('Error: Connection Error' + repr(errc))
             pass
         except requests.exceptions.Timeout as errt:
             logger.error('Error: Timeout Error' + repr(errt))
@@ -75,7 +76,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_da
 
     return isConnectionError
 
-def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', ts_datetime=None, timeout=60, fmt='json'):
+def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', ts_datetime=None, timeout=15, fmt='json'):
     """Update channel feed.
 
     Full reference:
