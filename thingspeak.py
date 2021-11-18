@@ -4,6 +4,7 @@ import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import logging
 import struct
 import math
+import json
 
 logger = logging.getLogger('HoneyPi.thingspeak')
 
@@ -45,8 +46,11 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_da
     while isConnectionError:
         try:
             # convert_lorawan(ts_fields_cleaned)
-            thingspeak_update(write_key, ts_fields_cleaned, server_url, ts_datetime)
-            logger.info("Data succesfully transfered to ThingSpeak.")
+            response = thingspeak_update(write_key, ts_fields_cleaned, server_url, ts_datetime)
+            if debug:
+                logger.debug("Data succesfully transfered to ThingSpeak. " + response)
+            else:
+                logger.info("Data succesfully transfered to ThingSpeak.")
             # break because transfer succeded
             isConnectionError = False
             break
@@ -71,7 +75,7 @@ def upload_single_channel(write_key, ts_fields_cleaned, server_url, debug, ts_da
 
     return isConnectionError
 
-def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', ts_datetime=None, timeout=None, fmt='json'):
+def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', ts_datetime=None, timeout=60, fmt='json'):
     """Update channel feed.
 
     Full reference:
@@ -87,10 +91,10 @@ def thingspeak_update(write_key, data, server_url='https://api.thingspeak.com', 
         fmt=fmt,
     )
     logger.debug("Start of post request")
-    r = requests.post(url, params=data, timeout=timeout)
-    r.raise_for_status()
+    response = requests.post(url, params=data, timeout=timeout)
+    response.raise_for_status()
     logger.debug("End of post request")
     if fmt == 'json':
-        return r.json()
+        return json.dumps(response.json())
     else:
-        return r.text
+        return response.text
