@@ -12,8 +12,10 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage
+from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp
 
+from multiprocessing import Process, Queue, Value
+from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main
 
 logger = logging.getLogger('HoneyPi.main')
 
@@ -27,6 +29,21 @@ debug = 0
 GPIO_BTN = 16
 GPIO_LED = 21 # GPIO for led
 LED_STATE = 0
+
+def oled():
+            oled_init()
+            oled_start_honeypi()
+            time.sleep(4)
+            oled_diag_data()
+            time.sleep(4)
+            oled_interface_data()
+            oled_off()
+            return
+
+def timesync():
+            ntptimediff=sync_time_ntp()
+            logger.info('Time syncronized to NTP - diff: ' + ntptimediff)
+
 
 def start_ap():
     global isActive, GPIO_LED
@@ -112,6 +129,10 @@ def button_pressed_falling(self):
             # normal button press to switch between measurement and maintenance
             tmeasurement = threading.Thread(target=toggle_measurement)
             tmeasurement.start()
+        elif time_elapsed >= 50 and time_elapsed <= 500:
+            if displaysettings["enabled"]:
+                pOLed = threading.Thread(target=oled, args=())
+                pOLed.start()
         elif time_elapsed >= 5000 and time_elapsed <= 10000:
             # shutdown raspberry
             tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
@@ -171,6 +192,24 @@ def main():
         else:
             logger.info('HoneyPi '+ get_rpiscripts_version() + ' Started on ' + get_pi_model())
             start_hdd_led()
+        global displaysettings
+        displaysettings = settings["display"]
+        q = Queue()
+        if displaysettings["enabled"]:
+            tOLed = threading.Thread(target=oled, args=())
+            tOLed.start()
+
+        if settings["offline"] != 3:
+            ttimesync = threading.Thread(target=timesync, args=())
+            ttimesync.start()
+        else:
+            logger.debug('Offline mode  - no time syncronization to NTP')
+
+        #if displaysettings["enabled"]:
+        #    tOLed.join()
+        if settings["offline"] != 3:
+            ttimesync.join()
+
 
         runpostupgradescript()
 

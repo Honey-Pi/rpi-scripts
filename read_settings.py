@@ -65,6 +65,9 @@ def get_defaults():
     normalVoltage["interval"] = 600
     wittyPi["normal"] = normalVoltage
     settings['wittyPi'] = wittyPi
+    display = {}
+    display['enabled'] = False
+    settings['display'] = display
 
     return settings
 
@@ -280,6 +283,14 @@ def validate_settings(settings):
         settings['wittyPi']["low"]["schedule"]
     except:
         settings['wittyPi']["low"]["schedule"] = get_defaults()["wittyPi"]["low"]["schedule"]
+
+    # Add since v1.3.7
+
+    try:
+        settings["display"]["enabled"]
+    except:
+        settings["display"] = get_defaults()["display"]
+
 
     if updateSettingsFile:
         logger.warning("Settings have been changed because of version migration.")

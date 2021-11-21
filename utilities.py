@@ -16,6 +16,7 @@ import RPi.GPIO as GPIO
 from pathlib import Path
 import socket, struct, fcntl
 
+
 import subprocess
 import re
 logger = logging.getLogger('HoneyPi.utilities')
@@ -28,8 +29,57 @@ settingsFile = backendFolder + '/settings.json'
 wittypi_scheduleFile = backendFolder + "/schedule.wpi"
 logfile = scriptsFolder + '/error.log'
 
+def get_interfacelist():
+    try:
+        ifaces = os.listdir('/sys/class/net/')
+        return(ifaces)
+        
+    except Exception as ex:
+        logger.exception("get_interfacelist")
+        pass
+        return None
+
 def thingspeak_datetime():
     return datetime.utcnow().replace(microsecond=0).isoformat()
+
+def get_cpu_temp():
+    try:
+            ## CPU-Temperatur ermitteln
+            fd = open("/sys/class/thermal/thermal_zone0/temp")
+            temperatur = float(fd.readline().rstrip())/1000.0
+            fd.close()
+            return temperatur
+    except Exception as ex:
+        logger.exception("Exception in get_cpu_temp")
+        pass
+        return None
+
+def sync_time_ntp():
+    try:
+        os.system("sudo systemctl stop ntp")
+        ntptimediff = os.popen("sudo ntpd -q -g | grep 'ntpd:' | awk '/^ntpd:/{print $NF}'").read().strip()
+        os.system("sudo systemctl start ntp")
+        return(ntptimediff)
+    except Exception as ex:
+        logger.exception("Exception in get_ntp_status")
+        pass
+        return None
+
+def get_ntp_status():
+    try:
+        ntpstatus = os.popen('timedatectl status | grep "System clock synchronized" | grep -Eo "(yes|no)"').read().strip().lower()
+        if ntpstatus == "yes":
+            ntpstatus = True
+        elif ntpstatus == "no":
+            ntpstatus = False
+        else:
+            ntpstatus = None
+        return(ntpstatus)
+    except Exception as ex:
+        logger.exception("Exception in get_ntp_status")
+        pass
+        return None
+
 
 def get_ip_address(ifname):
     try:
