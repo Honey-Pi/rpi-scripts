@@ -84,7 +84,7 @@ def oled_start_honeypi():
         fp = open(version_file)
         for i, line in enumerate(fp):
             if i >= 1 :
-                print(line.split()[-1])
+                #print(line.split()[-1])
                 draw.text((0, 13*i-10), str(line.split()[-1]), fill=1)
                 oled.display()
         #print("Anzahl Datensaetze: ", i)
@@ -112,19 +112,19 @@ def oled_diag_data():
     
         if "No undervoltage alarm" in undervoltage:
             #error_log("Info: No undervoltage alarm")
-            print("Unterspannung 0x0 " + undervoltage)
+            #print("Unterspannung 0x0 " + undervoltage)
             lcdLine1= "Undervoltage:" 
             lcdLine2= "          No alarm"
     
         elif "0x50000" in undervoltage:
             #error_log("Warning: Undervoltage alarm had happened since system start ", undervoltage)
-            print("Undervoltage " + undervoltage)
+            #print("Undervoltage " + undervoltage)
             lcdLine1= "Undervoltage check: Alarm"
             lcdLine2=  "    Alarm!"
     
         elif "0x50005" in undervoltage:
             #error_log("Warning: Undervoltage alarm is currently raised ", undervoltage)
-            print("Undervoltage 0x50005 " + undervoltage)
+            #print("Undervoltage 0x50005 " + undervoltage)
             lcdLine1= "Undervoltage check: Alarm " 
             lcdLine2=  "    Alarm!"
         lcdLine5= "Clock sync:" + str(get_ntp_status())
