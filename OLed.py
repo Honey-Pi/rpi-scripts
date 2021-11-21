@@ -20,23 +20,42 @@ import sys
 
 def oled_init():
     global i2cbus, oled, draw
-    i2cbus = SMBus(get_smbus())  # 0 = Raspberry Pi 1, 1 = Raspberry Pi > 1
-    oled = ssd1306(i2cbus)
-    draw = oled.canvas
-    oled.onoff(1)
+    try:
+        i2cbus = SMBus(get_smbus())  # 0 = Raspberry Pi 1, 1 = Raspberry Pi > 1
+        oled = ssd1306(i2cbus)
+        draw = oled.canvas
+        oled.onoff(1)
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
+    except Exception as ex:
+        logger.error("Exception in function oled_init:" + str(ex))
+        #pass
+    
 
 
 def oled_off():
+    try:
     ## OLED aus
-    oled.cls()
-    draw.text((0, 2), "", fill=1)
-    draw.text((0, 12), "", fill=1)
-    draw.text((0, 24), "", fill=1)
-    draw.text((0, 34), "", fill=1)
-    draw.text((0, 44), "", fill=1)
-    draw.text((0, 54), "", fill=1)
-    oled.display()
-    oled.onoff(0) 
+        oled.cls()
+        draw.text((0, 2), "", fill=1)
+        draw.text((0, 12), "", fill=1)
+        draw.text((0, 24), "", fill=1)
+        draw.text((0, 34), "", fill=1)
+        draw.text((0, 44), "", fill=1)
+        draw.text((0, 54), "", fill=1)
+        oled.display()
+        oled.onoff(0) 
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("communication with oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("communication with oled ssd1306 failed")
+    except Exception as ex:
+        logger.error("Exception in function oled_off:" + str(ex))
+        #pass
 
 def oled_Logo():
     ## HoneyPi Logo an OLED senden
@@ -47,6 +66,11 @@ def oled_Logo():
         draw.bitmap((0, 0), Image.open('Oled/HoneyPi_logo.png'), fill=0)
         oled.display()
         time.sleep(1)
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
     except Exception as ex:
         logger.error("Exception in function oled_Logo:" + str(ex))
         #pass
@@ -65,6 +89,11 @@ def oled_start_honeypi():
                 oled.display()
         #print("Anzahl Datensaetze: ", i)
         fp.close()
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
     except Exception as ex:
         logger.error("Exception in function oled_start_honeypi:" + str(ex))
 
@@ -111,6 +140,11 @@ def oled_diag_data():
         draw.text((0, 44), lcdLine5, fill=1)
         draw.text((0, 54), lcdLine6, fill=1)
         oled.display()
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
     except Exception as e:
         logger.error("Exception in function oled_diag_data:" + str(e))
         #pass
@@ -136,6 +170,11 @@ def oled_interface_data():
             draw.text((0, 54), lcdLine6, fill=1)
             oled.display()
             time.sleep(2)
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
     except Exception as e:
         logger.error("Exception in function oled_interface_data:" + str(e))
         #pass
