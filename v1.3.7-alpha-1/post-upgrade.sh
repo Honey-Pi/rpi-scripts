@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-VERSION="v1.3.7-alpha-1"
+VERSION="v1.3.7-alpha-2"
 
 echo '>>> Running post-upgrade script...'
 
@@ -79,10 +79,15 @@ else
    service lighttpd force-reload
 fi
 
+apt-get -y update --allow-releaseinfo-change
+
 echo "Install required modules after v1.3.4..."
 apt-get -y install libgpiod2
 pip3 install adafruit-circuitpython-dht
 echo "Finished installing modules"
 
+echo "Install required modules after v1.3.7..."
+pip3 install Pillow
+apt-get -y install libopenjp2-7 libtiff5
 
 echo "postupdatefinished 1" >> /var/www/html/version.txt
