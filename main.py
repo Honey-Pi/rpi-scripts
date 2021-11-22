@@ -2,6 +2,7 @@
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
+import superglobal
 import sys
 import threading
 import time
@@ -15,11 +16,12 @@ from read_settings import get_settings
 from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp
 
 from multiprocessing import Process, Queue, Value
-from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main
+from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data
 
 logger = logging.getLogger('HoneyPi.main')
 
 # global vars
+superglobal = superglobal.SuperGlobal()
 measurement = None
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
@@ -31,14 +33,16 @@ GPIO_LED = 21 # GPIO for led
 LED_STATE = 0
 
 def oled():
-            oled_init()
-            oled_start_honeypi()
-            time.sleep(4)
-            oled_diag_data()
-            time.sleep(4)
-            oled_interface_data()
-            oled_off()
-            return
+    oled_init()
+    oled_start_honeypi()
+    time.sleep(4)
+    oled_diag_data()
+    time.sleep(4)
+    oled_measurement_data()
+    time.sleep(4)
+    oled_interface_data()
+    oled_off()
+    return
 
 def timesync():
             ntptimediff=sync_time_ntp()

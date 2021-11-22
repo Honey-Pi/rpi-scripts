@@ -3,9 +3,11 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 # Changelog 05.12.2020: New sensors ATH10, SHT31 and HDC1080(1008)
 
+import superglobal
 import math
 import threading
 import time
+from datetime import datetime, timedelta
 
 import logging
 
@@ -33,6 +35,7 @@ from measurement import measure_all_sensors
 from thingspeak import transfer_all_channels_to_ts
 
 logger = logging.getLogger('HoneyPi.read_and_upload_all')
+superglobal = superglobal.SuperGlobal()
 
 def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug, ts_datetime):
     try:
@@ -254,14 +257,15 @@ def start_measurement(measurement_stop):
             # free ThingSpeak account has an upload limit of 15 seconds
             isTimeToMeasure = ((time_now-time_measured >= interval) or (interval == 1)) and counter > 0
             if isTimeToMeasure:
-                now = time.strftime("%H:%M", time.localtime(time_now))
-                lastMeasurement = time.strftime("%H:%M", time.localtime(time_measured))
+                now = datetime.now()
                 if time_measured == 0:
-                    print("First time measurement. Now: " + str(now))
+                    print("First time measurement. Now: " + str(now.strftime('%Y-%m-%d %H:%M')))
                 else:
-                    print("Last measurement was at " + str(lastMeasurement))
-                    print("Time over for a new measurement. Time is now: " + str(now))
+                    print("Last measurement was at " + str(superglobal.lastmeasurement.strftime('%Y-%m-%d %H:%M')))
+                    print("Time over for a new measurement. Time is now: " + str(now.strftime('%Y-%m-%d %H:%M')))
                 time_measured = time.time()
+                superglobal.lastmeasurement = now
+                superglobal.nextmeasurement = now + timedelta(seconds=1) * interval
 
                 check_undervoltage('0x7')
 
