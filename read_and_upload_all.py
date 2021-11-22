@@ -284,10 +284,11 @@ def start_measurement(measurement_stop):
                     measurement_stop.set()
 
                     if shutdownAfterTransfer:
-                        isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
+                        if superglobal.isMaintenanceActive is None:
+                            superglobal.isMaintenanceActive = False
                         print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
-                        while isMaintenanceActive:
-                            isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
+                        while superglobal.isMaintenanceActive:
+                            #isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
                             print("Shutting down was set but Maintenance mode is active, delaying shutdown!")
                             print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
                             time.sleep(10)

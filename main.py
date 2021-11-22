@@ -16,7 +16,7 @@ from read_settings import get_settings
 from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp
 
 from multiprocessing import Process, Queue, Value
-from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data
+from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data
 
 logger = logging.getLogger('HoneyPi.main')
 
@@ -40,6 +40,8 @@ def oled():
     time.sleep(4)
     oled_measurement_data()
     time.sleep(4)
+    oled_maintenance_data()
+    time.sleep(4)
     oled_interface_data()
     oled_off()
     return
@@ -57,7 +59,10 @@ def start_ap():
     t1.join()
     isActive = 1 # measurement shall start next time
     logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
-    isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
+    superglobal.isMaintenanceActive=True
+    #isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
+    oled_init()
+    oled_maintenance_data()
 
 def stop_ap():
     global isActive, GPIO_LED
@@ -66,7 +71,9 @@ def stop_ap():
     t2.start()
     t2.join()
     isActive = 0 # measurement shall stop next time
-    isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
+    superglobal.isMaintenanceActive=False
+    #isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
+    oled_off()
 
 def get_led_state(self):
     global GPIO_LED, LED_STATE
@@ -235,7 +242,8 @@ def main():
 
         # start as seperate background thread
         # because Taster pressing was not recognised
-        isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
+        superglobal.isMaintenanceActive=False
+        #isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
         measurement_stop = threading.Event() # create event to stop measurement
         measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
         measurement.start() # start measurement

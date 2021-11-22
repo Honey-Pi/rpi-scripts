@@ -114,7 +114,8 @@ def oled_measurement_data():
         else:
             nextmeasurement = "see interval"
         #print("Next Measurement: " + nextmeasurement)
-        
+        if superglobal.isMaintenanceActive:
+            nextmeasurement = "MaintenanceActive"
         lcdLine1= "Measurement info"
         lcdLine2= "Last:"
         lcdLine3= lastmeasurement
@@ -224,6 +225,66 @@ def oled_interface_data():
         logger.error("Exception in function oled_interface_data:" + str(e))
         #pass
 
+def oled_maintenance_data():
+    try:
+        if superglobal.isMaintenanceActive:
+            settings = get_settings()
+            honeypi = settings['internet']['honeypi']
+            
+            lcdLine1 = "Connect to"
+            lcdLine2 = "SSID:"
+            lcdLine3 = honeypi["ssid"]
+            lcdLine4 = "Password:"
+            lcdLine5 = honeypi["password"]
+            lcdLine6 = "IP:" + str(get_ip_address("uap0"))
+            ## an OLED senden
+            oled.cls()
+            draw.text((0, 2), lcdLine1, fill=1)
+            draw.text((0, 12), lcdLine2, fill=1)
+            draw.text((0, 24), lcdLine3, fill=1)
+            draw.text((0, 34), lcdLine4, fill=1)
+            draw.text((0, 44), lcdLine5, fill=1)
+            draw.text((0, 54), lcdLine6, fill=1)
+            oled.display()
+            time.sleep(2)
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
+    except Exception as e:
+        logger.error("Exception in function oled_interface_data:" + str(e))
+        #pass
+
+def oled_maintenance_mode(status):
+    try:
+        oled_maintenance_data()
+        ifaces = get_interfacelist()
+        for i in range (0,len(ifaces)):
+            lcdLine1 = "Interface " + str(ifaces[i])
+            lcdLine2 = "IP:" + str(get_ip_address(ifaces[i]))
+            lcdLine3 = "" #Subnetmask
+            lcdLine4 = "" #Broadscast
+            lcdLine5 = "" #Gateway
+            lcdLine6 = ""
+            ## an OLED senden
+            oled.cls()
+            draw.text((0, 2), lcdLine1, fill=1)
+            draw.text((0, 12), lcdLine2, fill=1)
+            draw.text((0, 24), lcdLine3, fill=1)
+            draw.text((0, 34), lcdLine4, fill=1)
+            draw.text((0, 44), lcdLine5, fill=1)
+            draw.text((0, 54), lcdLine6, fill=1)
+            oled.display()
+            time.sleep(2)
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
+    except Exception as e:
+        logger.error("Exception in function oled_interface_data:" + str(e))
+        #pass
 
 def main():
     try:
