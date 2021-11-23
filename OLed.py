@@ -13,7 +13,7 @@ from PIL import Image
 from sensors.sensor_utilities import get_smbus
 
 from read_settings import get_settings
-from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist
+from utilities import scriptsFolder, logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist
 #from Oled.diag_onOLED import diag_onOLED
 
 logger = logging.getLogger('HoneyPi.OLed')
@@ -66,7 +66,7 @@ def oled_Logo():
         oled.display()
         oled.cls()
         draw.rectangle((0, 0, 128, 64), outline=1, fill=1)
-        draw.bitmap((0, 0), Image.open('Oled/HoneyPi_logo.png'), fill=0)
+        draw.bitmap((0, 0), Image.open(scriptsFolder + '/Oled/HoneyPi_logo.png'), fill=0)
         oled.display()
         time.sleep(1)
     except IOError as ex:
