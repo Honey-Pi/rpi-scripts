@@ -26,11 +26,22 @@ $RECYCLE.BIN/
 # =========================
 # Logfiles
 # =========================
-error.log
+*.log
+*.log.*
+*.csv
 
 # =========================
 # compiled Python files
 # =========================
 *.pyc
-error.log
-*.csv
+
+
+# =========================
+# Python variables on filesystem
+# =========================
+.isMaintenanceActive
+.isLowVoltage
+.isActive
+
+
+

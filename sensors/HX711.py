@@ -3,10 +3,13 @@ This file holds HX711 class
 """
 #!/usr/bin/env python3
 
-# https://github.com/gandalf15/HX711/blob/master/HX711_Python3/simple_example.py
+# Source: https://github.com/gandalf15/HX711/blob/master/HX711_Python3/hx711.py
+# Changelog:
+# 2020-01-04: added readLock like https://github.com/tatobari/hx711py/blob/master/hx711.py
 
 import statistics as stat
 import time
+import threading
 
 import RPi.GPIO as GPIO
 
@@ -21,6 +24,11 @@ class HX711:
                  pd_sck_pin,
                  gain_channel_A=128,
                  select_channel='A'):
+
+        # Mutex for reading from the HX711, in case multiple threads in client
+        # software try to access get values from the class at the same time.
+        self.readLock = threading.Lock()
+
         """
         Init a new instance of HX711
 
@@ -58,6 +66,7 @@ class HX711:
         self._scale_ratio_B = 1  # scale ratio for channel B
         self._debug_mode = False     # init debug mode to True
         self._data_filter = outliers_filter  # default it is used outliers_filter
+        self._num_data_filtered_out =  0 # number of data filtered out by the data_filter
 
         GPIO.setup(self._pd_sck, GPIO.OUT)  # pin _pd_sck is output only
         GPIO.setup(self._dout, GPIO.IN)  # pin _dout is input only
@@ -92,10 +101,10 @@ class HX711:
     def set_gain_A(self, gain):
         """
         set_gain_A method sets gain for channel A.
-        
+
         Args:
             gain(int): Gain for channel A (128 || 64)
-        
+
         Raises:
             ValueError: if gain is different than 128 or 64
         """
@@ -163,12 +172,12 @@ class HX711:
         set offset method sets desired offset for specific
         channel and gain. Optional, by default it sets offset for current
         channel and gain.
-        
+
         Args:
             offset(int): specific offset for channel
             channel(str): Optional, by default it is the current channel.
                 Or use these options ('A' || 'B')
-        
+
         Raises:
             ValueError: if channel is not ('A' || 'B' || '')
             TypeError: if offset is not int type
@@ -253,7 +262,7 @@ class HX711:
         Args:
             data_filter(data_filter): Data filter that takes list of int numbers and
                 returns a list of filtered int numbers.
-        
+
         Raises:
             TypeError: if filter is not a function.
         """
@@ -263,24 +272,25 @@ class HX711:
             raise TypeError('Parameter "data_filter" must be a function. '
                             'Received: {}'.format(data_filter))
 
+    def get_num_data_filtered_out(self):
+        return self._num_data_filtered_out
+
     def set_debug_mode(self, flag=False):
         """
         set_debug_mode method is for turning on and off
         debug mode.
-        
+
         Args:
             flag(bool): True turns on the debug mode. False turns it off.
-        
+
         Raises:
             ValueError: if fag is not bool type
         """
         if flag == False:
             self._debug_mode = False
-            print('Debug mode DISABLED')
             return
         elif flag == True:
             self._debug_mode = True
-            print('Debug mode ENABLED')
             return
         else:
             raise ValueError('Parameter "flag" can be only BOOL value. '
@@ -289,7 +299,7 @@ class HX711:
     def _save_last_raw_data(self, channel, gain_A, data):
         """
         _save_last_raw_data saves the last raw data for specific channel and gain.
-        
+
         Args:
             channel(str):
             gain_A(int):
@@ -309,7 +319,7 @@ class HX711:
         """
         _ready method check if data is prepared for reading from HX711
 
-        Returns: bool True if ready else False when not ready        
+        Returns: bool True if ready else False when not ready
         """
         # if DOUT pin is low data is ready for reading
         if GPIO.input(self._dout) == 0:
@@ -326,15 +336,24 @@ class HX711:
         Args:
             num(int): how many ones it sends to HX711
                 options (1 || 2 || 3)
-        
+
         Returns: bool True if HX711 is ready for the next reading
             False if HX711 is not ready for the next reading
         """
         for _ in range(num):
+            # Wait for and get the Read Lock, incase another thread is already
+            # driving the HX711 serial interface.
+            self.readLock.acquire()
+
             start_counter = time.perf_counter()
             GPIO.output(self._pd_sck, True)
             GPIO.output(self._pd_sck, False)
             end_counter = time.perf_counter()
+
+            # Release the Read Lock, now that we've finished driving the HX711
+            # serial interface.
+            self.readLock.release()
+
             # check if hx 711 did not turn off...
             if end_counter - start_counter >= 0.00006:
                 # if pd_sck pin is HIGH for 60 us and more than the HX 711 enters power down mode.
@@ -353,7 +372,7 @@ class HX711:
         """
         _read method reads bits from hx711, converts to INT
         and validate the data.
-        
+
         Returns: (bool || int) if it returns False then it is false reading.
             if it returns int then the reading was correct
         """
@@ -362,7 +381,7 @@ class HX711:
         while (not self._ready() and ready_counter <= 40):
             time.sleep(0.01)  # sleep for 10 ms because data is not ready
             ready_counter += 1
-            if ready_counter == 50:  # if counter reached max value then return False
+            if ready_counter == 40:  # if counter reached max value then return False
                 if self._debug_mode:
                     print('self._read() not ready after 40 trials')
                 return False
@@ -370,11 +389,20 @@ class HX711:
         # read first 24 bits of data
         data_in = 0  # 2's complement data from hx 711
         for _ in range(24):
+            # Wait for and get the Read Lock, incase another thread is already
+            # driving the HX711 serial interface.
+            self.readLock.acquire()
+
             start_counter = time.perf_counter()
             # request next bit from hx 711
             GPIO.output(self._pd_sck, True)
             GPIO.output(self._pd_sck, False)
             end_counter = time.perf_counter()
+
+            # Release the Read Lock, now that we've finished driving the HX711
+            # serial interface.
+            self.readLock.release()
+
             if end_counter - start_counter >= 0.00006:  # check if the hx 711 did not turn off...
                 # if pd_sck pin is HIGH for 60 us and more than the HX 711 enters power down mode.
                 if self._debug_mode:
@@ -450,9 +478,13 @@ class HX711:
         data_mean = False
         if readings > 2 and self._data_filter:
             filtered_data = self._data_filter(data_list)
+            num_unfiltered_data_list = len(data_list)
+            num_filtered_data_list = len(filtered_data)
+            self._num_data_filtered_out = num_unfiltered_data_list - num_filtered_data_list
             if self._debug_mode:
                 print('data_list: {}'.format(data_list))
                 print('filtered_data list: {}'.format(filtered_data))
+                print('number of elements removed by filter: ' + str(self._num_data_filtered_out))
                 print('data_mean:', stat.mean(filtered_data))
             data_mean = stat.mean(filtered_data)
         else:
@@ -539,7 +571,7 @@ class HX711:
         Args:
             channel(str): select channel ('A' || 'B'). If not then it returns the current one.
             gain_A(int): select gain (128 || 64). If not then it returns the current one.
-        
+
         Raises:
             ValueError: if channel is not ('A' || 'B' || '') or gain_A is not (128 || 64 || 0)
                 '' and 0 is default value.
@@ -574,7 +606,7 @@ class HX711:
         Args:
             channel(str): select for which channel ('A' || 'B')
             gain_A(int): select for which gain (128 || 64)
-        
+
         Raises:
             ValueError: if channel is not ('A' || 'B' || '') or gain_A is not (128 || 64 || 0)
                 '' and 0 is default value.
@@ -670,7 +702,7 @@ def outliers_filter(data_list):
 
     Args:
         data_list([int]): List of int. It can contain Bool False that is removed.
-    
+
     Returns: list of filtered data. Excluding outliers.
     """
     data = []
@@ -683,20 +715,23 @@ def outliers_filter(data_list):
     # It calculates the absolute distance to the median.
     # Then it scales the distances by their median value (again)
     # so they are on a relative scale to 'm'.
-    data_median = stat.median(data)
-    abs_distance = []
-    for num in data:
-        abs_distance.append(abs(num - data_median))
-    mdev = stat.median(abs_distance)
-    s = []
-    if mdev:
-        for num in abs_distance:
-            s.append(num / mdev)
+    if len(data) != 0:
+        data_median = stat.median(data)
+        abs_distance = []
+        for num in data:
+            abs_distance.append(abs(num - data_median))
+        mdev = stat.median(abs_distance)
+        s = []
+        if mdev:
+            for num in abs_distance:
+                s.append(num / mdev)
+        else:
+            # mdev is 0. Therefore all data samples in the list data have the same value.
+            return data
+        filtered_data = []
+        for i in range(len(data)):
+            if s[i] < m:
+                filtered_data.append(data[i])
+        return filtered_data
     else:
-        # mdev is 0. Therefore all data samples in the list data have the same value.
-        return data
-    filtered_data = []
-    for i in range(len(data)):
-        if s[i] < m:
-            filtered_data.append(data[i])
-    return filtered_data
+        return data #data is empty!

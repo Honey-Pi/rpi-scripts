@@ -7,19 +7,38 @@ import time
 import os, sys
 import io
 from datetime import datetime
-from utilities import scriptsFolder, check_file, error_log
+from utilities import scriptsFolder, check_file, clean_fields, thingspeak_datetime
+import logging
 
-def write_csv(ts_fields):
+logger = logging.getLogger('HoneyPi.write_csv')
+
+
+
+def write_csv(ts_fields, ts_channels, ts_datetime=None):
     try:
-        csv_file = scriptsFolder + '/offline.csv'
+        success = True
+        for (channelIndex, channel) in enumerate(ts_channels, 0):
+            ts_fields_cleaned = clean_fields(ts_fields, channelIndex, False)
+            success = write_singlechannel_csv(ts_fields_cleaned, channel['ts_channel_id'], ts_datetime)
+        return success
+    except Exception as ex:
+        logger.exception("Unhandled exception in write_csv")
+
+def write_singlechannel_csv(ts_fields_cleaned, channelId, ts_datetime=None):
+    try:
+        csv_file = scriptsFolder + '/offline-' + str(channelId) + '.csv'
         # Allowed ThingSpeak fields:
         csv_columns = ['datetime','field1','field2','field3','field4','field5','field6','field7','field8','latitude','longitude','elevation','status']
         check_file(csv_file, 5, 10, 1)
 
         # Create row with data
         row = {}
-        row['datetime']=datetime.now()
-        for key, value in ts_fields.items():
+        if ts_datetime is not None:
+            row['datetime']=ts_datetime
+        else:
+            row['datetime']=thingspeak_datetime()
+
+        for key, value in ts_fields_cleaned.items():
             row[key]=str(value)
 
         # Write to CSV File
@@ -30,7 +49,9 @@ def write_csv(ts_fields):
                 writer.writeheader()  # file doesn't exist yet, write a header
             writer.writerow(row)
 
+        return True
     except IOError as ex1:
-        error_log(ex1, "Write-CSV IOError")
+        logger.error("IOError in write_singlechannel_csv: " + repr(ex1))
     except Exception as ex:
-        error_log(ex, "Write-CSV Exception")
+        logger.exception("Unhandled exception in write_singlechannel_csv")
+    return False
