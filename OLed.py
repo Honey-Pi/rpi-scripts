@@ -13,7 +13,7 @@ from PIL import Image
 from sensors.sensor_utilities import get_smbus
 
 from read_settings import get_settings
-from utilities import scriptsFolder, logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist
+from utilities import scriptsFolder, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist
 #from Oled.diag_onOLED import diag_onOLED
 
 logger = logging.getLogger('HoneyPi.OLed')
@@ -169,14 +169,14 @@ def oled_diag_data():
         elif "0x50000" in undervoltage:
             #error_log("Warning: Undervoltage alarm had happened since system start ", undervoltage)
             #print("Undervoltage " + undervoltage)
-            lcdLine5= "Undervoltage check: Alarm"
-            lcdLine6=  "Alarm!"
+            lcdLine5= "Undervoltage check:"
+            lcdLine6= "Alarm since start!"
         
         elif "0x50005" in undervoltage:
             #error_log("Warning: Undervoltage alarm is currently raised ", undervoltage)
             #print("Undervoltage 0x50005 " + undervoltage)
             lcdLine5= "Undervoltage check: Alarm " 
-            lcdLine6=  "Alarm!"
+            lcdLine6= "Alarm currently!"
         
         oled.cls()
         draw.text((0, 2), lcdLine1, fill=1)
@@ -201,11 +201,11 @@ def oled_interface_data():
         ifaces = get_interfacelist()
         for i in range (0,len(ifaces)):
             lcdLine1 = "Interface " + str(ifaces[i])
-            lcdLine2 = "IP:" + str(get_ip_address(ifaces[i]))
-            lcdLine3 = "" #Subnetmask
-            lcdLine4 = "" #Broadscast
-            lcdLine5 = "" #Gateway
-            lcdLine6 = ""
+            lcdLine2 = "is up: " + str(get_interface_upstatus_linux(ifaces[i]))
+            lcdLine3 = "IP:" + str(get_ip_address(ifaces[i]))
+            lcdLine4 = "" #Subnetmask
+            lcdLine5 = "" #Broadscast
+            lcdLine6 = "" #Gateway
             ## an OLED senden
             oled.cls()
             draw.text((0, 2), lcdLine1, fill=1)
@@ -294,7 +294,7 @@ def main():
         oled_diag_data()
         time.sleep(4)
         oled_interface_data()
-        oled_measurement_data(lastmeasurement="", nextmeasurement="")
+        oled_measurement_data()
         #time.sleep()
         oled_off()
     except Exception as ex:
