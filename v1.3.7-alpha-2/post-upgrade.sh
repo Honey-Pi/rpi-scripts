@@ -87,7 +87,7 @@ pip3 install adafruit-circuitpython-dht
 echo "Finished installing modules"
 
 echo "Install required modules after v1.3.7..."
-pip3 install Pillow
+pip3 install Pillow ds18b20
 apt-get -y install libopenjp2-7 libtiff5
 
 echo "postupdatefinished 1" >> /var/www/html/version.txt
