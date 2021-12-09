@@ -42,12 +42,13 @@ def oled():
     time.sleep(4)
     oled_measurement_data()
     time.sleep(4)
-    oled_maintenance_data(settings)
-    time.sleep(4)
     oled_interface_data()
     ts_channels = settings["ts_channels"]
     oled_view_channels(offlinedata_prepare(ts_channels))
-    oled_off()
+    time.sleep(4)
+    oled_maintenance_data(settings)
+    if not superglobal.isMaintenanceActive:
+        oled_off()
     return
 
 def timesync():
@@ -64,6 +65,7 @@ def start_ap():
     isActive = 1 # measurement shall start next time
     logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
     superglobal.isMaintenanceActive=True
+    start_led(GPIO_LED)
     #isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     oled_init()
     oled_maintenance_data(settings)
