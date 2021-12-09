@@ -13,16 +13,17 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp
+from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare
 
 from multiprocessing import Process, Queue, Value
-from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data
+from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
 
 logger = logging.getLogger('HoneyPi.main')
 
 # global vars
 superglobal = superglobal.SuperGlobal()
 measurement = None
+settings = {}
 isActive = 0 # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
 time_rising = 0 # will be set by button_pressed event if the button is rised
@@ -33,6 +34,7 @@ GPIO_LED = 21 # GPIO for led
 LED_STATE = 0
 
 def oled():
+    global settings
     oled_init()
     oled_start_honeypi()
     time.sleep(4)
@@ -40,9 +42,11 @@ def oled():
     time.sleep(4)
     oled_measurement_data()
     time.sleep(4)
-    oled_maintenance_data()
+    oled_maintenance_data(settings)
     time.sleep(4)
     oled_interface_data()
+    ts_channels = settings["ts_channels"]
+    oled_view_channels(offlinedata_prepare(ts_channels))
     oled_off()
     return
 
@@ -52,7 +56,7 @@ def timesync():
 
 
 def start_ap():
-    global isActive, GPIO_LED
+    global isActive, GPIO_LED, settings
     start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
@@ -62,10 +66,10 @@ def start_ap():
     superglobal.isMaintenanceActive=True
     #isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     oled_init()
-    oled_maintenance_data()
+    oled_maintenance_data(settings)
 
 def stop_ap():
-    global isActive, GPIO_LED
+    global isActive, GPIO_LED, settings
     stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode)
     t2.start()
@@ -163,7 +167,7 @@ def button_pressed_falling(self):
 
 def main():
     try:
-        global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED
+        global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED, settings
 
         # Zaehlweise der GPIO-PINS auf der Platine
         GPIO.setmode(GPIO.BCM)

@@ -3,6 +3,7 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 import superglobal
+import os
 from datetime import datetime
 from smbus import SMBus
 import time
@@ -13,7 +14,7 @@ from PIL import Image
 from sensors.sensor_utilities import get_smbus
 
 from read_settings import get_settings
-from utilities import scriptsFolder, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist
+from utilities import scriptsFolder, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist, offlinedata_prepare
 #from Oled.diag_onOLED import diag_onOLED
 
 logger = logging.getLogger('HoneyPi.OLed')
@@ -225,10 +226,10 @@ def oled_interface_data():
         logger.error("Exception in function oled_interface_data:" + str(e))
         #pass
 
-def oled_maintenance_data():
+def oled_maintenance_data(settings):
     try:
         if superglobal.isMaintenanceActive:
-            settings = get_settings()
+            #settings = get_settings()
             honeypi = settings['internet']['honeypi']
             
             lcdLine1 = "Connect to"
@@ -286,8 +287,70 @@ def oled_maintenance_mode(status):
         logger.error("Exception in function oled_interface_data:" + str(e))
         #pass
 
+def oled_view_channels(offlinedata):
+    try:
+        for channeldata in offlinedata:
+            oled_view_channel(
+                channeldata['channel_id'],
+                channeldata['Date'],
+                channeldata['Time'],
+                channeldata['field1'],
+                channeldata['field2'],
+                channeldata['field3'],
+                channeldata['field4'],
+                channeldata['field5'],
+                channeldata['field6'],
+                channeldata['field7'],
+                channeldata['field8'])
+    except Exception as ex:
+        logger.exception("oled_view_channels" + str(ex))
+
+def oled_view_channel(ChannelId, lcdTime, lcdDate, field1="", field2="", field3="", field4="", field5="", field6="", field7="", field8=""):
+    try:
+        #oled.onoff(1) 
+        #oled.cls()
+        #draw.rectangle((0, 0, 128, 64), outline=1, fill=1)
+        #draw.bitmap((0, 0), Image.open('HoneyPi_logo.png'), fill=0)
+        #oled.display()
+        #time.sleep(2)
+        
+        lcdLine1="Channel: " + str(ChannelId)
+        lcdLine2=('Date:'+ lcdDate).ljust(10)  + " " + ('Time:' + lcdTime).ljust(10)
+        lcdLine3=field1.rjust(10) + "|" + field2.rjust(10)
+        lcdLine4=field3.rjust(10) + "|" + field4.rjust(10)
+        lcdLine5=field5.rjust(10) + "|" + field6.rjust(10)
+        lcdLine6=field7.rjust(10) + "|" + field8.rjust(10)
+        oled.cls()
+        #mylcd.lcd_clear()
+        draw.text((0, 2), lcdLine1, fill=1)
+        draw.text((0, 12), lcdLine2, fill=1)
+        draw.text((0, 24), lcdLine3, fill=1)
+        draw.text((0, 34), lcdLine4, fill=1)
+        draw.text((0, 44), lcdLine5, fill=1)
+        draw.text((0, 54), lcdLine6, fill=1)
+        oled.display()
+        time.sleep(2)
+        #oled.onoff(0)   # kill the oled.  RAM contents still there.
+        logger.debug("Channel data for " + str(ChannelId) + " successfully sent to the LCD")
+        return ChannelId
+        
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
+        else:
+            logger.exception("Initializing oled ssd1306 failed")
+    except Exception as ex:
+        logger.exception("oled_view_channel" + str(ex))
+    return False
+
+
+
 def main():
     try:
+        logging.basicConfig(level=logging.DEBUG)
+        settings = get_settings()
+        ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
+
         oled_init()
         oled_start_honeypi()
         time.sleep(4)
@@ -295,6 +358,8 @@ def main():
         time.sleep(4)
         oled_interface_data()
         oled_measurement_data()
+        time.sleep(4)
+        oled_view_channels(offlinedata_prepare(ts_channels))
         #time.sleep()
         oled_off()
     except Exception as ex:

@@ -29,6 +29,43 @@ settingsFile = backendFolder + '/settings.json'
 wittypi_scheduleFile = backendFolder + "/schedule.wpi"
 logfile = scriptsFolder + '/error.log'
 
+def offlinedata_prepare(ts_channels):
+    try:
+        offlinedata = []
+        for (channelIndex, channel) in enumerate(ts_channels, 1):
+            channeldata = {}
+            channel_id = channel['ts_channel_id']
+            channeldata['channel_id'] = channel_id
+            csv_file = scriptsFolder + '/offline-' + str(channel_id) + '.csv'
+            logger.debug("Checking offline file: " + csv_file + " for channel " + str(channel_id))
+            #filename = scriptsFolder + "/offline-"
+            if os.path.exists(csv_file):
+                with open(csv_file, "r") as fp:
+                    logger.debug("Offline file:" +  csv_file + " found")
+                    for i, line in enumerate(fp):
+                        pass
+                    #print(line)
+                    
+                    reader = line.strip().split(",")
+                    #time.sleep(0.5)
+                    channeldata['Date'] = reader[0][5:10]
+                    channeldata['Time'] = reader[0][11:16]
+                    channeldata['field1'] = reader[1]
+                    channeldata['field2'] = reader[2]
+                    channeldata['field3'] = reader[3]
+                    channeldata['field4'] = reader[4]
+                    channeldata['field5'] = reader[5]
+                    channeldata['field6'] = reader[6]
+                    channeldata['field7'] = reader[7]
+                    channeldata['field8'] = reader[8]
+                    #t = oled_view_channel(channel_id, Time, Date, field1, field2, field3, field4, field5, field6, field7, field8)
+                offlinedata.append(channeldata)
+            else:
+                logger.debug("No offline File: " + csv_file + " does exist")
+        return(offlinedata)
+    except Exception as ex:
+        logger.exception("Exception in offlinedata_prepare "+ str(ex))
+
 def get_interfacelist():
     try:
         ifaces = os.listdir('/sys/class/net/')
