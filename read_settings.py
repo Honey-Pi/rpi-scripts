@@ -67,7 +67,9 @@ def get_defaults():
     settings['wittyPi'] = wittyPi
     display = {}
     display['enabled'] = False
+    display['show_nondefault_password'] = False
     settings['display'] = display
+    settings['enable_reset'] = False
 
     return settings
 
@@ -284,12 +286,17 @@ def validate_settings(settings):
     except:
         settings['wittyPi']["low"]["schedule"] = get_defaults()["wittyPi"]["low"]["schedule"]
 
-    # Add since v1.3.7
-
+    # Migrate to version v1.3.7
     try:
         settings["display"]["enabled"]
     except:
+        updateSettingsFile = True
         settings["display"] = get_defaults()["display"]
+    try:
+        settings["enable_reset"]
+    except:
+        updateSettingsFile = True
+        settings["enable_reset"] = get_defaults()["enable_reset"]
 
 
     if updateSettingsFile:
