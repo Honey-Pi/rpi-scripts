@@ -132,7 +132,7 @@ def button_pressed_rising(self):
         print("button_pressed_rising")
 
 def button_pressed_falling(self):
-    global time_rising, debug, GPIO_LED, LED_STATE
+    global time_rising, debug, GPIO_LED, LED_STATE, settings
     time_falling = miliseconds()
     time_elapsed = time_falling-time_rising
     time_rising = 0 # reset to prevent multiple fallings from the same rising
@@ -155,7 +155,7 @@ def button_pressed_falling(self):
             tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
             tblink.start()
             shutdown()
-        elif time_elapsed >= 10000 and time_elapsed <= 15000:
+        elif time_elapsed >= 10000 and time_elapsed <= 15000 and settings["enable_reset"]:
             # reset settings and shutdown
             tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
             tblink.start()
