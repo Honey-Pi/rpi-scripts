@@ -13,7 +13,7 @@ from Oled.lib_oled96 import ssd1306
 from PIL import Image
 from sensors.sensor_utilities import get_smbus
 
-from read_settings import get_settings
+from read_settings import get_defaults
 from utilities import scriptsFolder, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist, offlinedata_prepare
 #from Oled.diag_onOLED import diag_onOLED
 
@@ -229,14 +229,20 @@ def oled_interface_data():
 def oled_maintenance_data(settings):
     try:
         if superglobal.isMaintenanceActive:
-            #settings = get_settings()
-            honeypi = settings['internet']['honeypi']
             
+            honeypi = settings['internet']['honeypi']
+            if honeypi['password'] == get_defaults()['internet']['honeypi']['password']:
+                    password = honeypi["password"]
+            else:
+                if settings['display']['show_nondefault_password']:
+                    password = honeypi["password"]
+                else:
+                    password = '**********'
             lcdLine1 = "Connect to"
             lcdLine2 = "SSID:"
             lcdLine3 = honeypi["ssid"]
             lcdLine4 = "Password:"
-            lcdLine5 = honeypi["password"]
+            lcdLine5 = password
             lcdLine6 = "IP:" + str(get_ip_address("uap0"))
             ## an OLED senden
             oled.cls()

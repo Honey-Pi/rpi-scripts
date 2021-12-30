@@ -147,7 +147,7 @@ def button_pressed_falling(self):
             tmeasurement = threading.Thread(target=toggle_measurement)
             tmeasurement.start()
         elif time_elapsed >= 50 and time_elapsed <= 500:
-            if displaysettings["enabled"]:
+            if settings['display']['enabled']:
                 pOLed = threading.Thread(target=oled, args=())
                 pOLed.start()
         elif time_elapsed >= 5000 and time_elapsed <= 10000:
@@ -209,10 +209,8 @@ def main():
         else:
             logger.info('HoneyPi '+ get_rpiscripts_version() + ' Started on ' + get_pi_model())
             start_hdd_led()
-        global displaysettings
-        displaysettings = settings["display"]
         q = Queue()
-        if displaysettings["enabled"]:
+        if settings['display']['enabled']:
             tOLed = threading.Thread(target=oled, args=())
             tOLed.start()
 
@@ -222,7 +220,7 @@ def main():
         else:
             logger.debug('Offline mode  - no time syncronization to NTP')
 
-        #if displaysettings["enabled"]:
+        #if settings['display']['enabled']:
         #    tOLed.join()
         if settings["offline"] != 3:
             ttimesync.join()
