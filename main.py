@@ -67,8 +67,9 @@ def start_ap():
     superglobal.isMaintenanceActive=True
     start_led(GPIO_LED)
     #isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
-    oled_init()
-    oled_maintenance_data(settings)
+    if settings['display']['enabled']:
+        oled_init()
+        oled_maintenance_data(settings)
 
 def stop_ap():
     global isActive, GPIO_LED, settings
@@ -79,7 +80,8 @@ def stop_ap():
     isActive = 0 # measurement shall stop next time
     superglobal.isMaintenanceActive=False
     #isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
-    oled_off()
+    if settings['display']['enabled']:
+        oled_off()
 
 def get_led_state(self):
     global GPIO_LED, LED_STATE
