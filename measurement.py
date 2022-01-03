@@ -85,12 +85,14 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                 tempAndHum = measure_dht_zero(sensor)
             else:
                 tempAndHum = measure_dht(sensor)
-            ts_fields.update(tempAndHum)
+            if tempAndHum is not None:
+                ts_fields.update(tempAndHum)
 
         # measure every sensor with type 4 [MAX6675]
         for (i, sensor) in enumerate(tcSensors):
             tc_temp = measure_tc(sensor)
-            ts_fields.update(tc_temp)
+            if tc_temp is not None:
+                ts_fields.update(tc_temp)
 
         # measure BME280 (can only be two) [type 5]
         for (sensorIndex, bme280Sensor) in enumerate(bme280Sensors):
@@ -98,7 +100,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if bme280_values is not None:
                 ts_fields.update(bme280_values)
 
-        # measure PCF8591 [type 6]
+        # measure every PCF8591 sensor [type 6]
         for (i, sensor) in enumerate(pcf8591Sensors):
             pcf8591_values = measure_pcf8591(sensor)
             if pcf8591_values is not None:
@@ -110,27 +112,21 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if ee895_values is not None:
                 ts_fields.update(ee895_values)
 
-        # measure AHT10 (can only be one) [type 8]
-        if aht10Sensors and len(aht10Sensors) == 1:
-            aht10_fields = measure_aht10(aht10Sensors[0])
+        # measure every AHT10 sensor [type 8]
+        for (i, sensor) in enumerate(aht10Sensors):
+            aht10_fields = measure_aht10(sensor)
             if aht10_fields is not None:
                 ts_fields.update(aht10_fields)
 
-        # measure sht31 (can only be one) [type 9]
-        if sht31Sensors and len(sht31Sensors) == 1:
-            sht31_fields = measure_sht31(sht31Sensors[0])
+        # measure every sht31 sensor [type 9]
+        for (i, sensor) in enumerate(sht31Sensors):
+            sht31_fields = measure_sht31(sensor)
             if sht31_fields is not None:
                 ts_fields.update(sht31_fields)
 
-        # measure sht25 (can only be one) [type 12]
-        if sht25Sensors and len(sht25Sensors) == 1:
-            sht25_fields = measure_sht31(sht25Sensors[0])
-            if sht25_fields is not None:
-                ts_fields.update(sht25_fields)
-
-        # measure hdc1008 (can only be one) [type 10]
-        if hdc1008Sensors and len(hdc1008Sensors) == 1:
-            hdc1008_fields = measure_hdc1008(hdc1008Sensors[0])
+        # measure every hdc1008 sensor [type 10]
+        for (i, sensor) in enumerate(hdc1008Sensors):
+            hdc1008_fields = measure_hdc1008(sensor)
             if hdc1008_fields is not None:
                 ts_fields.update(hdc1008_fields)
 
@@ -140,16 +136,21 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if bh1750_fields is not None:
                 ts_fields.update(bh1750_fields)
 
+        # measure sht25 [type 12]
+        for (i, sensor) in enumerate(sht25Sensors):
+            sht25_fields = measure_hdc1008(sensor)
+            if sht25_fields is not None:
+                ts_fields.update(sht25_fields)
+
+        # all other sensors need to be measured first in case a temperature field is passed for compensation to HX711
         # measure every sensor with type 2 [HX711]
         start_single()
         for (i, sensor) in enumerate(weightSensors):
             if hxInits is not None:
                 hx711_fields = measure_hx711(sensor, ts_fields, hxInits[i])
-                # hx711_fields = compensate_temperature(sensor, weight, ts_fields)
                 ts_fields.update(hx711_fields)
             else:
                 hx711_fields = measure_hx711(sensor, ts_fields)
-                # hx711_fields = compensate_temperature(sensor, weight, ts_fields)
                 ts_fields.update(hx711_fields)
         stop_single()
 
