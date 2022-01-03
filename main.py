@@ -247,7 +247,7 @@ def main():
         #if settings['display']['enabled']:
         #    tOLed.join()
         if settings["offline"] != 3:
-            ttimesync.join()
+            ttimesync.join(timeout=20)
 
         # start as seperate background thread
         # because Taster pressing was not recognised
