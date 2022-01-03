@@ -19,21 +19,20 @@ def measure_dht(ts_sensor):
     timer = 0
     errorMessage = ""
 
-    try:
-        SENSOR_PIN = digitalio.Pin(int(ts_sensor["pin"]))
-        dht_type = int(ts_sensor["dht_type"])
+    while timer <= 8:
+        try:
+            SENSOR_PIN = digitalio.Pin(int(ts_sensor["pin"]))
+            dht_type = int(ts_sensor["dht_type"])
 
-        # setup sensor
-        if dht_type == 2302:
-            dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
-        elif dht_type == 11:
-            dht = adafruit_dht.DHT11(SENSOR_PIN, use_pulseio=True)
-        else:
-            dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
+            # setup sensor
+            if dht_type == 2302:
+                dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
+            elif dht_type == 11:
+                dht = adafruit_dht.DHT11(SENSOR_PIN, use_pulseio=True)
+            else:
+                dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
 
-        while timer <= 8:
             try:
-
                 temperature = dht.temperature
                 humidity = dht.humidity
                 dht.exit()
@@ -49,20 +48,25 @@ def measure_dht(ts_sensor):
                 break # break while if no Exception occured
             except RuntimeError as error:
                 # Errors happen fairly often, DHT's are hard to read, just keep going
-                errorMessage = error.args[0]
-                print(errorMessage)
+                errorMessage = "Failed reading DHT: " + error.args[0]
+                logger.debug(errorMessage)
                 time.sleep(1)
                 timer = timer + 1
 
-            if timer > 8: # end reached
-                logger.error("Failed reading DHT on GPIO " + str(SENSOR_PIN) + ". " + errorMessage)
+        except RuntimeError as error:
+            errorMessage = "Failed initialising DHT: " + error.args[0]
+            logger.error(errorMessage)
+            time.sleep(1)
+            timer = timer + 1
 
-    except RuntimeError as error:
-        errorMessage = error.args[0]
-        logger.error("Failed initialising DHT: " + errorMessage)
+        except Exception as ex:
+            errorMessage = "Reading DHT failed. DHT: " + str(dht_type) + ", GPIO: " + str(SENSOR_PIN)
+            logger.exception(errorMessage)
+            time.sleep(1)
+            timer = timer + 1
 
-    except Exception as ex:
-        logger.exception("Reading DHT failed. DHT: " + str(dht_type) + ", GPIO: " + str(SENSOR_PIN))
+    if timer > 8: # end reached
+        logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(SENSOR_PIN) + ". " + errorMessage)
 
     return fields
 
