@@ -52,8 +52,8 @@ def oled():
     return
 
 def timesync():
-            ntptimediff=sync_time_ntp()
-            logger.info('Time syncronized to NTP - diff: ' + ntptimediff)
+    ntptimediff=sync_time_ntp()
+    logger.info('Time syncronized to NTP - diff: ' + ntptimediff)
 
 
 def start_ap():
@@ -218,13 +218,7 @@ def main():
             ttimesync = threading.Thread(target=timesync, args=())
             ttimesync.start()
         else:
-            logger.debug('Offline mode  - no time syncronization to NTP')
-
-        #if settings['display']['enabled']:
-        #    tOLed.join()
-        if settings["offline"] != 3:
-            ttimesync.join()
-
+            logger.debug('Offline mode - no time syncronization to NTP')
 
         runpostupgradescript()
 
@@ -244,6 +238,17 @@ def main():
         # check undervolate for since system start
         check_undervoltage()
 
+        # setup Button
+        GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
+        bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
+        # register button press event
+        GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
+
+        #if settings['display']['enabled']:
+        #    tOLed.join()
+        if settings["offline"] != 3:
+            ttimesync.join()
+
         # start as seperate background thread
         # because Taster pressing was not recognised
         superglobal.isMaintenanceActive=False
@@ -251,12 +256,6 @@ def main():
         measurement_stop = threading.Event() # create event to stop measurement
         measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
         measurement.start() # start measurement
-
-        # setup Button
-        GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
-        bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
-        # register button press event
-        GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
 
         # Main Lopp: Cancel with STRG+C
         while True:

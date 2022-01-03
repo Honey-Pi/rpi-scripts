@@ -45,7 +45,7 @@ def offlinedata_prepare(ts_channels):
                     for i, line in enumerate(fp):
                         pass
                     #print(line)
-                    
+
                     reader = line.strip().split(",")
                     #time.sleep(0.5)
                     channeldata['Date'] = reader[0][5:10]
@@ -70,7 +70,7 @@ def get_interfacelist():
     try:
         ifaces = os.listdir('/sys/class/net/')
         return(ifaces)
-        
+
     except Exception as ex:
         logger.exception("get_interfacelist")
         pass
