@@ -25,6 +25,7 @@ from read_hx711 import init_hx711
 
 from read_aht10 import measure_aht10
 from read_sht31 import measure_sht31
+from read_sht25 import measure_sht25
 from read_hdc1008 import measure_hdc1008
 from read_bh1750 import measure_bh1750
 
@@ -53,11 +54,11 @@ def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug, ts
     except Exception as ex:
         logger.exception("Exception during manage_transfer_to_ts")
 
-def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
     ts_fields = {}
     try:
-        ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits)
+        ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits)
         if len(ts_fields) > 0:
             ts_datetime=thingspeak_datetime()
             if offline == 1 or offline == 3:
@@ -207,6 +208,7 @@ def start_measurement(measurement_stop):
         sht31Sensors = get_sensors(settings, 9)
         aht10Sensors = get_sensors(settings, 10)
         bh1750Sensors = get_sensors(settings, 11)
+        sht25Sensors = get_sensors(settings, 12)
         bme680Inits = []
 
         # -- Run Pre Configuration --
@@ -271,7 +273,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join()
 
