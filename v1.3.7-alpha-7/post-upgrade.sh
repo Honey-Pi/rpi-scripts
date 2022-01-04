@@ -90,4 +90,17 @@ echo "Install required modules after v1.3.7..."
 pip3 install --upgrade Pillow ds18b20 rak811
 apt-get -y install libopenjp2-7 libtiff5
 
+echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
+sed -i '/(sleep 2;python3/c\#' /etc/rc.local # disable autostart in rc.local
+if cmp -s /lib/systemd/system/honeypi.service /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/honeypi.service
+then
+   echo "The honeypi.service file is already the correct file..."
+else
+   echo "The honeypi.service file is different..."
+   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/honeypi.service /lib/systemd/system/honeypi.service
+   chmod 644 /lib/systemd/system/honeypi.service
+   systemctl daemon-reload
+   systemctl enable honeypi.service
+fi
+
 echo "postupdatefinished 1" >> /var/www/html/version.txt

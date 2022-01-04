@@ -18,3 +18,13 @@ git clone --depth=1 https://github.com/Honey-Pi/rpi-scripts
 ```
 
 Your settings won't be lost because they are stored at `/var/www/html/backend/settings.json`.
+
+## How to Run the measurement routine
+
+### Autostart
+
+In previous versions the main.py was started within the `/etc/rc.local` to autostart the measurements scripts. But with the latest versions we created an systemd service which contains the call of our main.py script. This is necessary to autostart the measurement service after your Raspberry Pi booted. If you run the installer from our [main repo](https://github.com/Honey-Pi/HoneyPi#install) the autostart job is automatically added and therefore no additional action is required.
+
+### Manually
+
+But for manually testing you should be able to call the measurement script within your terminal as the following: `sudo python3 /home/pi/HoneyPi/rpi-scripts/main.py`
