@@ -130,44 +130,52 @@ def button_pressed_rising(self):
     global time_rising, debug, GPIO_LED, LED_STATE
     time_rising = miliseconds()
 
-    if debug:
-        print("button_pressed_rising")
+    logger.debug("button_pressed_rising")
 
 def button_pressed_falling(self):
     global time_rising, debug, GPIO_LED, LED_STATE, settings
     time_falling = miliseconds()
+    logger.debug("button_pressed_falling")
     time_elapsed = time_falling-time_rising
     time_rising = 0 # reset to prevent multiple fallings from the same rising
-    MIN_TIME_TO_ELAPSE = 500 # miliseconds
-    MAX_TIME_TO_ELAPSE = 3000
+    logger.debug("Button was pressed for: " + str(time_elapsed) + " miliseconds")
 
-    if debug:
-        print("button_pressed_falling")
+    MIN_TIME_TO_ELAPSE = 50
+    MAX_TIME_TO_ELAPSE_OLED = 500 # miliseconds
+    MAX_TIME_TO_ELAPSE_MAINTENANCE = 3000
+    MIN_TIME_TO_ELAPSE_SHUTDOWN = 5000
+    MAX_TIME_TO_ELAPSE_SHUTDOWN = 10000
+    MAX_TIME_TO_ELAPSE_RESET = 15000
+    
     if time_elapsed >= 0 and time_elapsed <= 30000:
-        if time_elapsed >= MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE:
-            # normal button press to switch between measurement and maintenance
-            tmeasurement = threading.Thread(target=toggle_measurement)
-            tmeasurement.start()
-        elif time_elapsed >= 50 and time_elapsed <= 500:
+        if time_elapsed > MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE_OLED:
             if settings['display']['enabled']:
                 pOLed = threading.Thread(target=oled, args=())
                 pOLed.start()
-        elif time_elapsed >= 5000 and time_elapsed <= 10000:
+        elif time_elapsed > MAX_TIME_TO_ELAPSE_OLED and time_elapsed <= MAX_TIME_TO_ELAPSE_MAINTENANCE:
+            # normal button press to switch between measurement and maintenance
+            tmeasurement = threading.Thread(target=toggle_measurement)
+            tmeasurement.start()
+        elif time_elapsed > MIN_TIME_TO_ELAPSE_SHUTDOWN and time_elapsed <= MAX_TIME_TO_ELAPSE_SHUTDOWN:
             # shutdown raspberry
             tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
             tblink.start()
+            logger.critical("Shutting down because button was pressed more than "+ MIN_TIME_TO_ELAPSE_SHUTDOWN/1000 + " seconds.")
             shutdown()
-        elif time_elapsed >= 10000 and time_elapsed <= 15000 and settings["enable_reset"]:
-            # reset settings and shutdown
-            tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
-            tblink.start()
-            delete_settings()
-            update_wittypi_schedule("")
-            logger.critical("Resettet settings because Button was pressed wore than 10seconds.")
-            shutdown()
-        elif debug:
+        elif time_elapsed > MAX_TIME_TO_ELAPSE_SHUTDOWN and time_elapsed <= MAX_TIME_TO_ELAPSE_RESET:
+            if settings["enable_reset"]:
+                # reset settings and shutdown
+                tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
+                tblink.start()
+                delete_settings()
+                update_wittypi_schedule("")
+                logger.critical("Resetting settings and shutting down because button was pressed more than "+ MAX_TIME_TO_ELAPSE_SHUTDOWN/1000 + "seconds.")
+                shutdown()
+            else:
+                logger.critical("Button was pressed more than 10 seconds but NOT resetting settings and shutting down because feature disabled in webinterface.")
+        else:
             time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s
-            logger.warning("Too short Button press, Too long Button press OR inteference occured: " + str(time_elapsed_s) + "s elapsed.")
+            logger.warning("Too short Button press, Too long Button press OR inteference occured. Button was pressed for: " + str(time_elapsed_s) + "s.")
 
 def main():
     try:
