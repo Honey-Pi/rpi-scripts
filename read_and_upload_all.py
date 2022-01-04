@@ -109,7 +109,7 @@ def check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowV
             isTimeToCheckVoltage = (time_now-time_measured_Voltage >= intervalVoltageCheck)
             if isTimeToCheckVoltage:
                 if pcf8591Sensors and len(pcf8591Sensors) > 0:
-                    print(str(pcf8591Sensors[pcf8591Sensorforvoltagecheck]))
+                    logger.debug(str(pcf8591Sensors[pcf8591Sensorforvoltagecheck]))
                     voltage = get_raw_voltage(pcf8591Sensors[pcf8591Sensorforvoltagecheck])
                     if voltage is not None:
                         now = time.strftime("%H:%M", time.localtime(time_now))
@@ -261,10 +261,10 @@ def start_measurement(measurement_stop):
             if isTimeToMeasure:
                 now = datetime.now()
                 if time_measured == 0:
-                    print("First time measurement. Now: " + str(now.strftime('%Y-%m-%d %H:%M')))
+                    logger.debug("First time measurement. Now: " + str(now.strftime('%Y-%m-%d %H:%M')))
                 else:
-                    print("Last measurement was at " + str(superglobal.lastmeasurement.strftime('%Y-%m-%d %H:%M')))
-                    print("Time over for a new measurement. Time is now: " + str(now.strftime('%Y-%m-%d %H:%M')))
+                    logger.debug("Last measurement was at " + str(superglobal.lastmeasurement.strftime('%Y-%m-%d %H:%M')))
+                    logger.debug("Time over for a new measurement. Time is now: " + str(now.strftime('%Y-%m-%d %H:%M')))
                 time_measured = time.time()
                 superglobal.lastmeasurement = now
                 superglobal.nextmeasurement = now + timedelta(seconds=1) * interval
@@ -282,19 +282,19 @@ def start_measurement(measurement_stop):
 
                 # stop measurements after uploading once
                 if interval == 1:
-                    print("Only one measurement was set => stop measurements.")
+                    logger.debug("Only one measurement was set => stop measurements.")
                     measurement_stop.set()
 
                     if shutdownAfterTransfer:
                         if superglobal.isMaintenanceActive is None:
                             superglobal.isMaintenanceActive = False
-                        print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
+                        logger.debug("Wert isMaintenanceActive: " + str(isMaintenanceActive))
                         while superglobal.isMaintenanceActive:
                             #isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
-                            print("Shutting down was set but Maintenance mode is active, delaying shutdown!")
-                            print("Wert isMaintenanceActive: " + str(isMaintenanceActive))
+                            logger.info("Shutting down was set but Maintenance mode is active, delaying shutdown!")
+                            logger.debug("Wert isMaintenanceActive: " + str(isMaintenanceActive))
                             time.sleep(10)
-                        print("Shutting down was set => Waiting 10seconds and then shutdown.")
+                        logger.info("Shutting down was set => Waiting 10seconds and then shutdown.")
                         tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25))
                         tblink.start()
                         time.sleep(10)
@@ -305,7 +305,7 @@ def start_measurement(measurement_stop):
         end_time = time.time()
         time_taken = end_time - start_time # time_taken is in seconds
         time_taken_s = float("{0:.2f}".format(time_taken)) # remove microseconds
-        print("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
+        logger.debug("Measurement-Script runtime was " + str(time_taken_s) + " seconds.")
 
     except Exception as ex:
         logger.exception("Unhandled Exception in start_measurement")
