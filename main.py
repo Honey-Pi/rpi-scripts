@@ -160,7 +160,7 @@ def button_pressed_falling(self):
             # shutdown raspberry
             tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
             tblink.start()
-            logger.critical("Shutting down because button was pressed more than "+ MIN_TIME_TO_ELAPSE_SHUTDOWN/1000 + " seconds.")
+            logger.critical("Shutting down because button was pressed more than "+ str(MIN_TIME_TO_ELAPSE_SHUTDOWN/1000) + " seconds.")
             shutdown()
         elif time_elapsed > MAX_TIME_TO_ELAPSE_SHUTDOWN and time_elapsed <= MAX_TIME_TO_ELAPSE_RESET:
             if settings["enable_reset"]:
@@ -169,7 +169,7 @@ def button_pressed_falling(self):
                 tblink.start()
                 delete_settings()
                 update_wittypi_schedule("")
-                logger.critical("Resetting settings and shutting down because button was pressed more than "+ MAX_TIME_TO_ELAPSE_SHUTDOWN/1000 + "seconds.")
+                logger.critical("Resetting settings and shutting down because button was pressed more than "+ str(MAX_TIME_TO_ELAPSE_SHUTDOWN/1000) + "seconds.")
                 shutdown()
             else:
                 logger.critical("Button was pressed more than 10 seconds but NOT resetting settings and shutting down because feature disabled in webinterface.")
