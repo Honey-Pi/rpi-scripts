@@ -15,7 +15,7 @@ import logging
 import RPi.GPIO as GPIO
 from pathlib import Path
 import socket, struct, fcntl
-
+from wittypi.wittypi import *
 
 import subprocess
 import re
@@ -613,13 +613,39 @@ def blockPrinting(func):
 
     return func_wrapper
 
+def is_service_active(servicename="honeypi.service"):
+    try:
+        status = os.system('systemctl is-active --quiet ' + servicename)
+        if status != 'active':
+            return False
+        return True
+    except Exception as ex:
+        logger.exception("Error in function is_service_active")
+
+def check_wittypi(settings):
+    try:
+        wittypi = {}
+        wittypi['service_active'] = is_service_active('wittypi.service')
+        wittypi['settings_enabled'] = settings['wittyPi']['enabled']
+        wittypi['is_rtc_connected'] = is_rtc_connected()
+        wittypi['is_mc_connected'] = is_mc_connected()
+        wittypi['settings_dummy_load_duration'] = settings['wittyPi']['dummyload']
+        if wittypi['is_mc_connected']:
+            wittypi['dummy_load_duration'] = get_dummy_load_duration()
+            startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
+            shutdown_time_utc,shutdown_time_local,shutdown_str_time,shutdown_timedelta = get_shutdown_time()
+            wittypi['startup_time_local'] = startup_time_local
+            wittypi['shutdown_time_local'] = shutdown_time_local
+        return wittypi
+    except Exception as ex:
+        logger.exception("Error in function check_wittypi")
+
 def pause_wittypi_schedule():
     try:
         if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1:
             os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
             update_wittypi_schedule("")
             logger.debug("Pausing wittyPi schedule...")
-
     except Exception as ex:
         logger.exception("Error in function pause_wittypi_schedule")
 
