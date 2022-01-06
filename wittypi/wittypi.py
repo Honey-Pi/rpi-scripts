@@ -115,10 +115,8 @@ def get_dummy_load_duration():
     try:
         out=[]
         with SMBus(1) as bus:
-            b = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD)
-            out.append(b)
-        dummy_load_duration = dec2hex(out)
-        return dummy_load_duration[0]
+            dummy_load_duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD)
+        return dummy_load_duration #[0]
     except Exception as ex:
         logger.exception("Exception in get_dummy_load_duration")
 
