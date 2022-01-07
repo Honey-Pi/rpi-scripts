@@ -379,6 +379,18 @@ def set_power_cut_delay(delay=8):
         print('wrong input for power cut delay threshold',delay, 'Please input from 0.0 to ', maxVal, ' ...')
         return False
 
+def set_dummy_load_duration(duration=0):
+    if duration >=- 0 and duration <= 254:
+        try:
+            with SMBus(1) as bus:
+                bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD, duration)
+                print("Dummy load duration set to ", duration, " !")
+        except Exception as e:
+            print(e)
+            return False
+    else:
+        print('wrong input for power cut delay threshold', duration , 'Please input from 0 to 254')
+
 def getAll():
     wittypi = {}
     UTCtime,localtime,timestamp = get_rtc_timestamp()
@@ -424,7 +436,6 @@ def main():
         print('\n')
         print("WittyPi dummy load duration: " + str(dummy_load_duration))
         print("WittyPi power cut delay after shutdown.: " + str(power_cut_delay_after_shutdown))
-        set_power_cut_delay(delay=7)
     except Exception as ex:
         logger.critical("Unhandled Exception in main: " + repr(ex))
 
