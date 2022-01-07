@@ -613,12 +613,12 @@ def blockPrinting(func):
 
     return func_wrapper
 
-def is_service_active(servicename="honeypi.service"):
+def is_service_active(servicename='honeypi.service'):
     try:
         status = os.system('systemctl is-active --quiet ' + servicename)
-        if status != 'active':
-            return False
-        return True
+        if status == 0:
+            return True
+        return False
     except Exception as ex:
         logger.exception("Error in function is_service_active")
 
