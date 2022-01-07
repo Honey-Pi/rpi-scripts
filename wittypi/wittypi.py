@@ -101,13 +101,7 @@ def get_firmwareversion():
             b = bus.read_byte_data(I2C_MC_ADDRESS, I2C_ID)
             out.append(b)
         firmwareversion =  dec2hex(out)
-        if firmwareversion[0] == 22:
-            wittypi_firmwareversion = 'V1.02'
-        elif firmwareversion[0] == 24:
-            wittypi_firmwareversion = 'V1.04'
-        else:
-            wittypi_firmwareversion = str(firmwareversion[0])
-        return wittypi_firmwareversion
+        return firmwareversion[0]
     except Exception as ex:
         logger.exception("Exception in get_firmwareversion")
 
@@ -362,6 +356,29 @@ def get_temperature():
         c += str(((t2&0xC0)>>6)*25 )
     return float(c)
 
+def get_power_cut_delay():
+    with SMBus(1) as bus:
+        pcd = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_POWER_CUT_DELAY)
+    pcd=pcd/10
+    return pcd
+
+def set_power_cut_delay(delay=8):
+    maxVal=8.0;
+    if get_firmwareversion() >= 35:
+        maxVal='25.0'
+    if delay >= 0 and delay <= maxVal:
+        d=delay*10
+        try:
+            with SMBus(1) as bus:
+                bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_POWER_CUT_DELAY, d)
+                print("Power cut delay set to ", delay , " seconds!")
+        except Exception as e:
+            print(e)
+            return False
+    else:
+        print('wrong input for power cut delay threshold',delay, 'Please input from 0.0 to ', maxVal, ' ...')
+        return False
+
 def getAll():
     wittypi = {}
     UTCtime,localtime,timestamp = get_rtc_timestamp()
@@ -385,6 +402,7 @@ def main():
         startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
         shutdown_time_utc,shutdown_time_local,shutdown_str_time,shutdown_timedelta = get_shutdown_time()
         dummy_load_duration = get_dummy_load_duration()
+        power_cut_delay_after_shutdown=get_power_cut_delay()
         if startup_time_local is not None: 
             str_startup_time_local = str(startup_time_local.strftime("%Y-%m-%d_%H-%M-%S"))
         else: 
@@ -405,6 +423,8 @@ def main():
         print("WittyPi temperature: " + str(wittypi['temperature']))
         print('\n')
         print("WittyPi dummy load duration: " + str(dummy_load_duration))
+        print("WittyPi power cut delay after shutdown.: " + str(power_cut_delay_after_shutdown))
+        set_power_cut_delay(delay=7)
     except Exception as ex:
         logger.critical("Unhandled Exception in main: " + repr(ex))
 
