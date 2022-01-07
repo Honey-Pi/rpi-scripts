@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-VERSION="v1.3.7-alpha-8"
+VERSION="v1.3.7-alpha-9"
 
 echo '>>> Running post-upgrade script...'
 
@@ -87,7 +87,7 @@ pip3 install --upgrade adafruit-circuitpython-dht
 echo "Finished installing modules"
 
 echo "Install required modules after v1.3.7..."
-pip3 install --upgrade Pillow ds18b20 rak811
+pip3 install --upgrade Pillow ds18b20 rak811 smbus2 pytz
 apt-get -y install libopenjp2-7 libtiff5
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
