@@ -288,11 +288,11 @@ def start_measurement(measurement_stop):
                     if shutdownAfterTransfer:
                         if superglobal.isMaintenanceActive is None:
                             superglobal.isMaintenanceActive = False
-                        logger.debug("Wert isMaintenanceActive: " + str(isMaintenanceActive))
+                        logger.debug("Wert isMaintenanceActive: " + str(superglobal.isMaintenanceActive))
                         while superglobal.isMaintenanceActive:
                             #isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
                             logger.info("Shutting down was set but Maintenance mode is active, delaying shutdown!")
-                            logger.debug("Wert isMaintenanceActive: " + str(isMaintenanceActive))
+                            logger.debug("Wert isMaintenanceActive: " + str(superglobal.isMaintenanceActive))
                             time.sleep(10)
                         logger.info("Shutting down was set => Waiting 10seconds and then shutdown.")
                         tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25))

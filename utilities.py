@@ -636,9 +636,9 @@ def check_wittypi(settings):
                 if wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']:
                     logger.warning("WittyPi dummy load duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['dummyload']) + "seconds")
                     set_dummy_load_duration(settings['wittyPi']['dummyload'])
-                if not settings['wittyPi']['enabled'] and wittypi_status['is_rtc_connected']:
-                        if wittypi_status['startup_time_local'] is not None or wittypi_status['shutdown_time_local'] is not None:
-                            logger.crititcal("WittyPi is disabled in settings but a startup / shutdown time is set on WittyPi")
+        if not settings['wittyPi']['enabled'] and wittypi_status['is_rtc_connected']:
+            if wittypi_status['startup_time_local'] is not None or wittypi_status['shutdown_time_local'] is not None:
+                logger.critical("WittyPi is disabled in settings but a startup / shutdown time is set on WittyPi")
     except Exception as ex:
         logger.exception("Error in function check_wittypi")
 
