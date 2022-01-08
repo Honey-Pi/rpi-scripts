@@ -5,7 +5,7 @@
 import superglobal
 import os
 from datetime import datetime
-from smbus import SMBus
+from smbus2 import SMBus
 import time
 import logging
 from logging.handlers import RotatingFileHandler
