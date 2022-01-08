@@ -25,6 +25,7 @@ import datetime as dt
 import calendar
 import time
 import pytz
+import os
 
 local_tz = dt.datetime.utcnow().astimezone().tzinfo
 #local_tz = pytz.timezone('Europe/Stockholm')
@@ -78,8 +79,21 @@ def is_rtc_connected():
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             return False
+        if str(ex) == "[Errno 16] Device or resource busy":
+            os.system('sudo rmmod rtc-ds1307')
+            try:
+                out=[]
+                with SMBus(1) as bus:
+                    b = bus.read_byte(RTC_ADDRESS)
+                    out.append(b)
+                return True
+            except IOError as ex:
+                if str(ex) == "[Errno 121] Remote I/O error":
+                    return False
+        else:
+            logger.exception("IOError in is_rtc_connected " + str(ex))
     except Exception as ex:
-        logger.exception("Exception in is_rtc_connected")
+        logger.exception("Exception in is_rtc_connected " + str(ex))
 
 def is_mc_connected():
     try:
@@ -393,13 +407,19 @@ def set_dummy_load_duration(duration=0):
 
 def getAll():
     wittypi = {}
-    UTCtime,localtime,timestamp = get_rtc_timestamp()
-    wittypi['DateTime'] = localtime.strftime("%Y-%m-%d_%H-%M-%S")
-    wittypi['timestamp'] = timestamp
-    wittypi['input_voltage'] = get_input_voltage()
-    wittypi['output_voltage'] = get_output_voltage()
-    wittypi['temperature'] = get_temperature()
-    wittypi['outputcurrent'] = get_output_current()
+    if is_rtc_connected():
+        UTCtime,localtime,timestamp = get_rtc_timestamp()
+        wittypi['DateTime'] = localtime.strftime("%Y-%m-%d_%H-%M-%S")
+        wittypi['timestamp'] = timestamp
+    if is_mc_connected():
+        wittypi['firmwareversion'] = get_firmwareversion()
+        wittypi['input_voltage'] = get_input_voltage()
+        wittypi['output_voltage'] = get_output_voltage()
+        wittypi['temperature'] = get_temperature()
+        wittypi['outputcurrent'] = get_output_current()
+        wittypi['dummy_load_duration'] = get_dummy_load_duration()
+        wittypi['power_cut_delay'] = get_power_cut_delay()
+        
     return wittypi
     
 
@@ -408,13 +428,10 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
         print("WittyPi is connected: " + str(is_mc_connected()))
         print("WittyPi RTC is connected: " + str(is_rtc_connected()))
-        firmwareversion = get_firmwareversion()
         wittypi = {}
         wittypi = getAll()
         startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
         shutdown_time_utc,shutdown_time_local,shutdown_str_time,shutdown_timedelta = get_shutdown_time()
-        dummy_load_duration = get_dummy_load_duration()
-        power_cut_delay_after_shutdown=get_power_cut_delay()
         if startup_time_local is not None: 
             str_startup_time_local = str(startup_time_local.strftime("%Y-%m-%d_%H-%M-%S"))
         else: 
@@ -423,7 +440,7 @@ def main():
             str_shutdown_time_local = str(shutdown_time_local.strftime("%Y-%m-%d_%H-%M-%S"))
         else: 
             str_shutdown_time_local = "Never"
-        print("Firmwareversion: " + str(firmwareversion))
+        print("Firmwareversion: " + str(wittypi['firmwareversion']))
         print("WittyPi RTC Time: " + str(wittypi['DateTime']))
         print('Next startup: ' + str_startup_time_local)
         print('Next shutdown: ' + str_shutdown_time_local)
@@ -434,8 +451,8 @@ def main():
         print("WittyPi outputcurrent: " + str(wittypi['outputcurrent']))
         print("WittyPi temperature: " + str(wittypi['temperature']))
         print('\n')
-        print("WittyPi dummy load duration: " + str(dummy_load_duration))
-        print("WittyPi power cut delay after shutdown.: " + str(power_cut_delay_after_shutdown))
+        print("WittyPi dummy load duration: " + str(wittypi['dummy_load_duration']))
+        print("WittyPi power cut delay after shutdown.: " + str(wittypi['power_cut_delay']))
     except Exception as ex:
         logger.critical("Unhandled Exception in main: " + repr(ex))
 
