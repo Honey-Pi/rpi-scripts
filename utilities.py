@@ -625,6 +625,7 @@ def is_service_active(servicename='honeypi.service'):
 def check_wittypi(settings):
     try:
         wittypi_status = get_wittypi_status(settings)
+        wittypi_status['service_active']=is_service_active('wittypi.service')
         if wittypi_status['is_rtc_connected'] and wittypi_status['is_mc_connected'] and not wittypi_status['service_active']:
             logger.warning("WittyPi Software is not installed but WittyPi is connected")
         if wittypi_status['service_active'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
@@ -636,6 +637,19 @@ def check_wittypi(settings):
                 if wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']:
                     logger.warning("WittyPi dummy load duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['dummyload']) + "seconds")
                     set_dummy_load_duration(settings['wittyPi']['dummyload'])
+                if wittypi_status['default_state'] != settings['wittyPi']['default_state']:
+                    logger.warning("WittyPi default state defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['default_state']))
+                    set_default_state(settings['wittyPi']['default_state'])
+                if wittypi_status['power_cut_delay'] != settings['wittyPi']['power_cut_delay']:
+                    logger.warning("WittyPi power_cut_delay defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['power_cut_delay']))
+                    set_power_cut_delay(settings['wittyPi']['power_cut_delay'])
+                if wittypi_status['pulsing_interval'] != settings['wittyPi']['pulsing_interval']:
+                    logger.warning("WittyPi pulsing_interval defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['pulsing_interval']))
+                    set_pulsing_interval(settings['wittyPi']['pulsing_interval'])
+                if wittypi_status['white_led_duration'] != settings['wittyPi']['white_led_duration']:
+                    logger.warning("WittyPi white_led_duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['white_led_duration']))
+                    set_white_led_duration(settings['wittyPi']['white_led_duration'])
+
         if not settings['wittyPi']['enabled'] and wittypi_status['is_rtc_connected']:
             if wittypi_status['startup_time_local'] is not None or wittypi_status['shutdown_time_local'] is not None:
                 logger.critical("WittyPi is disabled in settings but a startup / shutdown time is set on WittyPi")
@@ -644,21 +658,11 @@ def check_wittypi(settings):
 
 def get_wittypi_status(settings):
     try:
-        wittypi_status = {}
-        wittypi_status['service_active'] = is_service_active('wittypi.service')
-        wittypi_status['is_rtc_connected'] = is_rtc_connected()
-        wittypi_status['is_mc_connected'] = is_mc_connected()
-        if wittypi_status['is_mc_connected']:
-            wittypi_status['dummy_load_duration'] = get_dummy_load_duration()
-            wittypi_status['power_cut_delay'] = get_power_cut_delay()
-            if wittypi_status['is_rtc_connected']:
-                startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
-                shutdown_time_utc,shutdown_time_local,shutdown_str_time,shutdown_timedelta = get_shutdown_time()
-                wittypi_status['startup_time_local'] = startup_time_local
-                wittypi_status['shutdown_time_local'] = shutdown_time_local
-        return wittypi_status
+        wittyPi_status = {}
+        wittyPi_status = getAll()
+        return wittyPi_status
     except Exception as ex:
-        logger.exception("Error in function get_wittypi_status")
+        logger.exception("Error in function get_wittyPi_status")
 
 def pause_wittypi_schedule():
     try:
