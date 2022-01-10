@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-VERSION="v1.3.7-alpha-9"
+VERSION="v1.3.7-alpha-10"
 
 echo '>>> Running post-upgrade script...'
 
