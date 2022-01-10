@@ -495,6 +495,18 @@ def get_default_state(): #1=ON, 0=OFF
     except Exception as ex:
         logger.exception("Exception in get_default_state")
 
+def rtc_time_is_valid(rtc_time_utc):
+    try:
+        
+        if rtc_time_utc.strftime("%Y") == "1999" or rtc_time_utc.strftime("%Y") == "2000": # if you never set RTC time before
+            logger.debug('RTC time ' + rtc_time_utc.strftime("%a %d %b %Y %H:%M:%S")+ ' ' + str(utc_tz) + ' has not been set before (stays in year 1999/2000).')
+            return False
+        else:
+            logger.debug('RTC time ' + rtc_time_utc.strftime("%a %d %b %Y %H:%M:%S")+ ' ' + str(utc_tz) + ' is a valid time.')
+            return True
+    except Exception as ex:
+        logger.exception("Exception in get_default_state")    
+
 def getAll():
     wittypi = {}
     if is_rtc_connected():
@@ -503,6 +515,7 @@ def getAll():
         wittypi['rtc_time_utc'] = rtc_time_utc
         wittypi['rtc_time_local'] = rtc_time_local
         wittypi['rtc_timestamp'] = rtc_timestamp
+        wittypi['rtc_time_is_valid'] = rtc_time_is_valid(rtc_time_utc)
         startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
         wittypi['startup_time_utc'] = startup_time_utc
         wittypi['startup_time_local'] = startup_time_local
@@ -549,6 +562,8 @@ def main():
             print(">>> Your system time is:       " + str(dt.datetime.now(local_tz).strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz))
             if wittypi['rtc_time_local'] is not None: 
                 print(">>> Your RTC time is:          " + str(wittypi['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " + str(local_tz))
+                if not wittypi['rtc_time_is_valid']:
+                    print(">>> Your RTC time has not been set before (stays in year 1999/2000).")
             if wittypi['shutdown_time_local'] is not None:
                 str_shutdown_time_local = str(wittypi['shutdown_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz)
             else: 
