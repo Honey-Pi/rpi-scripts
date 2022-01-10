@@ -83,7 +83,7 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
                         if not debug:
                             logger.critical("Too many Connection Errors in a row => Rebooting Raspberry")
                             time.sleep(4)
-                            reboot()
+                            reboot(settings)
                         else:
                             logger.critical("Too many Connection Errors in a row but did not reboot because console debug mode is enabled.")
                 else:
@@ -158,12 +158,13 @@ def check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowV
         measurementIsRunning.value = 0 # clear flag
 
 def start_measurement(measurement_stop):
+    settings = get_settings()
     try:
         global burn_in_time
         start_time = time.time()
 
         # load settings
-        settings = get_settings()
+        
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
         ts_server_url = settings["ts_server_url"]
         debuglevel = settings["debuglevel"]
@@ -298,7 +299,7 @@ def start_measurement(measurement_stop):
                         tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25))
                         tblink.start()
                         time.sleep(10)
-                        shutdown()
+                        shutdown(settings)
 
             time.sleep(6) # wait 6 seconds before next measurement check
 
@@ -311,4 +312,4 @@ def start_measurement(measurement_stop):
         logger.exception("Unhandled Exception in start_measurement")
         if not debug:
             time.sleep(10)
-            reboot()
+            reboot(settings)
