@@ -522,7 +522,7 @@ def getAll():
         wittypi['input_voltage'] = get_input_voltage()
         wittypi['output_voltage'] = get_output_voltage()
         wittypi['outputcurrent'] = get_output_current()
-        wittypi['get_default_state'] = get_default_state()
+        wittypi['default_state'] = get_default_state()
         wittypi['dummy_load_duration'] = get_dummy_load_duration()
         wittypi['power_cut_delay'] = get_power_cut_delay()
         wittypi['pulsing_interval'] = get_pulsing_interval()
@@ -565,9 +565,9 @@ def main():
             print(">>> Vout=" + str(wittypi['output_voltage']) + "V, Iout=" + str(wittypi['outputcurrent']) + "A")
             print(">>> Vin= " + str(wittypi['input_voltage']) + "V")
             print(">>> Firmware version: " + str(wittypi['firmwareversion']))
-            if  wittypi['get_default_state'] == 0:
+            if  wittypi['default_state'] == 0:
                 print(">>> Default state when powered [OFF]")
-            if  wittypi['get_default_state'] == 1:
+            if  wittypi['default_state'] == 1:
                 print(">>> Default state when powered [ON]")
             print(">>> Power cut delay after shutdown. " + str(wittypi['power_cut_delay']) + "seconds")
             print(">>> Pulsing interval during sleep " + str(wittypi['pulsing_interval']) + "seconds")
