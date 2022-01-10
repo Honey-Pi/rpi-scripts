@@ -463,6 +463,38 @@ def get_white_led_duration():
     except Exception as ex:
         logger.exception("Exception in get_white_led_duration")
 
+def set_default_state(state):
+    if int(state)>=0 and int(state)<=1:
+        hexstate = None
+        if int(state)==1:
+            hexstate = 0x01
+        elif int(state)==0:
+            hexstate = 0x00
+        try:
+            with SMBus(1) as bus:
+                bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_DEFAULT_ON, hexstate)
+            if hexstate == 0x01:
+                print('Default state when powered set to "ON"!')
+            elif hexstate == 0x00:
+                print('Default state when powered set to "OFF"!')
+        except Exception as e:
+            print(e)
+            return False
+    else:
+        print('wrong input for default state. Please use 1 for "Default ON" or 0 for "Default OFF"')
+
+def get_default_state(): #1=ON, 0=OFF
+    try:
+        with SMBus(1) as bus:
+            hexstate = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DEFAULT_ON)
+        if hexstate == 0x01:
+            state=1
+        elif hexstate == 0x00:
+            state=0
+        return state
+    except Exception as ex:
+        logger.exception("Exception in get_default_state")
+
 def getAll():
     wittypi = {}
     if is_rtc_connected():
@@ -490,6 +522,7 @@ def getAll():
         wittypi['input_voltage'] = get_input_voltage()
         wittypi['output_voltage'] = get_output_voltage()
         wittypi['outputcurrent'] = get_output_current()
+        wittypi['get_default_state'] = get_default_state()
         wittypi['dummy_load_duration'] = get_dummy_load_duration()
         wittypi['power_cut_delay'] = get_power_cut_delay()
         wittypi['pulsing_interval'] = get_pulsing_interval()
@@ -532,14 +565,16 @@ def main():
             print(">>> Vout=" + str(wittypi['output_voltage']) + "V, Iout=" + str(wittypi['outputcurrent']) + "A")
             print(">>> Vin= " + str(wittypi['input_voltage']) + "V")
             print(">>> Firmware version: " + str(wittypi['firmwareversion']))
-            print(">>> Default state when powered [default OFF]")
+            if  wittypi['get_default_state'] == 0:
+                print(">>> Default state when powered [OFF]")
+            if  wittypi['get_default_state'] == 1:
+                print(">>> Default state when powered [ON]")
             print(">>> Power cut delay after shutdown. " + str(wittypi['power_cut_delay']) + "seconds")
             print(">>> Pulsing interval during sleep " + str(wittypi['pulsing_interval']) + "seconds")
             print(">>> White LED duration " + str(wittypi['white_led_duration']) + "ms")
             print(">>> Dummy load duration " + str(wittypi['dummy_load_duration']) + "ms")
         else:
             print("no WittyPi MC is connected")
-        
     except Exception as ex:
         logger.critical("Unhandled Exception in main: " + repr(ex))
 
