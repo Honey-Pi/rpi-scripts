@@ -7,11 +7,11 @@
 
 """
 library for WittyPi 3 mini
-Version 3.11
+Version 3.50
 """
 
 name = "wittypi"
-__version__ = '0.0.5'
+__version__ = '0.1.0'
 # pip3 install smbus2
 # pip3 install pytz
 
@@ -119,14 +119,6 @@ def get_firmwareversion():
     except Exception as ex:
         logger.exception("Exception in get_firmwareversion")
 
-def get_dummy_load_duration():
-    try:
-        out=[]
-        with SMBus(1) as bus:
-            dummy_load_duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD)
-        return dummy_load_duration #[0]
-    except Exception as ex:
-        logger.exception("Exception in get_dummy_load_duration")
 
 def get_rtc_timestamp(): 
     out=[]
@@ -393,6 +385,14 @@ def set_power_cut_delay(delay=8):
         print('wrong input for power cut delay threshold',delay, 'Please input from 0.0 to ', maxVal, ' ...')
         return False
 
+def get_dummy_load_duration():
+    try:
+        with SMBus(1) as bus:
+            dummy_load_duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD)
+        return dummy_load_duration #[0]
+    except Exception as ex:
+        logger.exception("Exception in get_dummy_load_duration")
+
 def set_dummy_load_duration(duration=0):
     if duration >=- 0 and duration <= 254:
         try:
@@ -404,6 +404,64 @@ def set_dummy_load_duration(duration=0):
             return False
     else:
         print('wrong input for power cut delay threshold', duration , 'Please input from 0 to 254')
+
+def set_pulsing_interval(interval):
+    pi = None
+    if interval==1:
+        pi = 0x06
+    elif interval==2:
+        pi = 0x07
+    elif interval==4:
+        pi = 0x08
+    elif interval==8:
+        pi = 0x0
+    else:
+        print('wrong input for pulsing invterval', interval , 'Please input 1,2,4 or 8 seconds')
+    if pi is not None:
+        try:
+            with SMBus(1) as bus:
+                bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_PULSE_INTERVAL, pi)
+                print("Pulsing interval set to ", str(interval), "seconds")
+        except Exception as e:
+            print(e)
+            return False
+
+def get_pulsing_interval():
+    try:
+        interval = None
+        with SMBus(1) as bus:
+            pi = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_PULSE_INTERVAL)
+        if pi == 0x09:
+            interval=8
+        elif pi == 0x07:
+            interval=2
+        elif pi == 0x06:
+            interval=1
+        else:
+            interval=4
+        return interval
+    except Exception as ex:
+        logger.exception("Exception in get_pulsing_interval")
+
+def set_white_led_duration(duration):
+    if duration >=- 0 and duration <= 254:
+        try:
+            with SMBus(1) as bus:
+                bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_BLINK_LED, duration)
+                print("White LED duration set to ", duration, " !")
+        except Exception as e:
+            print(e)
+            return False
+    else:
+        print('wrong input for white LED duration ', duration , 'Please input from 0 to 254')
+
+def get_white_led_duration():
+    try:
+        with SMBus(1) as bus:
+            duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_BLINK_LED)
+        return duration
+    except Exception as ex:
+        logger.exception("Exception in get_white_led_duration")
 
 def getAll():
     wittypi = {}
@@ -423,6 +481,7 @@ def getAll():
         wittypi['shutdown_time_local'] = shutdown_time_local
         wittypi['shutdown_str_time'] = shutdown_str_time
         wittypi['shutdown_timedelta'] = shutdown_timedelta
+        wittypi['temperature'] = get_temperature()
     else:
         wittypi['is_RTC_connected'] = False
     if is_mc_connected():
@@ -430,10 +489,11 @@ def getAll():
         wittypi['firmwareversion'] = get_firmwareversion()
         wittypi['input_voltage'] = get_input_voltage()
         wittypi['output_voltage'] = get_output_voltage()
-        wittypi['temperature'] = get_temperature()
         wittypi['outputcurrent'] = get_output_current()
         wittypi['dummy_load_duration'] = get_dummy_load_duration()
         wittypi['power_cut_delay'] = get_power_cut_delay()
+        wittypi['pulsing_interval'] = get_pulsing_interval()
+        wittypi['white_led_duration'] = get_white_led_duration()
     else:
         wittypi['is_mc_connected'] = False
     return wittypi
@@ -444,32 +504,39 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
         wittypi = {}
         wittypi = getAll()
+        print("================================================================================")
+        print("|                                                                              |")
+        print("|   Witty Pi - Realtime Clock + Power Management for Raspberry Pi              |")
+        print("|                                                                              |")
+        print("|               < Version " + str(__version__) + " >     by elschnorro77                          |")
+        print("|                                                                              |")
+        print("================================================================================")
         if wittypi['is_rtc_connected']:
-            print("WittyPi RTC is connected: " + str(wittypi['is_rtc_connected']))
+            print(">>> Current temperature: " + str(wittypi['temperature']) + "°C / " + str(int(wittypi['temperature']) * 1.8 + 32) + " °F")
+            print(">>> Your system time is:       " + str(dt.datetime.now(local_tz).strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz))
             if wittypi['rtc_time_local'] is not None: 
-                print("RTC Time: " + str(wittypi['rtc_time_local'].strftime("%Y-%m-%d_%H-%M-%S")))
-            if wittypi['startup_time_local'] is not None: 
-                str_startup_time_local = str(wittypi['rtc_time_local'].strftime("%Y-%m-%d_%H-%M-%S"))
-            else: 
-                str_startup_time_local = "Never"
-            print("next scheduled startup time: " + str_startup_time_local)
-            
+                print(">>> Your RTC time is:          " + str(wittypi['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " + str(local_tz))
             if wittypi['shutdown_time_local'] is not None:
-                str_shutdown_time_local = str(shutdown_time_local.strftime("%Y-%m-%d_%H-%M-%S"))
+                str_shutdown_time_local = str(wittypi['shutdown_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz)
             else: 
                 str_shutdown_time_local = "Never"
-            print("next scheduled shutdown time: " + str_startup_time_local)
+            print(">>> Schedule next shutdown at: " + str_shutdown_time_local)
+            if wittypi['startup_time_local'] is not None: 
+                str_startup_time_local = str(wittypi['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz)
+            else: 
+                str_startup_time_local = "Never"
+            print(">>> Schedule next startup at:  " + str_startup_time_local)
         else:
             print("no WittyPi RTC is connected")
         if wittypi['is_mc_connected']:
-            print("WittyPi MC is connected: " + str(wittypi['is_mc_connected']))
-            print("Firmwareversion: " + str(wittypi['firmwareversion']))
-            print("input voltage: " + str(wittypi['input_voltage']))
-            print("output voltage: " + str(wittypi['output_voltage']))
-            print("outputcurrent: " + str(wittypi['outputcurrent']))
-            print("temperature: " + str(wittypi['temperature']))
-            print("dummy load duration: " + str(wittypi['dummy_load_duration']))
-            print("power cut delay after shutdown.: " + str(wittypi['power_cut_delay']))
+            print(">>> Vout=" + str(wittypi['output_voltage']) + "V, Iout=" + str(wittypi['outputcurrent']) + "A")
+            print(">>> Vin= " + str(wittypi['input_voltage']) + "V")
+            print(">>> Firmware version: " + str(wittypi['firmwareversion']))
+            print(">>> Default state when powered [default OFF]")
+            print(">>> Power cut delay after shutdown. " + str(wittypi['power_cut_delay']) + "seconds")
+            print(">>> Pulsing interval during sleep " + str(wittypi['pulsing_interval']) + "seconds")
+            print(">>> White LED duration " + str(wittypi['white_led_duration']) + "ms")
+            print(">>> Dummy load duration " + str(wittypi['dummy_load_duration']) + "ms")
         else:
             print("no WittyPi MC is connected")
         
