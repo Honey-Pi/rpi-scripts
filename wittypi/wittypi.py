@@ -461,8 +461,8 @@ def main():
             print("next scheduled shutdown time: " + str_startup_time_local)
         else:
             print("no WittyPi RTC is connected")
-        if wittypi['is_rtc_connected']:
-            print("WittyPi MC is connected: " + str(wittypi['is_rtc_connected']))
+        if wittypi['is_mc_connected']:
+            print("WittyPi MC is connected: " + str(wittypi['is_mc_connected']))
             print("Firmwareversion: " + str(wittypi['firmwareversion']))
             print("input voltage: " + str(wittypi['input_voltage']))
             print("output voltage: " + str(wittypi['output_voltage']))
