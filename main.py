@@ -161,7 +161,7 @@ def button_pressed_falling(self):
             tblink = threading.Thread(target=blink_led, args = (GPIO_LED, 0.1))
             tblink.start()
             logger.critical("Shutting down because button was pressed more than "+ str(MIN_TIME_TO_ELAPSE_SHUTDOWN/1000) + " seconds.")
-            shutdown()
+            shutdown(settings)
         elif time_elapsed > MAX_TIME_TO_ELAPSE_SHUTDOWN and time_elapsed <= MAX_TIME_TO_ELAPSE_RESET:
             if settings["enable_reset"]:
                 # reset settings and shutdown
@@ -170,7 +170,7 @@ def button_pressed_falling(self):
                 delete_settings()
                 update_wittypi_schedule("")
                 logger.critical("Resetting settings and shutting down because button was pressed more than "+ str(MAX_TIME_TO_ELAPSE_SHUTDOWN/1000) + "seconds.")
-                shutdown()
+                shutdown(settings)
             else:
                 logger.critical("Button was pressed more than 10 seconds but NOT resetting settings and shutting down because feature disabled in webinterface.")
         else:
@@ -280,7 +280,7 @@ def main():
         logger.critical("Unhandled Exception in main: " + repr(ex))
         if not debug:
             time.sleep(60)
-            reboot()
+            reboot(settings)
 
 if __name__ == '__main__':
     try:
@@ -291,6 +291,6 @@ if __name__ == '__main__':
 
     except Exception as ex:
         logger.error("Unhandled Exception in __main__ " + repr(ex))
-        if not debug:
-            time.sleep(60)
-            reboot()
+        #if not debug:
+            #time.sleep(60)
+            #reboot()

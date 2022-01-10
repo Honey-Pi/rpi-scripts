@@ -437,8 +437,15 @@ def ap_to_client_mode():
     process.wait()
     continue_wittypi_schedule()
 
-def reboot():
+def reboot(settings):
+    wittypi_status = get_wittypi_status(settings)
+    check_wittypi_rtc(settings, wittypi_status)
+    old_startup_time = wittypi_status['startup_time_local']
+    old_shutdown_time = wittypi_status['shutdown_time_local']
     set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
+    wittypi_status = get_wittypi_status(settings)
+    if old_startup_time != wittypi_status['startup_time_local'] or old_shutdown_time != wittypi_status['shutdown_time_local']:
+        logger.info("Startup / shutdown time on wittypi updated during reboot!")
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
@@ -446,13 +453,26 @@ def reboot():
     logger.info('HoneyPi rebooting...')
     os.system("sudo reboot")
 
-def shutdown():
+def shutdown(settings):
+    wittypi_status = get_wittypi_status(settings)
+    check_wittypi_rtc(settings, wittypi_status)
+    old_startup_time = wittypi_status['startup_time_local']
+    old_shutdown_time = wittypi_status['shutdown_time_local']
     set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
+    wittypi_status = get_wittypi_status(settings)
+    if old_startup_time != wittypi_status['startup_time_local'] or old_shutdown_time != wittypi_status['shutdown_time_local']:
+        logger.info("Startup / shutdown time on wittypi updated during shutdown!")
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     os.system("sudo systemctl disable dnsmasq.service")
-    logger.info('HoneyPi shutting down...')
+    if settings['wittyPi']['enabled']:
+        if not wittypi_status['startup_time_local'] is None:
+            logger.info('HoneyPi shutting down, next startup schedule is ' + wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+        else:
+            logger.critical('HoneyPi shutting down but no startup is scheduled!')
+    else:
+        logger.info('HoneyPi shutting down...')
     os.system("sudo shutdown -h 0")
 
 def decrease_nice():
@@ -622,6 +642,24 @@ def is_service_active(servicename='honeypi.service'):
     except Exception as ex:
         logger.exception("Error in function is_service_active")
 
+def check_wittypi_rtc(settings, wittypi_status):
+        if wittypi_status['is_rtc_connected']:
+            if not wittypi_status['rtc_time_is_valid']:
+                logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
+            else:
+                timedelta = wittypi_status['rtc_time_local'] - datetime.now(local_tz)
+                if abs(timedelta.seconds) >= 300:
+                    logger.critical("Difference between RTC time and sytstem time is " + str(timedelta.seconds) + "seconds")
+                elif abs(timedelta.seconds) >= 60:
+                    logger.warning("Difference between RTC time and sytstem time is " + str(timedelta.seconds) + "seconds")
+                else:
+                    logger.debug("Difference between RTC time and sytstem time is " + str(timedelta.seconds) + "seconds")
+            if wittypi_status['startup_time_local'] is not None:
+                logger.debug("HoneyPi next scheduled wakeup is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+            if wittypi_status['shutdown_time_local'] is not None:
+                logger.debug("HoneyPi next scheduled shutdown is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+
+
 def check_wittypi(settings):
     try:
         wittypi_status = get_wittypi_status(settings)
@@ -632,6 +670,7 @@ def check_wittypi(settings):
             logger.warning("WittyPi service is active but WittyPi is disabled in HoneyPi settings")
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.warning("WittyPi service is not active but WittyPi is enabled in HoneyPi settings")
+        check_wittypi_rtc(settings, wittypi_status)
         if settings['wittyPi']['enabled']:
             if wittypi_status['is_mc_connected']:
                 if wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']:
