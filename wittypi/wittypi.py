@@ -408,10 +408,25 @@ def set_dummy_load_duration(duration=0):
 def getAll():
     wittypi = {}
     if is_rtc_connected():
-        UTCtime,localtime,timestamp = get_rtc_timestamp()
-        wittypi['DateTime'] = localtime.strftime("%Y-%m-%d_%H-%M-%S")
-        wittypi['timestamp'] = timestamp
+        wittypi['is_rtc_connected'] = True
+        rtc_time_utc,rtc_time_local,rtc_timestamp = get_rtc_timestamp()
+        wittypi['rtc_time_utc'] = rtc_time_utc
+        wittypi['rtc_time_local'] = rtc_time_local
+        wittypi['rtc_timestamp'] = rtc_timestamp
+        startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
+        wittypi['startup_time_utc'] = startup_time_utc
+        wittypi['startup_time_local'] = startup_time_local
+        wittypi['startup_str_time'] = startup_str_time
+        wittypi['startup_timedelta'] = startup_timedelta
+        shutdown_time_utc,shutdown_time_local,shutdown_str_time,shutdown_timedelta = get_shutdown_time()
+        wittypi['shutdown_time_utc'] = shutdown_time_utc
+        wittypi['shutdown_time_local'] = shutdown_time_local
+        wittypi['shutdown_str_time'] = shutdown_str_time
+        wittypi['shutdown_timedelta'] = shutdown_timedelta
+    else:
+        wittypi['is_RTC_connected'] = False
     if is_mc_connected():
+        wittypi['is_mc_connected'] = True
         wittypi['firmwareversion'] = get_firmwareversion()
         wittypi['input_voltage'] = get_input_voltage()
         wittypi['output_voltage'] = get_output_voltage()
@@ -419,40 +434,45 @@ def getAll():
         wittypi['outputcurrent'] = get_output_current()
         wittypi['dummy_load_duration'] = get_dummy_load_duration()
         wittypi['power_cut_delay'] = get_power_cut_delay()
-        
+    else:
+        wittypi['is_mc_connected'] = False
     return wittypi
     
 
 def main():
     try:
         logging.basicConfig(level=logging.DEBUG)
-        print("WittyPi is connected: " + str(is_mc_connected()))
-        print("WittyPi RTC is connected: " + str(is_rtc_connected()))
         wittypi = {}
         wittypi = getAll()
-        startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
-        shutdown_time_utc,shutdown_time_local,shutdown_str_time,shutdown_timedelta = get_shutdown_time()
-        if startup_time_local is not None: 
-            str_startup_time_local = str(startup_time_local.strftime("%Y-%m-%d_%H-%M-%S"))
-        else: 
-            str_startup_time_local = "Never"
-        if shutdown_time_local is not None:
-            str_shutdown_time_local = str(shutdown_time_local.strftime("%Y-%m-%d_%H-%M-%S"))
-        else: 
-            str_shutdown_time_local = "Never"
-        print("Firmwareversion: " + str(wittypi['firmwareversion']))
-        print("WittyPi RTC Time: " + str(wittypi['DateTime']))
-        print('Next startup: ' + str_startup_time_local)
-        print('Next shutdown: ' + str_shutdown_time_local)
-        #print("WittyPi timestamp: " + str(wittypi['timestamp']))
-        print('\n')
-        print("WittyPi input voltage: " + str(wittypi['input_voltage']))
-        print("WittyPi output voltage: " + str(wittypi['output_voltage']))
-        print("WittyPi outputcurrent: " + str(wittypi['outputcurrent']))
-        print("WittyPi temperature: " + str(wittypi['temperature']))
-        print('\n')
-        print("WittyPi dummy load duration: " + str(wittypi['dummy_load_duration']))
-        print("WittyPi power cut delay after shutdown.: " + str(wittypi['power_cut_delay']))
+        if wittypi['is_rtc_connected']:
+            print("WittyPi RTC is connected: " + str(wittypi['is_rtc_connected']))
+            if wittypi['rtc_time_local'] is not None: 
+                print("RTC Time: " + str(wittypi['rtc_time_local'].strftime("%Y-%m-%d_%H-%M-%S")))
+            if wittypi['startup_time_local'] is not None: 
+                str_startup_time_local = str(wittypi['rtc_time_local'].strftime("%Y-%m-%d_%H-%M-%S"))
+            else: 
+                str_startup_time_local = "Never"
+            print("next scheduled startup time: " + str_startup_time_local)
+            
+            if wittypi['shutdown_time_local'] is not None:
+                str_shutdown_time_local = str(shutdown_time_local.strftime("%Y-%m-%d_%H-%M-%S"))
+            else: 
+                str_shutdown_time_local = "Never"
+            print("next scheduled shutdown time: " + str_startup_time_local)
+        else:
+            print("no WittyPi RTC is connected")
+        if wittypi['is_rtc_connected']:
+            print("WittyPi MC is connected: " + str(wittypi['is_rtc_connected']))
+            print("Firmwareversion: " + str(wittypi['firmwareversion']))
+            print("input voltage: " + str(wittypi['input_voltage']))
+            print("output voltage: " + str(wittypi['output_voltage']))
+            print("outputcurrent: " + str(wittypi['outputcurrent']))
+            print("temperature: " + str(wittypi['temperature']))
+            print("dummy load duration: " + str(wittypi['dummy_load_duration']))
+            print("power cut delay after shutdown.: " + str(wittypi['power_cut_delay']))
+        else:
+            print("no WittyPi MC is connected")
+        
     except Exception as ex:
         logger.critical("Unhandled Exception in main: " + repr(ex))
 
