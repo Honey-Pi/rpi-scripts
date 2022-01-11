@@ -69,6 +69,16 @@ HALT_PIN=4    # halt by GPIO-4 (BCM naming)
 SYSUP_PIN=17
 
 
+def dec2bcd(dec):
+    try:
+        #result= $((10#$1/10*16+(10#$1%10)))
+        t = int(dec) // 10;
+        o = int(dec) - t * 10;
+        result = (t << 4) + o;
+        return result
+    except Exception as ex:
+        logger.exception("Exception in dec2bcd " + str(ex))
+
 def is_rtc_connected():
     try:
         out=[]
@@ -249,6 +259,29 @@ def stringtime2timetuple(stringtime='?? 20:00'):
     #second = int(stringtime.split(' ')[1].split(':')[2])
     #print(day,hour,minute,second)
     return (day,hour,minute)
+
+def system_to_rtc():
+    try:
+        sys_ts=dt.datetime.now(utc_tz)
+        sec=sys_ts.strftime("%S")
+        minute=sys_ts.strftime("%M")
+        hour=sys_ts.strftime("%H")
+        day=sys_ts.strftime("%u")
+        date=sys_ts.strftime("%d")
+        month=sys_ts.strftime("%m")
+        year=sys_ts.strftime("%y")
+        with SMBus(1) as bus:
+            bus.write_byte_data(RTC_ADDRESS, 0x00, dec2bcd(sec))
+            bus.write_byte_data(RTC_ADDRESS, 0x01, dec2bcd(minute))
+            bus.write_byte_data(RTC_ADDRESS, 0x02, dec2bcd(hour))
+            bus.write_byte_data(RTC_ADDRESS, 0x03, dec2bcd(day))
+            bus.write_byte_data(RTC_ADDRESS, 0x04, dec2bcd(date))
+            bus.write_byte_data(RTC_ADDRESS, 0x05, dec2bcd(month))
+            bus.write_byte_data(RTC_ADDRESS, 0x06, dec2bcd(year))
+        return True
+    except Exception as e:
+        print(e)
+        return False
 
 def set_shutdown_time(stringtime='?? 20:00'):
     try:
