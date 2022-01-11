@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings
-from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, check_wittypi
+from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, check_wittypi, set_wittypi_rtc
 
 from multiprocessing import Process, Queue, Value
 from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
@@ -51,9 +51,13 @@ def oled():
         oled_off()
     return
 
-def timesync():
+def timesync(settings, wittypi_status):
     ntptimediff=sync_time_ntp()
-    logger.info('Time syncronized to NTP - diff: ' + ntptimediff)
+    if abs(int(float(ntptimediff.replace("s","")))) >= 60:
+        logger.critical('Time syncronized to NTP - diff: ' + ntptimediff + ' was more than 60seconds')
+        set_wittypi_rtc(settings, wittypi_status)
+    else:
+        logger.info('Time syncronized to NTP - diff: ' + ntptimediff)
 
 
 def start_ap():
@@ -224,8 +228,12 @@ def main():
             tOLed = threading.Thread(target=oled, args=())
             tOLed.start()
 
+        # check wittypi
+        wittypi_status = check_wittypi(settings)
+
+
         if settings["offline"] != 3:
-            ttimesync = threading.Thread(target=timesync, args=())
+            ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
             ttimesync.start()
         else:
             logger.debug('Offline mode - no time syncronization to NTP')
@@ -248,8 +256,6 @@ def main():
         # check undervoltage for since system start
         check_undervoltage()
 
-        # check wittypi
-        check_wittypi(settings)
         
         # setup Button
         GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)

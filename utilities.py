@@ -642,7 +642,20 @@ def is_service_active(servicename='honeypi.service'):
     except Exception as ex:
         logger.exception("Error in function is_service_active")
 
+def set_wittypi_rtc(settings, wittypi_status):
+    try:
+        if wittypi_status['is_rtc_connected']:
+            timenow = datetime.now(local_tz)
+            if system_to_rtc():
+                logger.critical("Set RTC time to "+ timenow.strftime("%a %d %b %Y %H:%M:%S"))
+            else:
+                logger.critical("Failed to set RTC time")
+    except Exception as ex:
+        logger.exception("Error in function set_wittypi_rtc")
+    
+
 def check_wittypi_rtc(settings, wittypi_status):
+    try:
         if wittypi_status['is_rtc_connected']:
             if not wittypi_status['rtc_time_is_valid']:
                 logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
@@ -662,9 +675,12 @@ def check_wittypi_rtc(settings, wittypi_status):
                 logger.debug("HoneyPi next scheduled wakeup is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
             if wittypi_status['shutdown_time_local'] is not None:
                 logger.debug("HoneyPi next scheduled shutdown is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+    except Exception as ex:
+        logger.exception("Error in function check_wittypi_rtc")
 
 
 def check_wittypi(settings):
+    wittypi_status = {}
     try:
         wittypi_status = get_wittypi_status(settings)
         wittypi_status['service_active']=is_service_active('wittypi.service')
@@ -692,12 +708,12 @@ def check_wittypi(settings):
                 if wittypi_status['white_led_duration'] != settings['wittyPi']['white_led_duration']:
                     logger.warning("WittyPi white_led_duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['white_led_duration']))
                     set_white_led_duration(settings['wittyPi']['white_led_duration'])
-
         if not settings['wittyPi']['enabled'] and wittypi_status['is_rtc_connected']:
             if wittypi_status['startup_time_local'] is not None or wittypi_status['shutdown_time_local'] is not None:
                 logger.critical("WittyPi is disabled in settings but a startup / shutdown time is set on WittyPi")
     except Exception as ex:
         logger.exception("Error in function check_wittypi")
+    return wittypi_status
 
 def get_wittypi_status(settings):
     try:
