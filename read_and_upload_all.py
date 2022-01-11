@@ -128,7 +128,7 @@ def check_wittypi_voltage(time_measured_Voltage, wittyPi, pcf8591Sensors, isLowV
                                 isLowVoltage = setStateToStorage('isLowVoltage', True)
                                 logger.info("New Interval: '" + str(interval) + "', Shutdown after transfer is '" + str(shutdownAfterTransfer)  +"'")
                             else:
-                                logger.debug("Running on low voltage, was on low voltage last measurement!
+                                logger.debug("Running on low voltage, was on low voltage last measurement!")
                         elif voltage < wittyPi["normal"]["voltage"]:
                             if (isLowVoltage == False) or (isLowVoltage is None):
                                 logger.debug("Not yet low voltage but below recovery voltage")
