@@ -647,7 +647,11 @@ def check_wittypi_rtc(settings, wittypi_status):
             if not wittypi_status['rtc_time_is_valid']:
                 logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
             else:
-                timedelta = wittypi_status['rtc_time_local'] - datetime.now(local_tz)
+                timenow = datetime.now(local_tz)
+                if wittypi_status['rtc_time_local'] >= timenow:
+                    timedelta = wittypi_status['rtc_time_local'] - timenow
+                else:
+                    timedelta = timenow - wittypi_status['rtc_time_local']
                 if abs(timedelta.seconds) >= 300:
                     logger.critical("Difference between RTC time and sytstem time is " + str(timedelta.seconds) + "seconds")
                 elif abs(timedelta.seconds) >= 60:
