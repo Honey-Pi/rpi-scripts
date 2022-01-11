@@ -561,7 +561,7 @@ def getAll():
         wittypi['shutdown_timedelta'] = shutdown_timedelta
         wittypi['temperature'] = get_temperature()
     else:
-        wittypi['is_RTC_connected'] = False
+        wittypi['is_rtc_connected'] = False
     if is_mc_connected():
         wittypi['is_mc_connected'] = True
         wittypi['firmwareversion'] = get_firmwareversion()
