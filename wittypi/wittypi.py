@@ -179,23 +179,40 @@ def calcTime(res):
     nowUTC = dt.datetime.now(utc_tz)
     nowLOCAL = dt.datetime.now(local_tz)
     #  sec, min, hour, day
-    if (res[-1] == 0): # [0, 0, 0] if day = 0 -> no time or date defined
+    print(str(res))
+    day = res[-1]
+    hour = res[-2]
+    minute = res[-3]
+    if len(res) == 4:
+        second = res[-4]
+    else:
+        second = 0
+    if (day == 0): # [0, 0, 0] if day = 0 -> no time or date defined
         #time_utc = dt.datetime(nowUTC.year+1,nowUTC.month,nowUTC.day,nowUTC.hour,nowUTC.minute,0) #.astimezone(utc_tz) # add 1 year
         #time_utc = utc_tz.localize(time_utc)
         time_utc = None
     else:
-        if (res[-1] == 80) and (res[-2] != 80): # day not defined, start every day
-            time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,res[-2],res[-3],0) #.astimezone(utc_tz)
+        if (day == 80) and (hour != 80): # day not defined, start every day
+            time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,hour,minute,second) #.astimezone(utc_tz)
             time_utc = utc_tz.localize(time_utc)
             if time_utc < nowUTC: time_utc += dt.timedelta(days=1)
-        if (res[-1] != 80) and (res[-2] != 80): # day defined, start every month
-            time_utc = dt.datetime(nowUTC.year,nowUTC.month,res[-1],res[-2],res[-3],0) #.astimezone(utc_tz)
+        if (day != 80) and (hour != 80): # day defined, start every month
+            time_utc = dt.datetime(nowUTC.year,nowUTC.month,day,hour,minute,second) #.astimezone(utc_tz)
             time_utc = utc_tz.localize(time_utc)
             if time_utc < nowUTC: time_utc = add_one_month(time_utc)
-        if (res[-1] == 80) and (res[-2] == 80): # day and hour not defined, start every hour
-            time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,nowUTC.hour,res[-3],0) #.astimezone(utc_tz)
+        if (day == 80) and (hour == 80) and (minute == 80) and (second == 80): # day and hour and minute not defined, start every minute (invalid using software but possible on webinterface
+            time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,nowUTC.hour,nowUTC.minute,0) #.astimezone(utc_tz)
+            time_utc = utc_tz.localize(time_utc)
+            if time_utc < nowUTC: time_utc += dt.timedelta(minutes=1)
+        if (day == 80) and (hour == 80) and (minute == 80) and (second != 80): # day and hour and minute not defined, start every minute at seconds
+            time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,nowUTC.hour,nowUTC.minute,second) #.astimezone(utc_tz)
+            time_utc = utc_tz.localize(time_utc)
+            if time_utc < nowUTC: time_utc += dt.timedelta(minutes=1)
+        if (day == 80) and (hour == 80) and (minute != 80): # day and hour not defined, start every hour
+            time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,nowUTC.hour,minute,second) #.astimezone(utc_tz)
             time_utc = utc_tz.localize(time_utc)
             if time_utc < nowUTC: time_utc += dt.timedelta(hours=1)
+
     if time_utc is not None:
         time_local =  time_utc.astimezone(local_tz)
         strtime = [] # [0, 20, 80]
