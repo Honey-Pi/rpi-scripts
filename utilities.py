@@ -26,7 +26,8 @@ honeypiFolder = homeFolder + '/HoneyPi'
 scriptsFolder = honeypiFolder + '/rpi-scripts'
 backendFolder = '/var/www/html/backend'
 settingsFile = backendFolder + '/settings.json'
-wittypi_scheduleFile = backendFolder + "/schedule.wpi"
+wittypi_scheduleFileName = "/schedule.wpi"
+wittypi_scheduleFile = backendFolder + wittypi_scheduleFileName
 logfile = scriptsFolder + '/error.log'
 
 def offlinedata_prepare(ts_channels):
@@ -761,6 +762,11 @@ def set_wittypi_schedule():
             if schedulefile_exists:
                 logger.debug("Setting wittyPi schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
+                schedulefile_updated = os.path.isfile(wittyPiPath+wittypi_scheduleFileName) and os.stat(wittyPiPath+wittypi_scheduleFileName).st_size == os.stat(wittypi_scheduleFile).st_size
+                if schedulefile_updated:
+                    logger.debug("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " with filesize "+ str(os.stat(wittyPiPath+wittypi_scheduleFileName).st_size) +" updated!")
+                else:
+                    logger.critical("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " update failed!")
             else:
                 logger.debug("Pausing wittyPi schedule...")
                 os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
