@@ -50,20 +50,21 @@ def get_defaults():
     wittyPi["version"] = 3
     wittyPi["dummyload"] = 0 # off by default
     wittyPi["voltagecheck_enabled"] = False
+    # The following wittypi settings are avaiable since v1.3.7 for wittypi3
     wittyPi['default_state'] = 0 # off by default
     wittyPi['power_cut_delay'] = 8 # cuts power after 8seconds
     wittyPi['pulsing_interval'] = 4 # LED blinks every 4 second when powered off
-    wittyPi['white_led_duration'] = 100 # LED blinks for 100ms 
+    wittyPi['white_led_duration'] = 100 # LED blinks for 100ms
     lowVoltage = {}
     lowVoltage["enabled"] = False
-    lowVoltage["schedule"] = "BEGIN 2015-08-01 06:00:00 \nEND   2025-07-31 23:59:59 \nON   M5 WAIT\nOFF   H23 M55"
+    lowVoltage["schedule"] = "BEGIN 2015-08-01 06:00:00 \nEND   2035-07-31 23:59:59 \nON   M5 WAIT\nOFF   H23 M55"
     lowVoltage["voltage"] = 11.9
     lowVoltage["shutdownAfterTransfer"] = True
     lowVoltage["interval"] = 1
     wittyPi["low"] = lowVoltage
     normalVoltage = {}
     normalVoltage["enabled"] = False
-    normalVoltage["schedule"] = "BEGIN 2015-08-01 00:00:00 \nEND   2025-07-31 23:59:59 \nON   M5 WAIT\nOFF   M10"
+    normalVoltage["schedule"] = "BEGIN 2015-08-01 00:00:00 \nEND   2035-07-31 23:59:59 \nON   M5 WAIT\nOFF   M10"
     normalVoltage["voltage"] = 12.8
     normalVoltage["shutdownAfterTransfer"] = False
     normalVoltage["interval"] = 600
@@ -316,12 +317,12 @@ def validate_settings(settings):
     except:
         updateSettingsFile = True
         settings['wittyPi']['power_cut_delay'] = get_defaults()['wittyPi']['power_cut_delay']
-    try: 
+    try:
         settings['wittyPi']['pulsing_interval']
     except:
         updateSettingsFile = True
         settings['wittyPi']['pulsing_interval'] = get_defaults()['wittyPi']['pulsing_interval']
-    try: 
+    try:
         settings['wittyPi']['white_led_duration']
     except:
         settings['wittyPi']['white_led_duration'] = get_defaults()['wittyPi']['white_led_duration']
