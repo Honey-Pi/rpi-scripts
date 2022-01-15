@@ -112,11 +112,11 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if ee895_values is not None:
                 ts_fields.update(ee895_values)
 
-        # measure every AHT10 sensor [type 8]
-        for (i, sensor) in enumerate(aht10Sensors):
-            aht10_fields = measure_aht10(sensor)
-            if aht10_fields is not None:
-                ts_fields.update(aht10_fields)
+        # measure every hdc1008 sensor [type 8]
+        for (i, sensor) in enumerate(hdc1008Sensors):
+            hdc1008_fields = measure_hdc1008(sensor)
+            if hdc1008_fields is not None:
+                ts_fields.update(hdc1008_fields)
 
         # measure every sht31 sensor [type 9]
         for (i, sensor) in enumerate(sht31Sensors):
@@ -124,12 +124,12 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if sht31_fields is not None:
                 ts_fields.update(sht31_fields)
 
-        # measure every hdc1008 sensor [type 10]
-        for (i, sensor) in enumerate(hdc1008Sensors):
-            hdc1008_fields = measure_hdc1008(sensor)
-            if hdc1008_fields is not None:
-                ts_fields.update(hdc1008_fields)
-
+        # measure every AHT10 sensor [type 10]
+        for (i, sensor) in enumerate(aht10Sensors):
+            aht10_fields = measure_aht10(sensor)
+            if aht10_fields is not None:
+                ts_fields.update(aht10_fields)
+                
         # measure bh1750 (can only be one) [type 11]
         if bh1750Sensors and len(bh1750Sensors) == 1:
             bh1750_fields = measure_bh1750(bh1750Sensors[0])
