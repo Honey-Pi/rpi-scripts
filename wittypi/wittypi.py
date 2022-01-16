@@ -788,8 +788,6 @@ def main():
     try:
         logging.basicConfig(level=logging.DEBUG)
         wittypi = {}
-        clear_shutdown_time()
-        clear_startup_time()
         wittypi = getAll()
         print("================================================================================")
         print("|                                                                              |")
