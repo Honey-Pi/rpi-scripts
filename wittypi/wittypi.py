@@ -906,10 +906,10 @@ def schedule_script_interrupted():
             local sd_timestamp=$(date --date="$(date +%Y-%m-)$shutdown_time" +%s)"""
             cur_timestamp = dt.datetime.now(local_tz)
             if startup_time_local > cur_timestamp  and shutdown_time_local < cur_timestamp:
-                return false
+                return True
     except Exception as ex:
         logger.exception("Exception in schedule_script_interrupted" + str(ex))
-    return True
+    return False
 
 
 def get_schedule_file(schedule_file = wittyPiPath+ '/schedule.wpi'):
