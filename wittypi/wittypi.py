@@ -26,6 +26,7 @@ import calendar
 import time
 import pytz
 import os
+import re
 
 local_tz = dt.datetime.utcnow().astimezone().tzinfo
 #local_tz = pytz.timezone('Europe/Stockholm')
@@ -129,9 +130,25 @@ def is_mc_connected():
     except Exception as ex:
         logger.exception("Exception in is_mc_connected" + str(ex))
 
+def get_wittypi_folder():
+    wittyPiPath = None
+    try:
+        if os.path.exists('/home/pi/wittyPi'):
+            wittyPiPath = '/home/pi/wittyPi'
+            logger.debug("WittyPi 2 or WittyPi Mini installation detected in: " + wittyPiPath)
+        elif os.path.exists('/home/pi/wittypi'):
+            wittyPiPath = '/home/pi/wittypi'
+            logger.debug("Wittypi 3 (Mini) installation detected in: " + wittyPiPath)
+        else:
+            logger.debug("No WittyPi installation detected!")
+    except Exception as ex:
+        logger.exception("Exception in get_wittypi_folder" + str(ex))
+    return wittyPiPath
+
 
 rtc_connected = is_rtc_connected()
 mc_connected = is_mc_connected()
+wittyPiPath = get_wittypi_folder()
 
 
 def get_firmwareversion():
@@ -218,7 +235,7 @@ def calcTime(res=[0, 0, 0]):
     """calculate startup/shutdown time from wittypi output"""
     time_local = None
     timedelta = None
-    str_time = None
+    str_time = [] # [0, 20, 80]
     try:
         nowUTC = dt.datetime.now(utc_tz)
         nowLOCAL = dt.datetime.now(local_tz)
@@ -261,13 +278,13 @@ def calcTime(res=[0, 0, 0]):
 
         if time_utc is not None:
             time_local =  time_utc.astimezone(local_tz)
-            strtime = [] # [0, 20, 80]
-            for ele in res:
-                if ele == 80: strtime.append('??')
-                else: strtime.append(str(ele))
-            if len(strtime) == 4: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':' + strtime[-4]
-            else: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':00' 
             timedelta = time_local - nowLOCAL
+        strtime=[]
+        for ele in res:
+            if ele == 80: strtime.append('??')
+            else: strtime.append(str(ele))
+        if len(strtime) == 4: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':' + strtime[-4]
+        else: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':00' 
     except Exception as ex:
         logger.exception("Exception in calcTime" + str(ex))
     return time_utc,time_local,str_time,timedelta
@@ -311,7 +328,7 @@ def get_shutdown_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??
                     out.append(b)
             res = dec2hex(out) # sec, min, hour, day
     except Exception as ex:
-        logger.exception("Exception in get_shutdown_time" + str(ex))
+        logger.exception("Exception in get_shutdown_time_native" + str(ex))
     return calcTime(res)
 
 def stringtime2timetuple(stringtime='?? 20:00:00'):
@@ -620,7 +637,7 @@ def get_dummy_load_duration():
                 dummy_load_duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD)
             return dummy_load_duration #[0]
     except Exception as ex:
-        logger.exception("Exception in get_dummy_load_duration")
+        logger.exception("Exception in get_dummy_load_duration" + str(ex))
 
 def set_dummy_load_duration(duration=0):
     try:
@@ -697,7 +714,7 @@ def get_white_led_duration():
                 duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_BLINK_LED)
             return duration
     except Exception as ex:
-        logger.exception("Exception in get_white_led_duration")
+        logger.exception("Exception in get_white_led_duration" + str(ex))
 
 def set_default_state(state):
     try:
@@ -718,7 +735,7 @@ def set_default_state(state):
             else:
                 logger.error('wrong input for default state. Please use 1 for "Default ON" or 0 for "Default OFF"')
     except Exception as ex:
-        logger.exception("Exception in get_white_led_duration" + str(ex))
+        logger.exception("Exception in set_default_state" + str(ex))
     return False
 
 def get_default_state(): #1=ON, 0=OFF
@@ -732,7 +749,7 @@ def get_default_state(): #1=ON, 0=OFF
                 state=0
             return state
     except Exception as ex:
-        logger.exception("Exception in get_default_state")
+        logger.exception("Exception in get_default_state" + str(ex))
 
 def rtc_time_is_valid(rtc_time_utc):
     try:
@@ -744,11 +761,279 @@ def rtc_time_is_valid(rtc_time_utc):
             logger.debug('RTC time ' + rtc_time_utc.strftime("%a %d %b %Y %H:%M:%S")+ ' ' + str(utc_tz) + ' is a valid time.')
             return True
     except Exception as ex:
-        logger.exception("Exception in get_default_state")    
+        logger.exception("Exception in rtc_time_is_valid" + str(ex))    
+
+def is_schedule_file_in_use(schedule_file = wittyPiPath+ '/schedule.wpi'):
+    
+    if os.path.isfile(schedule_file) and os.stat(schedule_file).st_size > 1:
+        return True
+    else:
+        return False
+
+def extract_timestamp(datetimestr):
+    timestamp = None
+    try:
+        datetimestr = datetimestr.split(' ')
+        date_reg = re.search('(20[1-9][0-9])-([0-9][0-9])-([0-3][0-9])', datetimestr[0]).groups()
+        time_reg = re.search('([0-2][0-9]):([0-5][0-9]):([0-5][0-9])', datetimestr[1]).groups()
+        if len(date_reg)==3 and len(time_reg) ==3:
+            #timestamp = dt.datetime(dt.date(int(date_reg[0]), int(date_reg[1]), int(date_reg[2])), dt.time(int(time_reg[0]), int(time_reg[1]), int(time_reg[2])))
+            timestamp = dt.datetime(int(date_reg[0]), int(date_reg[1]), int(date_reg[2]), int(time_reg[0]), int(time_reg[1]), int(time_reg[2]), tzinfo=local_tz)
+            logger.debug('extracted timestamp: ' + timestamp.strftime("%a %d %b %Y %H:%M:%S"))
+        else:
+            logger.debug('invalid timestamp!')
+        
+    except Exception as ex:
+        logger.exception("Exception in extract_timestamp" + str(ex))
+    return timestamp
+
+def get_local_date_time(timestr, wildcard=True):
+    result = None
+    try:
+        when=timestr
+        logger.debug("Calculating get_local_date_time for "+ str(timestr))
+        #IFS=' ' read -r date timestr <<< "$when"
+        #IFS=':' read -r hour minute second <<< "$timestr"
+        date = when.split(' ')[0]
+        bk_date = date
+        hour=when.split(' ')[1].split(':')[0]
+        bk_hour=hour
+        minute=when.split(' ')[1].split(':')[1]
+        bk_min=minute
+        second=when.split(' ')[1].split(':')[2]
+        bk_sec=second
+        if date == '??':
+            date='01'
+        if date == '0':
+            return result #0 at date - nothing scheduled
+        if hour == '??':
+            hour='12'
+        if minute == '??':
+            minute='00'
+        if second == '??':
+            second='00'
+        result_year=dt.datetime.now().strftime("%Y")
+        curDate=dt.datetime.now().strftime("%d")
+        if date < curDate:
+            result_month = add_one_month(dt.date(int(result_year), int(dt.datetime.now().strftime("%m")), 15)).strftime("%m")
+        else:
+            result_month = dt.datetime.now().strftime("%m")
+        result_datetime = dt.datetime(int(result_year), int(result_month), int(date), int(hour), int(minute), int(second), 0 ,utc_tz)
+        result = result_datetime.strftime("%d %H:%M:%S")
+        #IFS=' ' read -r date timestr <<< "$result"
+        #IFS=':' read -r hour minute second <<< "$timestr"
+        date = result.split(' ')[0]
+        hour=result.split(' ')[1].split(':')[0]
+        minute=result.split(' ')[1].split(':')[1]
+        second=result.split(' ')[1].split(':')[2]
+        if wildcard:
+            if bk_date == '??':
+                date='??'
+            if bk_hour == '??':
+                hour='??'
+            if bk_min == '??':
+                minute='??'
+            if bk_sec == '??':
+                second='??'
+        result = date + ' ' + hour + ' ' + minute + ' ' + second
+    except Exception as ex:
+        logger.exception("Exception in get_local_date_time" + str(ex))
+    return result
+
+
+def schedule_script_interrupted():
+    try:
+        startup_time_utc,startup_time_local,startup_str_time,startup_timedelta = get_startup_time()
+        shutdown_time_utc,shutdown_time_local,shutdown_str_time,shutdown_timedelta = get_shutdown_time()
+        startup_time=get_local_date_time(startup_str_time, False)
+        shutdown_time=get_local_date_time(shutdown_str_time, False)
+        if startup_time is not None and shutdown_time is not None:
+            
+            """    local st_timestamp=$(date --date="$(date +%Y-%m-)$startup_time" +%s)
+            local sd_timestamp=$(date --date="$(date +%Y-%m-)$shutdown_time" +%s)"""
+            cur_timestamp = dt.datetime.now()
+            if startup_time_local > cur_timestamp  and shutdown_time_local < cur_timestamp:
+                return false
+    except Exception as ex:
+        logger.exception("Exception in schedule_script_interrupted" + str(ex))
+    return True
+
+
+def get_schedule_file(schedule_file = wittyPiPath+ '/schedule.wpi'):
+    begin = None
+    end = None
+    states = []
+    schedule_file_data = {}
+    try:
+        if is_schedule_file_in_use(schedule_file):
+            count=0
+            with open(schedule_file) as schedule_file_fh:
+                for line in schedule_file_fh:
+                    cpos=line.find('#')
+                    if cpos != -1:
+                        line = line[0:cpos]
+                    line = line.strip()
+                    if line.startswith('BEGIN'):
+                        begin = extract_timestamp(line[6:].strip())
+                    elif line.startswith('END'):
+                        end = extract_timestamp(line[4:].strip())
+                    elif line != "":
+                        states.append(line)
+                        count = count+1
+            if begin == None:
+                logger.debug('I can not find the begin time in the script...')
+            elif end == None:
+                logger.debug('I can not find the end time in the script...')
+            elif count == 0:
+                logger.debug('I can not find any state defined in the script.')
+            else:
+                logger.debug('Succesfully read ' + str(schedule_file) + ' Begin: ' + begin.strftime("%a %d %b %Y %H:%M:%S") + ' End: ' + end.strftime("%a %d %b %Y %H:%M:%S") + ' States: ' + str(count))
+        else:
+            logger.info ("File " + schedule_file + "not found, skip reading schedule script.")
+
+
+    except Exception as ex:
+        logger.exception("Exception in get_schedule_file" + str(ex))
+    schedule_file_data['begin'] = begin
+    schedule_file_data['end'] = end
+    schedule_file_data['states'] = states
+    return schedule_file_data
+
+def extract_duration(state):
+    duration=0
+    try:
+        #print(str(state))
+        day_reg=re.search('D([0-9]+)', state)
+        hour_reg=re.search('H([0-9]+)', state)
+        min_reg=re.search('M([0-9]+)', state)
+        sec_reg=re.search('S([0-9]+)', state)
+        if day_reg is not None:
+            for index, element in enumerate(day_reg.groups()):
+                duration=duration+int(element)*86400
+        elif hour_reg is not None:
+            for index, element in enumerate(hour_reg.groups()):
+                duration=duration+int(element)*3600
+        elif min_reg is not None:
+            for index, element in enumerate(min_reg.groups()):
+                duration=duration+int(element)*60
+        elif sec_reg is not None:
+            for index, element in enumerate(sec_reg.groups()):
+                duration=duration+int(element)*1
+        #print(duration)
+    except Exception as ex:
+        logger.exception("Exception in extract_duration" + str(ex))
+    return duration
+
+    
+def process_schedule_data(schedule_file_data):
+    begin = None
+    end = None
+    states = []
+    count=0
+    try:
+
+        if not 'begin' in schedule_file_data or schedule_file_data['begin'] is None:
+            logger.critical('I can not find the begin time in the script...')
+        elif not 'end' in schedule_file_data or schedule_file_data['end'] is None:
+            logger.debug('I can not find the end time in the script...')
+        elif not 'states' in schedule_file_data or len(schedule_file_data['states']) == 0:
+            logger.debug('I can not find any state defined in the script.')
+        else:
+            begin = schedule_file_data['begin']
+            end = schedule_file_data['end']
+            states = schedule_file_data['states']
+            count=len(states)
+            logger.debug('Count: ' + str(count))
+            logger.debug(str(states))
+            cur_time = dt.datetime.now(local_tz)
+            logger.debug('begin: ' + begin.strftime("%a %d %b %Y %H:%M:%S"))
+            logger.debug('end: ' + end.strftime("%a %d %b %Y %H:%M:%S"))
+            logger.debug('cur_time: ' + cur_time.strftime("%a %d %b %Y %H:%M:%S"))
+            if cur_time < begin:
+                logger.debug('The schedule script start in future')
+                cur_time=begin
+            elif cur_time >= begin:
+                logger.debug('The schedule script started in past')
+            elif  cur_time >= end:
+                logger.debug('The schedule script has ended already.')
+            #else:
+            interrupted=schedule_script_interrupted()
+            print(interrupted)
+            if interrupted: # should be False if scheduled startup is in the future and shutdown is in the pass
+                logger.debug('Schedule script is interrupted, revising the schedule...')
+            index=0
+            found_states=0
+            check_time=begin
+            script_duration=0
+            found_off=0
+            found_on=0
+            while found_states != 2 and check_time < end:
+                duration=extract_duration(states[index])
+                #logger.debug('duration: ' + str(duration))
+                check_time=check_time+dt.timedelta(seconds=duration)
+                if found_off == 0 and states[index].startswith('OFF'):
+                    found_off=1
+                if found_on == 0 and states[index].startswith('ON'):
+                    found_on=1
+                #find the current ON state and incoming OFF state
+                #logger.debug('check_time: ' + check_time.strftime("%a %d %b %Y %H:%M:%S"))
+                #logger.debug('cur_time: ' + cur_time.strftime("%a %d %b %Y %H:%M:%S"))
+                #logger.debug('check_time >= cur_time: ' + str(check_time >= cur_time) + ' found_states: ' + str(found_states == 1) + ' state starts with on: ' + str(states[index].startswith('ON')))
+                if check_time >= cur_time and (found_states == 1 or states[index].startswith('ON')):
+                    found_states=found_states+1
+                    if states[index].startswith('ON'):
+                        if states[index].endswith('WAIT'):
+                            logger.debug('Skip scheduling next shutdown, which should be done externally.')
+                        else:
+                            if interrupted:
+                                #if [ ! -z "$2" ] && [ $interrupted == 0 ] ; then
+                                # schedule a shutdown 1 minute before next startup
+                                temptime=check_time-dt.timedelta(seconds=duration)-dt.timedelta(seconds=60)
+                                logger.debug('Scheduling next shutdown 1 minute before next startup at ' + temptime.strftime("%a %d %b %Y %H:%M:%S"))
+                                """setup_on_state(temptime)"""
+                            else:
+                                logger.debug('Scheduling next shutdown at ' + check_time.strftime("%a %d %b %Y %H:%M:%S"))
+                                """setup_on_state(check_time)"""
+                    elif states[index].startswith('OFF'):
+                        logger.debug('off state')
+                        if states[index].endswith('WAIT'):
+                            logger.debug('Skip scheduling next startup, which should be done externally.')
+                        else:
+                            if interrupted and index != 0:
+                                # if [ ! -z "$2" ] && [ $interrupted == 0 ] && [ $index != 0 ] ; then
+                                # jump back to previous OFF state 
+                                prev_state=states[(index-1)]
+                                prev_duration=extract_duration(prev_state)
+                                temptime=check_time-dt.timedelta(seconds=duration)-dt.timedelta(seconds=prev_duration)
+                                logger.debug('Scheduling next startup 1 state before at ' + temptime.strftime("%a %d %b %Y %H:%M:%S"))
+                                """setup_off_state(temptime)"""
+                            else:
+                                logger.debug('Scheduling next startup at ' + check_time.strftime("%a %d %b %Y %H:%M:%S"))
+                                """setup_off_state(check_time)"""
+                    else:
+                        logger.warning('I can not recognize this state: ' + str(states[index]))
+                index=index+1
+                if index == count:
+                    index=0
+                    if script_duration == 0:
+                        if found_off == 0:
+                            logger.warning('I need at least one OFF state in the script.')
+                            check_time=end     # skip all remaining cycles
+                        elif found_on == 0:
+                            logger.warning('I need at least one ON state in the script.')
+                            check_time=end     # skip all remaining cycles
+                        else:
+                            script_duration=check_time-begin
+                            skip=cur_time-check_time
+                            skip=skip-skip%script_duration
+                            check_time=check_time+skip
+    except Exception as ex:
+        logger.exception("Exception in process_schedule_data" + str(ex))    
 
 def getAll():
     wittypi = {}
-    if is_rtc_connected():
+    wittypi['is_rtc_connected'] = is_rtc_connected()
+    if wittypi['is_rtc_connected']:
         wittypi['is_rtc_connected'] = True
         rtc_time_utc,rtc_time_local,rtc_timestamp = get_rtc_timestamp()
         wittypi['rtc_time_utc'] = rtc_time_utc
@@ -766,9 +1051,8 @@ def getAll():
         wittypi['shutdown_str_time'] = shutdown_str_time
         wittypi['shutdown_timedelta'] = shutdown_timedelta
         wittypi['temperature'] = get_temperature()
-    else:
-        wittypi['is_rtc_connected'] = False
-    if is_mc_connected():
+    wittypi['is_mc_connected'] = is_mc_connected()
+    if wittypi['is_mc_connected']:
         wittypi['is_mc_connected'] = True
         wittypi['firmwareversion'] = get_firmwareversion()
         wittypi['input_voltage'] = get_input_voltage()
@@ -779,8 +1063,8 @@ def getAll():
         wittypi['power_cut_delay'] = get_power_cut_delay()
         wittypi['pulsing_interval'] = get_pulsing_interval()
         wittypi['white_led_duration'] = get_white_led_duration()
-    else:
-        wittypi['is_mc_connected'] = False
+    wittypi['wittyPiPath'] = get_wittypi_folder()
+    wittypi['is_schedule_file_in_use'] = is_schedule_file_in_use()
     return wittypi
     
 
@@ -827,6 +1111,18 @@ def main():
             print(">>> Pulsing interval during sleep " + str(wittypi['pulsing_interval']) + "seconds")
             print(">>> White LED duration " + str(wittypi['white_led_duration']) + "ms")
             print(">>> Dummy load duration " + str(wittypi['dummy_load_duration']) + "ms")
+            if is_schedule_file_in_use():
+                print(">>> schedule script " + str(wittypi['wittyPiPath']) + "/schedule.wpi is in use")
+            else:
+                print(">>> schedule script is not in use")
+            schedule_file_data = get_schedule_file()
+            #schedule_file_data['begin'] = None
+            #del schedule_file_data['begin']
+            #schedule_file_data['end'] = None
+            #del schedule_file_data['end']
+            #schedule_file_data['states'] = []
+            #del schedule_file_data['states']
+            process_schedule_data (schedule_file_data)
         else:
             print("no WittyPi MC is connected")
         #set_startup_time('?? ??:??:??')
