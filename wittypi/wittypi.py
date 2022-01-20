@@ -238,7 +238,7 @@ def calcTime(res=[0, 0, 0]):
     str_time = [] # [0, 20, 80]
     try:
         nowUTC = dt.datetime.now(utc_tz)
-        nowLOCAL = dt.datetime.now(local_tz)
+        nowLOCAL = nowUTC.astimezone(local_tz)
         #  sec, min, hour, day
         logger.debug("Calculating datetime for " + str(res))
         day = 0
@@ -255,6 +255,17 @@ def calcTime(res=[0, 0, 0]):
             #time_utc = utc_tz.localize(time_utc)
             time_utc = None
         else:
+            try:
+                time_temp = dt.datetime(nowUTC.year,nowUTC.month,day,nowUTC.hour,nowUTC.minute,second)
+            except ValueError as ex:
+                oldmonth = nowUTC.strftime("%B")
+                nowUTC = add_one_month(nowUTC)
+                nowLOCAL = nowUTC.astimezone(local_tz)
+                logger.debug('For '+ oldmonth + ' the day ' + str(day) + ' does not exist, added a month')
+                pass
+            except Exception as ex:
+                logger.exception("Another Exception in calcTime" + str(ex))
+            
             if (day == 80) and (hour != 80): # day not defined, start every day
                 time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,hour,minute,second) #.astimezone(utc_tz)
                 time_utc = utc_tz.localize(time_utc)
@@ -331,46 +342,60 @@ def get_shutdown_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??
         logger.exception("Exception in get_shutdown_time_native" + str(ex))
     return calcTime(res)
 
+def datetime2stringtime(dt):
+    result = ""
+    try:
+        result = dt.strftime("%d %H:%M:%S")
+    except Exception as ex:
+        logger.exception("Exception in datetime2stringtime" + str(ex))
+    return result
+    
+
 def stringtime2timetuple(stringtime='?? 20:00:00'):
-    logger.debug(str(stringtime))
-    day = stringtime.split(' ')[0]
-    if day == '??':
-        day = 80 #128
-    elif 1<= int(day) <=31:
-        day = int(day)
-    else: 
-        logger.debug('invalid day: ' + str(day))
-        day = None 
-    hour = stringtime.split(' ')[1].split(':')[0]
-    if hour == '??':
-        hour = 80 #128
-    elif 0<= int(hour) <=23:
-        hour = int(hour)
-    else: 
-        logger.debug('invalid hour: ' + str(hour))
-        hour = None 
-    minute = stringtime.split(' ')[1].split(':')[1]
-    if minute == '??':
-        minute = 80 #128
-    elif 0<= int(minute) <=59:
-        minute = int(minute)
-    else: 
-        logger.debug('invalid minute: ' + str(minute))
-        minute = None 
-    if len(stringtime) > 8:
-        second = stringtime.split(' ')[1].split(':')[2]
-        if second == '??':
-            second = 80 #128
-        elif 0<= int(second) <=59:
-            second = int(second)
-        else: 
-            logger.debug('invalid second: ' + str(second))
-            second = None 
-        logger.debug('day: ' + str(day) + ' hour: ' + str(hour) + 'minute: ' + str(minute)+ ' second: ' + str(second))
-        return (day,hour,minute,second)
-    else: 
-        logger.debug('day: ' + str(day) + ' hour: ' + str(hour) + 'minute: ' + str(minute))
-        return (day,hour,minute)
+    try:
+        if stringtime is not None:
+            logger.debug('stringtime: ' + str(stringtime))
+            day = stringtime.split(' ')[0]
+            if day == '??':
+                day = 80 #128
+            elif 1<= int(day) <=31:
+                day = int(day)
+            else: 
+                logger.debug('invalid day: ' + str(day))
+                day = None 
+            hour = stringtime.split(' ')[1].split(':')[0]
+            if hour == '??':
+                hour = 80 #128
+            elif 0<= int(hour) <=23:
+                hour = int(hour)
+            else: 
+                logger.debug('invalid hour: ' + str(hour))
+                hour = None 
+            minute = stringtime.split(' ')[1].split(':')[1]
+            if minute == '??':
+                minute = 80 #128
+            elif 0<= int(minute) <=59:
+                minute = int(minute)
+            else: 
+                logger.debug('invalid minute: ' + str(minute))
+                minute = None 
+            if len(stringtime) > 8:
+                second = stringtime.split(' ')[1].split(':')[2]
+                if second == '??':
+                    second = 80 #128
+                elif 0<= int(second) <=59:
+                    second = int(second)
+                else: 
+                    logger.debug('invalid second: ' + str(second))
+                    second = None 
+                logger.debug('day: ' + str(day) + ' hour: ' + str(hour) + 'minute: ' + str(minute)+ ' second: ' + str(second))
+                return (second,minute,hour,day)
+            else: 
+                logger.debug('day: ' + str(day) + ' hour: ' + str(hour) + 'minute: ' + str(minute))
+                return (minute,hour,day)
+    except Exception as ex:
+        logger.exception("Exception in stringtime2timetuple" + str(ex))
+    return None
 
 def system_to_rtc():
     try:
@@ -396,10 +421,26 @@ def system_to_rtc():
         logger.exception("Exception in system_to_rtc" + str(ex))
     return False
 
+def rtc_to_system():
+    try:
+        if rtc_connected:
+            UTCtime,localtime,timestamp = get_rtc_timestamp()
+            if UTCtime is not None and localtime is not None:
+                if rtc_time_is_valid(localtime):
+                    logger.info('Writing RTC time ' + localtime.strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
+                    value = os.system('sudo date -u -s "' + UTCtime.strftime("%d %b %Y %H:%M:%S") + '" >>/dev/null')
+                    if value == 0:
+                        logger.debug('Successfully wrote RTC time to system...')
+                    else:
+                        logger.error('Failure writing RTC time to system...')
+    except Exception as ex:
+        logger.exception("Exception in system_to_rtc" + str(ex))
+    return False
+
 def set_shutdown_time(stringtime='?? 20:00'):
     try:
         if rtc_connected:
-            day,hour,minute = stringtime2timetuple(stringtime)
+            minute,hour,day = stringtime2timetuple(stringtime)
             if (day is not None ) and (hour is not None) and (minute is not None):
                 with SMBus(1) as bus:
                     bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)
@@ -416,7 +457,7 @@ def set_shutdown_time(stringtime='?? 20:00'):
 def set_startup_time(stringtime='?? 20:00:00'):
     try:
         if rtc_connected:
-            day,hour,minute,second = stringtime2timetuple(stringtime)
+            second,minute,hour,day = stringtime2timetuple(stringtime)
             if (day is not None ) and (hour is not None) and (minute is not None) and (second is not None):
                 with SMBus(1) as bus:
                     bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)
@@ -427,9 +468,9 @@ def set_startup_time(stringtime='?? 20:00:00'):
                 return True
             else:
                 logger.debug("invalid Time")
-    except Exception as e:
-        print(e)
-        return False
+    except Exception as ex:
+        logger.exception("Exception in set_startup_time" + str(ex))
+    return False
 
 def clear_startup_time():
     try:
@@ -700,7 +741,7 @@ def set_white_led_duration(duration):
             if duration >=- 0 and duration <= 254:
                     with SMBus(1) as bus:
                         bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_BLINK_LED, duration)
-                        print("White LED duration set to ", duration, " !")
+                        logger.debug("White LED duration set to "+ str(duration) + " !")
             else:
                 logger.error('wrong input for white LED duration ' + str(duration) + ' Please input from 0 to 254')
     except Exception as ex:
@@ -774,7 +815,7 @@ def extract_timestamp(datetimestr):
     timestamp = None
     try:
         datetimestr = datetimestr.split(' ')
-        date_reg = re.search('(20[1-9][0-9])-([0-9][0-9])-([0-3][0-9])', datetimestr[0]).groups()
+        date_reg = re.search('(20[0-9][0-9])-([0-9][0-9])-([0-3][0-9])', datetimestr[0]).groups()
         time_reg = re.search('([0-2][0-9]):([0-5][0-9]):([0-5][0-9])', datetimestr[1]).groups()
         if len(date_reg)==3 and len(time_reg) ==3:
             #timestamp = dt.datetime(dt.date(int(date_reg[0]), int(date_reg[1]), int(date_reg[2])), dt.time(int(time_reg[0]), int(time_reg[1]), int(time_reg[2])))
@@ -790,6 +831,7 @@ def extract_timestamp(datetimestr):
 def get_local_date_time(timestr, wildcard=True):
     result = None
     try:
+        nowUTC = dt.datetime.now(utc_tz)
         when=timestr
         logger.debug("Calculating get_local_date_time for "+ str(timestr))
         #IFS=' ' read -r date timestr <<< "$when"
@@ -812,14 +854,25 @@ def get_local_date_time(timestr, wildcard=True):
             minute='00'
         if second == '??':
             second='00'
-        result_year=dt.datetime.now().strftime("%Y")
-        curDate=dt.datetime.now().strftime("%d")
+        result_year=nowUTC.strftime("%Y")
+        curDate=nowUTC.strftime("%d")
+        result_month = ""
         if date < curDate:
-            result_month = add_one_month(dt.date(int(result_year), int(dt.datetime.now().strftime("%m")), 15)).strftime("%m")
+            result_month = add_one_month(dt.date(int(result_year), int(nowUTC.strftime("%m")), 15)).strftime("%m")
         else:
-            result_month = dt.datetime.now().strftime("%m")
+            result_month = nowUTC.strftime("%m")
+        try:
+            time_temp = dt.datetime(nowUTC.year,int(result_month),int(date),nowUTC.hour,nowUTC.minute,nowUTC.second)
+        except ValueError as ex:
+            oldmonth = result_month
+            nowUTC = add_one_month(nowUTC)
+            result_month = nowUTC.strftime("%m")
+            logger.debug('For '+ oldmonth + ' the day ' + str(date) + ' does not exist, added a month')
+            pass
+        except Exception as ex:
+            logger.exception("Another Exception in calcTime" + str(ex))
         result_datetime = dt.datetime(int(result_year), int(result_month), int(date), int(hour), int(minute), int(second), 0 ,utc_tz)
-        result = result_datetime.strftime("%d %H:%M:%S")
+        result = datetime2stringtime(result_datetime)
         #IFS=' ' read -r date timestr <<< "$result"
         #IFS=':' read -r hour minute second <<< "$timestr"
         date = result.split(' ')[0]
@@ -851,7 +904,7 @@ def schedule_script_interrupted():
             
             """    local st_timestamp=$(date --date="$(date +%Y-%m-)$startup_time" +%s)
             local sd_timestamp=$(date --date="$(date +%Y-%m-)$shutdown_time" +%s)"""
-            cur_timestamp = dt.datetime.now()
+            cur_timestamp = dt.datetime.now(local_tz)
             if startup_time_local > cur_timestamp  and shutdown_time_local < cur_timestamp:
                 return false
     except Exception as ex:
@@ -903,21 +956,21 @@ def extract_duration(state):
     duration=0
     try:
         #print(str(state))
-        day_reg=re.search('D([0-9]+)', state)
-        hour_reg=re.search('H([0-9]+)', state)
-        min_reg=re.search('M([0-9]+)', state)
-        sec_reg=re.search('S([0-9]+)', state)
-        if day_reg is not None:
-            for index, element in enumerate(day_reg.groups()):
+        day_reg=re.findall('D([0-9]+)', state)
+        hour_reg=re.findall('H([0-9]+)', state)
+        min_reg=re.findall('M([0-9]+)', state)
+        sec_reg=re.findall('S([0-9]+)', state)
+        #if day_reg is not None:
+        for index, element in enumerate(day_reg):
                 duration=duration+int(element)*86400
-        elif hour_reg is not None:
-            for index, element in enumerate(hour_reg.groups()):
+        #if hour_reg is not None:
+        for index, element in enumerate(hour_reg):
                 duration=duration+int(element)*3600
-        elif min_reg is not None:
-            for index, element in enumerate(min_reg.groups()):
+        #if min_reg is not None:
+        for index, element in enumerate(min_reg):
                 duration=duration+int(element)*60
-        elif sec_reg is not None:
-            for index, element in enumerate(sec_reg.groups()):
+        #if sec_reg is not None:
+        for index, element in enumerate(sec_reg):
                 duration=duration+int(element)*1
         #print(duration)
     except Exception as ex:
@@ -930,6 +983,13 @@ def process_schedule_data(schedule_file_data):
     end = None
     states = []
     count=0
+    res_shutdown_time_local = None
+    res_shutdown_time_utc = None
+    res_shutdown_str_time = None
+    res_startup_time_local = None
+    res_startup_time_utc = None
+    res_startup_str_time = None
+
     try:
 
         if not 'begin' in schedule_file_data or schedule_file_data['begin'] is None:
@@ -958,7 +1018,6 @@ def process_schedule_data(schedule_file_data):
                 logger.debug('The schedule script has ended already.')
             #else:
             interrupted=schedule_script_interrupted()
-            print(interrupted)
             if interrupted: # should be False if scheduled startup is in the future and shutdown is in the pass
                 logger.debug('Schedule script is interrupted, revising the schedule...')
             index=0
@@ -979,7 +1038,8 @@ def process_schedule_data(schedule_file_data):
                 #logger.debug('check_time: ' + check_time.strftime("%a %d %b %Y %H:%M:%S"))
                 #logger.debug('cur_time: ' + cur_time.strftime("%a %d %b %Y %H:%M:%S"))
                 #logger.debug('check_time >= cur_time: ' + str(check_time >= cur_time) + ' found_states: ' + str(found_states == 1) + ' state starts with on: ' + str(states[index].startswith('ON')))
-                if check_time >= cur_time and (found_states == 1 or states[index].startswith('ON')):
+                #if check_time >= (cur_time) and (found_states == 1 or states[index].startswith('ON')):
+                if check_time >= (cur_time+dt.timedelta(seconds=60)) and (found_states == 1 or states[index].startswith('ON')):
                     found_states=found_states+1
                     if states[index].startswith('ON'):
                         if states[index].endswith('WAIT'):
@@ -990,9 +1050,15 @@ def process_schedule_data(schedule_file_data):
                                 # schedule a shutdown 1 minute before next startup
                                 temptime=check_time-dt.timedelta(seconds=duration)-dt.timedelta(seconds=60)
                                 logger.debug('Scheduling next shutdown 1 minute before next startup at ' + temptime.strftime("%a %d %b %Y %H:%M:%S"))
+                                res_shutdown_time_local = temptime
+                                res_shutdown_time_utc = res_shutdown_time_local.replace(tzinfo=local_tz).astimezone(tz=utc_tz)
+                                res_shutdown_str_time = datetime2stringtime(res_shutdown_time_utc)[:8]
                                 """setup_on_state(temptime)"""
                             else:
                                 logger.debug('Scheduling next shutdown at ' + check_time.strftime("%a %d %b %Y %H:%M:%S"))
+                                res_shutdown_time_local = check_time
+                                res_shutdown_time_utc = res_shutdown_time_local.replace(tzinfo=local_tz).astimezone(tz=utc_tz)
+                                res_shutdown_str_time = datetime2stringtime(res_shutdown_time_utc)[:8]
                                 """setup_on_state(check_time)"""
                     elif states[index].startswith('OFF'):
                         logger.debug('off state')
@@ -1006,9 +1072,15 @@ def process_schedule_data(schedule_file_data):
                                 prev_duration=extract_duration(prev_state)
                                 temptime=check_time-dt.timedelta(seconds=duration)-dt.timedelta(seconds=prev_duration)
                                 logger.debug('Scheduling next startup 1 state before at ' + temptime.strftime("%a %d %b %Y %H:%M:%S"))
+                                res_startup_time_local = temptime
+                                res_startup_time_utc = res_startup_time_local.replace(tzinfo=local_tz).astimezone(tz=utc_tz)
+                                res_startup_str_time = datetime2stringtime(res_startup_time_utc)
                                 """setup_off_state(temptime)"""
                             else:
                                 logger.debug('Scheduling next startup at ' + check_time.strftime("%a %d %b %Y %H:%M:%S"))
+                                res_startup_time_local = check_time
+                                res_startup_time_utc = res_startup_time_local.replace(tzinfo=local_tz).astimezone(tz=utc_tz)
+                                res_startup_str_time = datetime2stringtime(res_startup_time_utc)
                                 """setup_off_state(check_time)"""
                     else:
                         logger.warning('I can not recognize this state: ' + str(states[index]))
@@ -1028,7 +1100,9 @@ def process_schedule_data(schedule_file_data):
                             skip=skip-skip%script_duration
                             check_time=check_time+skip
     except Exception as ex:
-        logger.exception("Exception in process_schedule_data" + str(ex))    
+        logger.exception("Exception in process_schedule_data" + str(ex))
+    return res_shutdown_time_utc, res_shutdown_time_local, res_shutdown_str_time, res_startup_time_utc, res_startup_time_local, res_startup_str_time
+
 
 def getAll():
     wittypi = {}
@@ -1070,7 +1144,7 @@ def getAll():
 
 def main():
     try:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
         wittypi = {}
         wittypi = getAll()
         print("================================================================================")
@@ -1115,18 +1189,8 @@ def main():
                 print(">>> schedule script " + str(wittypi['wittyPiPath']) + "/schedule.wpi is in use")
             else:
                 print(">>> schedule script is not in use")
-            schedule_file_data = get_schedule_file()
-            #schedule_file_data['begin'] = None
-            #del schedule_file_data['begin']
-            #schedule_file_data['end'] = None
-            #del schedule_file_data['end']
-            #schedule_file_data['states'] = []
-            #del schedule_file_data['states']
-            process_schedule_data (schedule_file_data)
         else:
             print("no WittyPi MC is connected")
-        #set_startup_time('?? ??:??:??')
-        #set_shutdown_time('?? 21:00')
     except Exception as ex:
         logger.critical("Unhandled Exception in main: " + repr(ex))
 
