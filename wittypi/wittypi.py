@@ -631,15 +631,17 @@ def clear_alarm_flags():
         if rtc_connected:
             byte_F=0x0
             """{
-            if [ -z "$1" ]:
+            if [ -z "$1" ]:"""
             with SMBus(1) as bus:
-                byte_F=bus.read_byte_data(I2C_RTC_ADDRESS 0x0F)
-            else:
-                byte_F=$1
-            byte_F=$(($byte_F&0xFC))
-            """
+                byte_F=bus.read_byte_data(RTC_ADDRESS, 0x0F)
+            """else:
+                byte_F=$1"""
+            print(str((byte_F)))
+            byte_F=(byte_F&0xFC)
+            print(str((byte_F)))
             with SMBus(1) as bus:
-                bus.write_byte_data(I2C_RTC_ADDRESS, 0x0F, byte_F)
+                bus.write_byte_data(RTC_ADDRESS, 0x0F, byte_F)
+                #bus.write_byte_data(RTC_ADDRESS, 0x0F, 0x0)
     except Exception as ex:
         logger.exception("Exception in get_temperature" + str(ex))
 
@@ -913,38 +915,45 @@ def schedule_script_interrupted():
 
 
 def get_schedule_file(schedule_file = wittyPiPath+ '/schedule.wpi'):
+    schedule_file_lines = []
+    try:
+        if is_schedule_file_in_use(schedule_file):
+            with open(schedule_file) as schedule_file_fh:
+                schedule_file_lines = schedule_file_fh.readlines()
+            logger.debug('Succesfully read ' + str(schedule_file))
+        else:
+            logger.info ("File " + schedule_file + "not found, skip reading schedule script.")
+    except Exception as ex:
+        logger.exception("Exception in get_schedule_file" + str(ex))
+    return schedule_file_lines
+                
+def schedule_file_lines2schedule_file_data(schedule_file_lines):
     begin = None
     end = None
     states = []
     schedule_file_data = {}
+    count=0
     try:
-        if is_schedule_file_in_use(schedule_file):
-            count=0
-            with open(schedule_file) as schedule_file_fh:
-                for line in schedule_file_fh:
-                    cpos=line.find('#')
-                    if cpos != -1:
-                        line = line[0:cpos]
-                    line = line.strip()
-                    if line.startswith('BEGIN'):
-                        begin = extract_timestamp(line[6:].strip())
-                    elif line.startswith('END'):
-                        end = extract_timestamp(line[4:].strip())
-                    elif line != "":
-                        states.append(line)
-                        count = count+1
-            if begin == None:
-                logger.debug('I can not find the begin time in the script...')
-            elif end == None:
-                logger.debug('I can not find the end time in the script...')
-            elif count == 0:
-                logger.debug('I can not find any state defined in the script.')
-            else:
-                logger.debug('Succesfully read ' + str(schedule_file) + ' Begin: ' + begin.strftime("%a %d %b %Y %H:%M:%S") + ' End: ' + end.strftime("%a %d %b %Y %H:%M:%S") + ' States: ' + str(count))
+        for line in schedule_file_lines:
+            cpos=line.find('#')
+            if cpos != -1:
+                line = line[0:cpos]
+            line = line.strip()
+            if line.startswith('BEGIN'):
+                begin = extract_timestamp(line[6:].strip())
+            elif line.startswith('END'):
+                end = extract_timestamp(line[4:].strip())
+            elif line != "":
+                states.append(line)
+                count = count+1
+        if begin == None:
+            logger.debug('I can not find the begin time in the script...')
+        elif end == None:
+            logger.debug('I can not find the end time in the script...')
+        elif count == 0:
+            logger.debug('I can not find any state defined in the script.')
         else:
-            logger.info ("File " + schedule_file + "not found, skip reading schedule script.")
-
-
+            logger.debug('Succesfully read Begin: ' + begin.strftime("%a %d %b %Y %H:%M:%S") + ' End: ' + end.strftime("%a %d %b %Y %H:%M:%S") + ' States: ' + str(count))
     except Exception as ex:
         logger.exception("Exception in get_schedule_file" + str(ex))
     schedule_file_data['begin'] = begin
@@ -977,6 +986,82 @@ def extract_duration(state):
         logger.exception("Exception in extract_duration" + str(ex))
     return duration
 
+def verify_schedule_data(schedule_file_data):
+    begin = None
+    end = None
+    states = []
+    count=0
+    script_duration=0
+    found_off=0
+    found_on=0
+    found_irregular=0
+    found_irregular_order = 0
+    found_off_wait=0
+    found_on_wait=0
+    try:
+        if not 'begin' in schedule_file_data or schedule_file_data['begin'] is None:
+            logger.critical('I can not find the begin time in the script...')
+        elif not 'end' in schedule_file_data or schedule_file_data['end'] is None:
+            logger.critical('I can not find the end time in the script...')
+        elif not 'states' in schedule_file_data or len(schedule_file_data['states']) == 0:
+            logger.critical('I can not find any state defined in the script.')
+        else:
+            begin = schedule_file_data['begin']
+            end = schedule_file_data['end']
+            states = schedule_file_data['states']
+            count=len(states)
+            logger.debug('Count: ' + str(count))
+            cur_time = dt.datetime.now(local_tz)
+            logger.debug('begin: ' + begin.strftime("%a %d %b %Y %H:%M:%S"))
+            logger.debug('end: ' + end.strftime("%a %d %b %Y %H:%M:%S"))
+            logger.debug('cur_time: ' + cur_time.strftime("%a %d %b %Y %H:%M:%S"))
+            if cur_time < begin:
+                logger.debug('The schedule script starts in future')
+                cur_time=begin
+            elif cur_time >= begin:
+                logger.debug('The schedule script started in past')
+            elif  cur_time >= end:
+                logger.critical('The schedule script has ended already.')
+            #else:
+            index=0
+            found_on_state=False
+            while index <= (count-1):
+                #logger.debug('index: ' + str(index))
+                script_duration=script_duration+extract_duration(states[index])
+                if states[index].startswith('ON'):
+                    if not found_on_state:
+                        found_on_state = True
+                    else:
+                        logger.warning('Irregular order at # ' +str(index) + ' ' + str(states[index]))
+                        found_irregular_order=found_irregular_order+1
+                    found_on=found_on+1
+                    if states[index].endswith('WAIT'):
+                        found_on_wait=found_on_wait+1
+                elif states[index].startswith('OFF'):
+                    found_off=found_off+1
+                    if found_on_state:
+                        found_on_state = False
+                    else:
+                        logger.warning('Irregular order at # ' +str(index) + ' ' + str(states[index]))
+                        found_irregular_order=found_irregular_order+1
+                    if states[index].endswith('WAIT'):
+                        found_off_wait=found_off_wait+1
+                else:
+                    logger.warning('I can not recognize this state: ' + str(states[index]))
+                    found_irregular=found_irregular+1
+                index=index+1
+        if count != (found_off + found_on + found_irregular):
+            logger.error('Error during verify_schedule_data, number of states: ' + str(count) + ' differs from number of recognized states: ' + str(found_off + found_on + found_irregular))
+        logger.debug('found_off: ' + str(found_off))
+        logger.debug('found_on: ' + str(found_on))
+        logger.debug('found_off_wait: ' + str(found_off_wait))
+        logger.debug('found_on_wait: ' + str(found_on_wait))
+        logger.debug('found_irregular: ' + str(found_irregular))
+        logger.debug('script_duration: ' + str(script_duration))
+        logger.debug('found_irregular_order : ' + str(found_irregular_order))
+    except Exception as ex:
+        logger.exception("Exception in verify_schedule_data" + str(ex))
+    return count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait
     
 def process_schedule_data(schedule_file_data):
     begin = None
@@ -995,9 +1080,9 @@ def process_schedule_data(schedule_file_data):
         if not 'begin' in schedule_file_data or schedule_file_data['begin'] is None:
             logger.critical('I can not find the begin time in the script...')
         elif not 'end' in schedule_file_data or schedule_file_data['end'] is None:
-            logger.debug('I can not find the end time in the script...')
+            logger.critical('I can not find the end time in the script...')
         elif not 'states' in schedule_file_data or len(schedule_file_data['states']) == 0:
-            logger.debug('I can not find any state defined in the script.')
+            logger.critical('I can not find any state defined in the script.')
         else:
             begin = schedule_file_data['begin']
             end = schedule_file_data['end']
@@ -1010,7 +1095,7 @@ def process_schedule_data(schedule_file_data):
             logger.debug('end: ' + end.strftime("%a %d %b %Y %H:%M:%S"))
             logger.debug('cur_time: ' + cur_time.strftime("%a %d %b %Y %H:%M:%S"))
             if cur_time < begin:
-                logger.debug('The schedule script start in future')
+                logger.debug('The schedule script starts in future')
                 cur_time=begin
             elif cur_time >= begin:
                 logger.debug('The schedule script started in past')
@@ -1139,6 +1224,8 @@ def getAll():
         wittypi['white_led_duration'] = get_white_led_duration()
     wittypi['wittyPiPath'] = get_wittypi_folder()
     wittypi['is_schedule_file_in_use'] = is_schedule_file_in_use()
+    if wittypi['is_schedule_file_in_use']:
+        wittypi['schedule_file_data'] = schedule_file_lines2schedule_file_data(get_schedule_file())
     return wittypi
     
 

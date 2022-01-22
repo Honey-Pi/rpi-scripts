@@ -655,6 +655,23 @@ def set_wittypi_rtc(settings, wittypi_status):
         logger.exception("Error in function set_wittypi_rtc")
     
 
+def check_wittypi_schedule(settings, wittypi_status):
+    try:
+        if settings['wittyPi']['normal']['enabled']:
+            schedule_file_data_normal = schedule_file_lines2schedule_file_data(settings['wittyPi']['normal']['schedule'].split('\n'))
+            print('Normal voltage schedule: ' +str(schedule_file_data_normal))
+            verify_schedule_data(schedule_file_data_normal)
+        if settings['wittyPi']['low']['enabled']:
+            schedule_file_data_low = schedule_file_lines2schedule_file_data(settings['wittyPi']['low']['schedule'].split('\n'))
+            print('Low voltage schedule: ' + str(schedule_file_data_low))
+            verify_schedule_data(schedule_file_data_low)
+        if wittypi_status['is_schedule_file_in_use']:
+            print('File schedule: ' + str(wittypi_status['schedule_file_data']))
+            verify_schedule_data(wittypi_status['schedule_file_data'])
+
+    except Exception as ex:
+        logger.exception("Error in function check_wittypi_schedule")
+
 def check_wittypi_rtc(settings, wittypi_status):
     try:
         if wittypi_status['is_rtc_connected']:
@@ -686,7 +703,9 @@ def check_wittypi(settings):
         wittypi_status = get_wittypi_status(settings)
         wittypi_status['service_active']=is_service_active('wittypi.service')
         if wittypi_status['is_rtc_connected'] and wittypi_status['is_mc_connected'] and not wittypi_status['service_active']:
-            logger.warning("WittyPi Software is not installed but WittyPi is connected")
+            logger.warning("WittyPi Software is not installed but WittyPi 3 is connected")
+        if wittypi_status['is_rtc_connected'] and not wittypi_status['is_mc_connected'] and not wittypi_status['service_active']:
+            logger.warning("WittyPi Software is not installed but WittyPi 2 (or other RTC) is connected")
         if wittypi_status['service_active'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.warning("WittyPi service is active but WittyPi is disabled in HoneyPi settings")
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
@@ -709,6 +728,8 @@ def check_wittypi(settings):
                 if wittypi_status['white_led_duration'] != settings['wittyPi']['white_led_duration']:
                     logger.warning("WittyPi white_led_duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['white_led_duration']))
                     set_white_led_duration(settings['wittyPi']['white_led_duration'])
+            if wittypi_status['is_rtc_connected']:
+                check_wittypi_schedule(settings, wittypi_status)
         if not settings['wittyPi']['enabled'] and wittypi_status['is_rtc_connected']:
             if wittypi_status['startup_time_local'] is not None or wittypi_status['shutdown_time_local'] is not None:
                 logger.critical("WittyPi is disabled in settings but a startup / shutdown time is set on WittyPi")
