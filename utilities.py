@@ -680,8 +680,6 @@ def check_wittypi_schedule(settings, wittypi_status):
                     count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait = verify_schedule_data(schedule_file_data)
                     log_verify_schedule_data(schedule, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait)
                     #count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait
-                    if not wittypi_status['is_schedule_file_in_use']:
-                        logger.critical("Found " + str(found_off_wait) + " times a 'WAIT' in an 'OFF' line, this will shutdown the HoneyPi without a scheduled start!")
                     isLowVoltage = getStateFromStorage('isLowVoltage', None)
 
                     if isLowVoltage is not None:
