@@ -821,7 +821,13 @@ def set_wittypi_schedule():
         if os.path.isfile(wittyPiPath + '/wittyPi.sh') and os.path.isfile(wittyPiPath + '/syncTime.sh') and os.path.isfile(wittyPiPath + '/runScript.sh'):
             if schedulefile_exists:
                 logger.debug("Setting wittyPi schedule...")
-                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
+                #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
+                process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                for line in process.stdout:
+                    logger.debug(line.decode("utf-8"))
+                for line in process.stderr:
+                    logger.critical(line.decode("utf-8"))
+                process.wait()
                 schedulefile_updated = os.path.isfile(wittyPiPath+wittypi_scheduleFileName) and os.stat(wittyPiPath+wittypi_scheduleFileName).st_size == os.stat(wittypi_scheduleFile).st_size
                 if schedulefile_updated:
                     logger.debug("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " with filesize "+ str(os.stat(wittyPiPath+wittypi_scheduleFileName).st_size) +" updated!")
@@ -829,7 +835,12 @@ def set_wittypi_schedule():
                     logger.critical("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " update failed!")
             else:
                 logger.debug("Pausing wittyPi schedule...")
-                os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
+                #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
+                process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null", shell=True, stdout=subprocess.PIPE)
+                for line in process.stdout:
+                    logger.debug(line.decode("utf-8"))
+                process.wait()
+
             return True
         else:
             logger.debug('WittyPi is not installed - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
@@ -900,6 +911,11 @@ def setStateToStorage(variable, value):
     try:
         with open(file, 'w') as f:
             print(value, file=f)
+        if os.path.exists(file):
+            logger.debug("Variable '" + variable + " with type: '" + type(value).__name__ + "' with content: '" + str(value) + "' wtitten to file " + str(file))
+        else:
+            logger.critical("Variable '" + variable + "' file " + str(file) + " still does not exists.")
+
     except Exception as ex:
         logger.exception("Error in function setStateToStorage")
         pass
