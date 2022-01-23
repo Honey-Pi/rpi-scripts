@@ -654,20 +654,59 @@ def set_wittypi_rtc(settings, wittypi_status):
     except Exception as ex:
         logger.exception("Error in function set_wittypi_rtc")
     
-
+def log_verify_schedule_data(schedulename, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait):
+    try:
+        if found_off_wait > 0:
+            logger.critical(schedulename + ": Found " + str(found_off_wait) + " times a 'WAIT' in an 'OFF' line, this will shutdown the HoneyPi without a scheduled start!")
+        if found_irregular_order > 0:
+            logger.critical(schedulename + ": Found " + str(found_irregular_order) + " lines in irregular oder, each schedule should start with 'ON' followed by 'OFF'!")
+        if found_irregular > 0:
+            logger.critical(schedulename + ": Found " + str(found_irregular) + " lines which could not be recognized!")
+        if found_on_wait > 0 and found_on_wait != found_on:
+            logger.critical(schedulename + ": Found " + str(found_on_wait) + " times a 'WAIT' in an 'ON' line, but there are ! " + str(found_on) + " 'ON' lines")
+        if found_on == 0:
+            logger.critical(schedulename + ": Found no 'ON' line ")
+    except Exception as ex:
+        logger.exception("Error in function log_verify_schedule_data")
+        
 def check_wittypi_schedule(settings, wittypi_status):
     try:
-        if settings['wittyPi']['normal']['enabled']:
-            schedule_file_data_normal = schedule_file_lines2schedule_file_data(settings['wittyPi']['normal']['schedule'].split('\n'))
-            print('Normal voltage schedule: ' +str(schedule_file_data_normal))
-            verify_schedule_data(schedule_file_data_normal)
-        if settings['wittyPi']['low']['enabled']:
+        for schedule in ['normal', 'low']:
+            if schedule in settings['wittyPi']:
+                if settings['wittyPi'][schedule]['enabled']:
+                    schedule_file_data = schedule_file_lines2schedule_file_data(settings['wittyPi'][schedule]['schedule'].split('\n'))
+                    count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait = verify_schedule_data(schedule_file_data)
+                    log_verify_schedule_data(schedule, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait)
+                    #count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait
+                    if not wittypi_status['is_schedule_file_in_use']:
+                        logger.critical("Found " + str(found_off_wait) + " times a 'WAIT' in an 'OFF' line, this will shutdown the HoneyPi without a scheduled start!")
+                    isLowVoltage = getStateFromStorage('isLowVoltage', None)
+
+                    if isLowVoltage is not None:
+                        if schedule_file_data != wittypi_status['schedule_file_data']:
+                            if isLowVoltage and schedule=="low":
+                                logger.critical("WittyPi schedule file on filesystem is differnet from settings for power saving mode!")
+                            elif not isLowVoltage and schedule=="normal":
+                                logger.critical("WittyPi schedule file on filesystem is differnet from settings for normal mode!")
+                    if settings['wittyPi'][schedule]['interval']!=1:
+                        logger.warning("WittyPi " + schedule + " Interval is not set to 'single measurement'!")
+                        if not settings['wittyPi'][schedule]['shutdownAfterTransfer']:
+                            logger.warning("WittyPi " + schedule + " 'schutdown after transfer' is not enabled!")
+                else:
+                    if settings['wittyPi'][schedule]['interval']==1:
+                        logger.warning("WittyPi " + schedule + " not enabled but Interval is not set to 'single measurement'!")
+                        if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
+                            logger.critical("WittyPi " + schedule + " 'schutdown after transfer' is enabled!")
+                    print(schedule)
+                    #Nothing
+
+        '''if settings['wittyPi']['low']['enabled']:
             schedule_file_data_low = schedule_file_lines2schedule_file_data(settings['wittyPi']['low']['schedule'].split('\n'))
-            print('Low voltage schedule: ' + str(schedule_file_data_low))
-            verify_schedule_data(schedule_file_data_low)
-        if wittypi_status['is_schedule_file_in_use']:
+            count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait = verify_schedule_data(schedule_file_data_low)
+            log_verify_schedule_data("low", settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait)'''
+        '''
             print('File schedule: ' + str(wittypi_status['schedule_file_data']))
-            verify_schedule_data(wittypi_status['schedule_file_data'])
+            log_verify_schedule_data("file", settings, verify_schedule_data(wittypi_status['schedule_file_data']))'''
 
     except Exception as ex:
         logger.exception("Error in function check_wittypi_schedule")
@@ -683,12 +722,12 @@ def check_wittypi_rtc(settings, wittypi_status):
                     timedelta = wittypi_status['rtc_time_local'] - timenow
                 else:
                     timedelta = timenow - wittypi_status['rtc_time_local']
-                if abs(timedelta.seconds) >= 300:
-                    logger.critical("Difference between RTC time and sytstem time is " + str(timedelta.seconds) + "seconds")
-                elif abs(timedelta.seconds) >= 60:
-                    logger.warning("Difference between RTC time and sytstem time is " + str(timedelta.seconds) + "seconds")
+                if abs(timedelta.total_seconds()) >= 300:
+                    logger.critical("Difference between RTC time and sytstem time is " + str(timedelta.total_seconds()) + "seconds")
+                elif abs(timedelta.total_seconds()) >= 60:
+                    logger.warning("Difference between RTC time and sytstem time is " + str(timedelta.total_seconds()) + "seconds")
                 else:
-                    logger.debug("Difference between RTC time and sytstem time is " + str(timedelta.seconds) + "seconds")
+                    logger.debug("Difference between RTC time and sytstem time is " + str(timedelta.total_seconds()) + "seconds")
             if wittypi_status['startup_time_local'] is not None:
                 logger.debug("HoneyPi next scheduled wakeup is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
             if wittypi_status['shutdown_time_local'] is not None:
@@ -846,8 +885,8 @@ def getStateFromStorage(variable, default_value=False):
                     logger.debug("Variable '" + variable + "' is type: '" + type(content).__name__ + "' with content: '" + str(content) + "'")
                     return content
                 else:
-                    logger.debug("Variable '" + variable + "' has initial state because file is empty")
-                    return None
+                    logger.debug("Variable '" + variable + "' has initial state '" + str(default_value) + "' because file is empty")
+                    return default_value
 
         else:
             logger.debug("Variable '" + variable + "' does not exists. Use default:" + str(default_value))
