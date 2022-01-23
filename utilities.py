@@ -666,6 +666,8 @@ def log_verify_schedule_data(schedulename, settings, count, script_duration, fou
             logger.critical(schedulename + ": Found " + str(found_on_wait) + " times a 'WAIT' in an 'ON' line, but there are ! " + str(found_on) + " 'ON' lines")
         if found_on == 0:
             logger.critical(schedulename + ": Found no 'ON' line ")
+        if settings['wittyPi'][schedulename]['shutdownAfterTransfer'] and found_on_wait == 0:
+            logger.critical(schedulename + ": Found no 'WAIT' in the 'ON' line, but schutdown after transfer' is enabled, you should add a 'WAIT' at the End of the 'ON' line")
     except Exception as ex:
         logger.exception("Error in function log_verify_schedule_data")
         
@@ -694,9 +696,9 @@ def check_wittypi_schedule(settings, wittypi_status):
                             logger.warning("WittyPi " + schedule + " 'schutdown after transfer' is not enabled!")
                 else:
                     if settings['wittyPi'][schedule]['interval']==1:
-                        logger.warning("WittyPi " + schedule + " not enabled but Interval is not set to 'single measurement'!")
+                        logger.critical("WittyPi " + schedule + " not enabled but Interval is not set to 'single measurement'!")
                         if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
-                            logger.critical("WittyPi " + schedule + " 'schutdown after transfer' is enabled!")
+                            logger.critical("WittyPi " + schedule + " 'schutdown after transfer' is enabled but WittyPi is not enabled!")
                     print(schedule)
                     #Nothing
 
