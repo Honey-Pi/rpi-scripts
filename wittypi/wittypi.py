@@ -806,7 +806,7 @@ def rtc_time_is_valid(rtc_time_utc):
     except Exception as ex:
         logger.exception("Exception in rtc_time_is_valid" + str(ex))    
 
-def is_schedule_file_in_use(schedule_file = wittyPiPath+ '/schedule.wpi'):
+def is_schedule_file_in_use(schedule_file = str(wittyPiPath) + '/schedule.wpi'):
     
     if os.path.isfile(schedule_file) and os.stat(schedule_file).st_size > 1:
         return True
@@ -914,7 +914,7 @@ def schedule_script_interrupted():
     return False
 
 
-def get_schedule_file(schedule_file = wittyPiPath+ '/schedule.wpi'):
+def get_schedule_file(schedule_file = str(wittyPiPath) + '/schedule.wpi'):
     schedule_file_lines = []
     try:
         if is_schedule_file_in_use(schedule_file):
