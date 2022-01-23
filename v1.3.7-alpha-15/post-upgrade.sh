@@ -91,8 +91,8 @@ pip3 install --upgrade Pillow ds18b20 rak811 smbus2 pytz
 #pip3 install --upgrade Pillow==8.4.0 ds18b20 rak811 smbus2 pytz #Specific Pillow==8.4.0 due to piwheels error on zero
 apt-get -y install libopenjp2-7 libtiff5
 
-echo "Install required modules due to Pi Zero issue with wheels"
-pip3 install --upgrade numpy
+#echo "Install required modules due to Pi Zero issue with wheels"
+#pip3 install --upgrade numpy
 #pip3 install numpy==1.20.0 #Specific numpy==1.20.0 due to piwheels error on zero
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
