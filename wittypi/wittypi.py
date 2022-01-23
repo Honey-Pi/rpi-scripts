@@ -988,7 +988,9 @@ def extract_duration(state):
 
 def verify_schedule_data(schedule_file_data):
     begin = None
+    beginissue=""
     end = None
+    endissue=""
     states = []
     count=0
     script_duration=0
@@ -1001,8 +1003,10 @@ def verify_schedule_data(schedule_file_data):
     try:
         if not 'begin' in schedule_file_data or schedule_file_data['begin'] is None:
             logger.critical('I can not find the begin time in the script...')
+            beginissue='I can not find the begin time in the script...'
         elif not 'end' in schedule_file_data or schedule_file_data['end'] is None:
             logger.critical('I can not find the end time in the script...')
+            endissue='I can not find the end time in the script...'
         elif not 'states' in schedule_file_data or len(schedule_file_data['states']) == 0:
             logger.critical('I can not find any state defined in the script.')
         else:
@@ -1013,7 +1017,13 @@ def verify_schedule_data(schedule_file_data):
             logger.debug('Count: ' + str(count))
             cur_time = dt.datetime.now(local_tz)
             logger.debug('begin: ' + begin.strftime("%a %d %b %Y %H:%M:%S"))
+            if int(begin.strftime("%Y")) >= 2038 or int(begin.strftime("%Y")) <= 2010:
+                logger.critical('begin is invalid, must be less than 2038 and greater than 2010')
+                beginissue='begin is invalid, must be less than 2038 and greater than 2010'
             logger.debug('end: ' + end.strftime("%a %d %b %Y %H:%M:%S"))
+            if int(end.strftime("%Y")) >= 2038 or int(end.strftime("%Y")) <= 2010:
+                logger.critical('end is invalid, must be less than 2038 and greater than 2010')
+                endissue='end is invalid, must be less than 2038 and greater than 2010'
             logger.debug('cur_time: ' + cur_time.strftime("%a %d %b %Y %H:%M:%S"))
             if cur_time < begin:
                 logger.debug('The schedule script starts in future')
@@ -1061,7 +1071,7 @@ def verify_schedule_data(schedule_file_data):
         logger.debug('found_irregular_order : ' + str(found_irregular_order))
     except Exception as ex:
         logger.exception("Exception in verify_schedule_data" + str(ex))
-    return count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait
+    return count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue
     
 def process_schedule_data(schedule_file_data):
     begin = None

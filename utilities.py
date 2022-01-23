@@ -654,8 +654,12 @@ def set_wittypi_rtc(settings, wittypi_status):
     except Exception as ex:
         logger.exception("Error in function set_wittypi_rtc")
     
-def log_verify_schedule_data(schedulename, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait):
+def log_verify_schedule_data(schedulename, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue):
     try:
+        if beginissue != "":
+            logger.critical(schedulename + ": " + beginissue)
+        if endissue != "":
+            logger.critical(schedulename + ": " + endissue)
         if found_off_wait > 0:
             logger.critical(schedulename + ": Found " + str(found_off_wait) + " times a 'WAIT' in an 'OFF' line, this will shutdown the HoneyPi without a scheduled start!")
         if found_irregular_order > 0:
@@ -677,8 +681,8 @@ def check_wittypi_schedule(settings, wittypi_status):
             if schedule in settings['wittyPi']:
                 if settings['wittyPi'][schedule]['enabled']:
                     schedule_file_data = schedule_file_lines2schedule_file_data(settings['wittyPi'][schedule]['schedule'].split('\n'))
-                    count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait = verify_schedule_data(schedule_file_data)
-                    log_verify_schedule_data(schedule, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait)
+                    count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue = verify_schedule_data(schedule_file_data)
+                    log_verify_schedule_data(schedule, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue)
                     #count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait
                     isLowVoltage = getStateFromStorage('isLowVoltage', None)
 
