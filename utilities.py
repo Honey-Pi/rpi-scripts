@@ -811,6 +811,17 @@ def continue_wittypi_schedule():
     except Exception as ex:
         logger.exception("Error in function continue_wittypi_schedule")
 
+def clear_wittypi_schedule():
+    try:
+        startup_time_cleared = clear_startup_time()
+        shutdown_time_cleared = clear_shutdown_time()
+        if startup_time_cleared and shutdown_time_cleared:
+            logger.debug("Cleared wittyPi startup / shutdown...")
+        else:
+            logger.error("Error while clearing wittyPi startup / shutdown...")
+    except Exception as ex:
+        logger.exception("Error in function clear_wittypi_schedule")
+
 def set_wittypi_schedule():
     try:
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1
@@ -840,11 +851,11 @@ def set_wittypi_schedule():
             else:
                 logger.debug("Pausing wittyPi schedule...")
                 #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
-                process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null", shell=True, stdout=subprocess.PIPE)
+                """process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null", shell=True, stdout=subprocess.PIPE)
                 for line in process.stdout:
                     logger.debug(line.decode("utf-8"))
-                process.wait()
-
+                process.wait()"""
+                clear_wittypi_schedule()
             return True
         else:
             logger.debug('WittyPi is not installed - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))

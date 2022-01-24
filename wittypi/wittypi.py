@@ -334,12 +334,12 @@ def get_shutdown_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??
         if rtc_connected:
             out = []
             with SMBus(1) as bus:
-                for ele in [11,12,13]:
+                for ele in [11,12,13]: #[0x0B, 0x0C, 0x0D]
                     b = bus.read_byte_data(RTC_ADDRESS, ele)
                     out.append(b)
             res = dec2hex(out) # sec, min, hour, day
     except Exception as ex:
-        logger.exception("Exception in get_shutdown_time_native" + str(ex))
+        logger.exception("Exception in get_shutdown_time" + str(ex))
     return calcTime(res)
 
 def datetime2stringtime(dt):
