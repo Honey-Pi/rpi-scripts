@@ -790,7 +790,7 @@ def get_wittypi_status(settings):
 
 def pause_wittypi_schedule():
     try:
-        if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1:
+        if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1: #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
             os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
             update_wittypi_schedule("")
             logger.debug("Pausing wittyPi schedule...")
@@ -824,7 +824,7 @@ def clear_wittypi_schedule():
 
 def set_wittypi_schedule():
     try:
-        schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1
+        schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1 #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
         wittyPiPath = ''
         if os.path.exists(homeFolder + '/wittyPi'):
             wittyPiPath = homeFolder + '/wittyPi'
@@ -837,7 +837,7 @@ def set_wittypi_schedule():
             if schedulefile_exists:
                 logger.debug("Setting wittyPi schedule...")
                 #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1 > /dev/null")
-                process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi' und setzen der RTC Zeit und aufruf der runScript.sh [setzen von wittyPi Startup / Shutdown}
                 for line in process.stdout:
                     logger.debug(line.decode("utf-8"))
                 for line in process.stderr:
@@ -851,11 +851,11 @@ def set_wittypi_schedule():
             else:
                 logger.debug("Pausing wittyPi schedule...")
                 #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
-                """process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null", shell=True, stdout=subprocess.PIPE)
+                """process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null", shell=True, stdout=subprocess.PIPE) #Aufruf von wittyPi.sh und löschen der Start / Stop 
                 for line in process.stdout:
                     logger.debug(line.decode("utf-8"))
                 process.wait()"""
-                clear_wittypi_schedule()
+                clear_wittypi_schedule() #Löschen von wittyPi Startup / Shutdown
             return True
         else:
             logger.debug('WittyPi is not installed - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
