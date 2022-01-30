@@ -99,8 +99,8 @@ echo "Install required modules after v1.3.7 used for WittyPi..."
 pip3 install --upgrade smbus2 pytz adafruit-circuitpython-gps
 
 echo "Install required modules after v1.3.7 used for PA1010D..."
-pip3 install --upgrade adafruit-circuitpython-gps pa1010d
-
+pip3 install --upgrade pynmea2
+#pip3 install --upgrade pa1010d
 echo "Finished installing modules"
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
