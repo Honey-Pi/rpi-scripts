@@ -16,6 +16,10 @@ loggername='HoneyPi.gps' #+ inspect.getfile(inspect.currentframe())
 logger = logging.getLogger(loggername)
 
 gps = PA1010D()
+# Turn off everything
+gps.send_command(b'PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
+# Turn on the basic GGA, RMC and VTG info (what you typically want)
+gps.send_command(b'PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
 
 timeout=30
 waitforfix=True
@@ -32,6 +36,7 @@ def get_gps_timestamp():
         try:
             gpsfix = gps.update(nema_type, timeout, waitforfix) 
         except TimeoutError:
+            logger.error("Could not get GPS time within " + str(timeout) + " seconds!")
             pass
         if gpsfix:
             UTCtime = gps.datetimestamp
@@ -47,35 +52,22 @@ def get_gps_location():
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     nema_type="GGA"
     
-    timestamp = None
     longitude = None
-    lon_dir = None
     latitude = None
-    lat_dir = None
     altitude = None
-    geoid_sep = None
-    geoid_alt = None
-    num_sats = None
-    gps_qual = None
     
     try:
         gpsfix = False
         try:
             gpsfix = gps.update(nema_type, timeout, waitforfix) 
         except TimeoutError:
+            logger.error("Could not get GPS location within " + str(timeout) + " seconds!")
             pass
         if gpsfix:
-            timestamp = gps.timestamp
             longitude = gps.longitude
-            lon_dir = gps.lon_dir
             latitude = gps.latitude
-            lat_dir = gps.lat_dir
             altitude = gps.altitude
-            geoid_sep = gps.geo_sep
-            geoid_alt =(float(gps.altitude) + -float(gps.geo_sep))
-            num_sats = gps.num_sats
-            gps_qual = gps.gps_qual
-            logger.debug(f""" Time: {timestamp} Longitude: {longitude: .5f} {lon_dir} Latitude: {latitude: .5f} {lat_dir} Altitude: {altitude} Geoid_Sep: {geoid_sep} Geoid_Alt: {geoid_alt: .5f} Used Sats: {num_sats} Quality: {gps_qual}""")
+            logger.debug(f""" Longitude: {longitude: .5f} Latitude: {latitude: .5f} Altitude: {altitude}""")
     except Exception as ex:
         logger.exception("Exception " + str(ex))
     return longitude, latitude, altitude
