@@ -165,7 +165,10 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
     # ThingSpeak fields
     # Create returned dict if ts-field is defined
     fields = {}
+    i2c_addr = "0x76" # default value
     try:
+        if 'i2c_addr' in ts_sensor and ts_sensor["i2c_addr"] is not None:
+                i2c_addr = ts_sensor["i2c_addr"]
         if sensor is not None:
             gas_baseline
             start_time = time.time()
