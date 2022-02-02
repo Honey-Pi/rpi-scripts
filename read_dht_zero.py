@@ -5,14 +5,23 @@
 
 # This file is deprecated and not used because the Adafruit_DHT does not work with Raspberry Pi OS. (see: https://stackoverflow.com/a/66007330/6696623)
 
-# Because of comapbility issues (as mentioned here: https://github.com/adafruit/Adafruit_CircuitPython_DHT/issues/73 ) this file is still used if you are running HoneyPi on a Raspberry Zero.
+# Because of comapbility issues (as mentioned here: https://github.com/adafruit/Adaf    ruit_CircuitPython_DHT/issues/73 ) this file is still used if you are running HoneyPi on a Raspberry Zero.
 
-import Adafruit_DHT
 import os
 import logging
+logger = logging.getLogger('HoneyPi.read_dht_zero')
+
+try:
+    import Adafruit_DHT
+except ImportError as ex:
+    logger.exception(" ImportError while importing Adafruit_DHT " + str(ex))
+    def measure_dht_zero(ts_sensor):
+        logger.critical("Adafruit_DHT missing" + str(ex))
+        return {}
+
 os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
 
-logger = logging.getLogger('HoneyPi.read_dht_zero')
+
 
 def measure_dht_zero(ts_sensor):
     fields = {}
