@@ -52,12 +52,18 @@ def oled():
     return
 
 def timesync(settings, wittypi_status):
-    ntptimediff=sync_time_ntp()
-    if abs(int(float(ntptimediff.replace("s","")))) >= 60:
-        logger.critical('Time syncronized to NTP - diff: ' + ntptimediff + ' was more than 60seconds')
-        set_wittypi_rtc(settings, wittypi_status)
-    else:
-        logger.info('Time syncronized to NTP - diff: ' + ntptimediff)
+    try:
+        strntptimediff=sync_time_ntp()
+        ntptimediff = 0
+        ntptimediff= abs(int(float(strntptimediff.replace("s",""))))
+        if ntptimediff >= 60:
+            logger.critical('Time syncronized to NTP - diff: ' + ntptimediff + ' was more than 60seconds')
+            set_wittypi_rtc(settings, wittypi_status)
+        else:
+            logger.info('Time syncronized to NTP - diff: ' + strntptimediff)
+    except Exception as ex:
+        logger.exception("Exception in timesync" + str(ex))
+    return False
 
 def gpstimesync(gpsSensor, blank=None):
     try:
@@ -279,7 +285,8 @@ def main():
         #if settings['display']['enabled']:
         #    tOLed.join()
 
-        tgpstimesync.join(timeout=20)
+        if len(gpsSensors) >= 1:
+            tgpstimesync.join(timeout=20)
 
         if settings["offline"] != 3:
             ttimesync.join(timeout=20)
