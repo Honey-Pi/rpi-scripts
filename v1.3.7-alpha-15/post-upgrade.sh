@@ -99,7 +99,7 @@ echo "Install required modules after v1.3.7 used for WittyPi..."
 pip3 install --upgrade smbus2 pytz adafruit-circuitpython-gps
 
 echo "Install required modules after v1.3.7 used for PA1010D..."
-pip3 install --upgrade pynmea2
+pip3 install --upgrade pynmea2 timezonefinder
 #pip3 install --upgrade pa1010d
 echo "Finished installing modules"
 
