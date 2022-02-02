@@ -22,12 +22,13 @@ from read_pcf8591 import get_raw_voltage
 from read_bme680 import initBME680FromMain, burn_in_bme680, burn_in_time
 from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature, checkIfSensorExistsInArray
 from read_hx711 import init_hx711
+from read_gps import init_gps
 
-from read_aht10 import measure_aht10
-from read_sht31 import measure_sht31
-from read_sht25 import measure_sht25
-from read_hdc1008 import measure_hdc1008
-from read_bh1750 import measure_bh1750
+#from read_aht10 import measure_aht10
+#from read_sht31 import measure_sht31
+#from read_sht25 import measure_sht25
+#from read_hdc1008 import measure_hdc1008
+#from read_bh1750 import measure_bh1750
 
 from read_settings import get_settings, get_sensors
 from utilities import reboot, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led, check_undervoltage, thingspeak_datetime
@@ -54,11 +55,11 @@ def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug, ts
     except Exception as ex:
         logger.exception("Exception during manage_transfer_to_ts")
 
-def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
     measurementIsRunning.value = 1 # set flag
     ts_fields = {}
     try:
-        ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits)
+        ts_fields, bme680Inits = measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits)
         if len(ts_fields) > 0:
             ts_datetime=thingspeak_datetime()
             if offline == 1 or offline == 3:
@@ -204,6 +205,7 @@ def start_measurement(measurement_stop):
             measurement_stop.set()
 
         # read configured sensors from settings.json
+        gpsSensors = get_sensors(settings, 99)
         ds18b20Sensors = get_sensors(settings, 0)
         bme680Sensors = get_sensors(settings, 1)
         weightSensors = get_sensors(settings, 2)
@@ -233,6 +235,10 @@ def start_measurement(measurement_stop):
                 gas_baseline = None
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
+
+        # if GPS PA1010D is configured
+        for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
+            init_gps(gpsSensor)
 
         # if hx711 is set
         hxInits = []
@@ -281,7 +287,7 @@ def start_measurement(measurement_stop):
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
-                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join()
 

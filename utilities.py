@@ -11,6 +11,7 @@ import time
 from datetime import datetime
 import urllib.request
 import json
+import inspect
 import logging
 import RPi.GPIO as GPIO
 from pathlib import Path
@@ -19,7 +20,9 @@ from wittypi.wittypi import *
 
 import subprocess
 import re
-logger = logging.getLogger('HoneyPi.utilities')
+from timezonefinder import TimezoneFinder
+loggername='HoneyPi.utilities'
+logger = logging.getLogger(loggername)
 
 homeFolder = '/home/pi'
 honeypiFolder = homeFolder + '/HoneyPi'
@@ -29,6 +32,20 @@ settingsFile = backendFolder + '/settings.json'
 wittypi_scheduleFileName = "/schedule.wpi"
 wittypi_scheduleFile = backendFolder + wittypi_scheduleFileName
 logfile = scriptsFolder + '/error.log'
+
+def set_timezonefromcoordinates(latitude, longitude):
+    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+    try:
+        assert (latitude != None)
+        assert (longitude != None)
+        tf = TimezoneFinder()
+        strtimezone = tf.timezone_at(lng=longitude, lat=latitude)
+        logger.info("Set timezone to '" + strtimezone + "' based on latitude: " + str(latitude) + " longitude: " + str(longitude))
+        os.system(f"sudo timedatectl set-timezone {strtimezone}")
+    except AssertionError as ex:
+        logger.error("Invalid Coordinates, could not set timezone!")
+    except Exception as ex:
+        logger.exception("Exception " + str(ex))
 
 def offlinedata_prepare(ts_channels):
     try:
@@ -613,6 +630,9 @@ def clean_fields(ts_fields, countChannels, debug):
     ts_fields_cleaned = {}
     fieldNew = {};
     for field in ts_fields:
+        if field in ('latitude', 'longitude', 'elevation', 'created_at'):
+            ts_fields_cleaned[field]=ts_fields[field]
+            continue
         fieldNumber = int(field.replace('field',''))
         fieldNumberNew = fieldNumber - (8 * countChannels)
         if fieldNumberNew <= 8 and fieldNumberNew > 0 :

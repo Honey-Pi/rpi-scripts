@@ -26,6 +26,7 @@ from read_sht25 import measure_sht25
 from read_hdc1008 import measure_hdc1008
 from read_bh1750 import measure_bh1750
 from read_max import measure_tc
+from read_gps import init_gps, measure_gps
 from read_settings import get_settings, get_sensors
 from utilities import logfile, start_single, stop_single, scriptsFolder, is_zero
 
@@ -33,7 +34,7 @@ import logging
 
 logger = logging.getLogger('HoneyPi.measurement')
 
-def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, hxInits):
+def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits):
 
     ts_fields = {} # dict with all fields and values which will be tranfered to ThingSpeak later
     global burn_in_time
@@ -67,6 +68,12 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                         ts_fields.update({sensor["ts_field"]: ds18b20_temperature})
         except Exception as ex:
             logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors")
+
+        # measure gps (can only be one) [type 99]
+        for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
+            gps_values = measure_gps(gpsSensor)
+            if gps_values is not None:
+                ts_fields.update(gps_values)
 
         # measure BME680 (can only be two) [type 1]
         for (sensorIndex, bme680Sensor) in enumerate(bme680Sensors):
@@ -197,6 +204,7 @@ def measurement():
         logger.info('Direct measurement started from webinterface.')
 
         # read configured sensors from settings.json
+        gpsSensors = get_sensors(settings, 99)
         ds18b20Sensors = get_sensors(settings, 0)
         bme680Sensors = get_sensors(settings, 1)
         weightSensors = get_sensors(settings, 2)
@@ -226,8 +234,11 @@ def measurement():
                 gas_baseline = None
             bme680Init['gas_baseline'] = gas_baseline
             bme680Inits.append(bme680Init)
+        # if GPS PA1010D is configured
+        for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
+            init_gps(gpsSensor)
 
-        ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, weightSensors, None)
+        ts_fields, bme680Inits = measure_all_sensors(False, None, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, None)
 
     except Exception as ex:
         logger.exception("Unhandled Exception in direct measurement")

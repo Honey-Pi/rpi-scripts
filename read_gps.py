@@ -16,10 +16,6 @@ loggername='HoneyPi.gps' #+ inspect.getfile(inspect.currentframe())
 logger = logging.getLogger(loggername)
 
 gps = PA1010D()
-# Turn off everything
-gps.send_command(b'PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
-# Turn on the basic GGA, RMC and VTG info (what you typically want)
-gps.send_command(b'PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
 
 timeout=30
 waitforfix=True
@@ -27,7 +23,26 @@ waitforfix=True
 local_tz = dt.datetime.utcnow().astimezone().tzinfo
 utc_tz = pytz.timezone('UTC')
 
-def get_gps_timestamp(): 
+def init_gps(gpsSensor):
+    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+    global gps
+    try:
+        if 'i2c_addr' in gpsSensor and gpsSensor["i2c_addr"] is not None:
+            #i2c_addr = int(i2c_addr,16)
+            i2c_addr = int(gpsSensor["i2c_addr"],0)
+        else:
+            i2c_addr = 0x10
+        logger.debug("Initializing GPS at '" + format(i2c_addr, "x") +"'")
+        gps = PA1010D(i2c_addr)
+        # Turn off everything
+        gps.send_command(b'PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
+        # Turn on the basic GGA, RMC and VTG info (what you typically want)
+        gps.send_command(b'PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
+    except Exception as ex:
+        logger.exception("Exception " + str(ex))
+
+
+def get_gps_timestamp(timeout=5): 
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     nema_type="RMC"
     UTCtime,localtime,timestamp = None, None, None
@@ -36,7 +51,7 @@ def get_gps_timestamp():
         try:
             gpsfix = gps.update(nema_type, timeout, waitforfix) 
         except TimeoutError:
-            logger.error("Could not get GPS time within " + str(timeout) + " seconds!")
+            logger.warning("Could not get GPS time within " + str(timeout) + " seconds!")
             pass
         if gpsfix:
             UTCtime = gps.datetimestamp
@@ -48,7 +63,7 @@ def get_gps_timestamp():
         logger.exception("Exception " + str(ex))
     return UTCtime,localtime,timestamp
 
-def get_gps_location(): 
+def get_gps_location(timeout=5): 
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     nema_type="GGA"
     
@@ -61,16 +76,32 @@ def get_gps_location():
         try:
             gpsfix = gps.update(nema_type, timeout, waitforfix) 
         except TimeoutError:
-            logger.error("Could not get GPS location within " + str(timeout) + " seconds!")
+            logger.warning("Could not get GPS location within " + str(timeout) + " seconds!")
             pass
         if gpsfix:
             longitude = gps.longitude
             latitude = gps.latitude
             altitude = gps.altitude
             logger.debug(f""" Longitude: {longitude: .5f} Latitude: {latitude: .5f} Altitude: {altitude}""")
+        else:
+            logger.debug("No GPS fix!")
     except Exception as ex:
         logger.exception("Exception " + str(ex))
     return longitude, latitude, altitude
+
+
+def measure_gps(gpsSensor):
+    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+    gps_values = {}
+    try:
+        if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
+            timeout = gpsSensor["timeout"]
+        logger.debug("Start measureing GPS, waiting "+ str(timeout) + " seconds for GPS fix!")
+        gps_values['longitude'], gps_values['latitude'], gps_values['elevation'] = get_gps_location(timeout)
+    except Exception as ex:
+        logger.exception("Exception " + str(ex))
+    return gps_values
+
 
 def main():
     #logger = logging.getLogger(loggername + '.' + __name__)
