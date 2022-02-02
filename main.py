@@ -12,12 +12,12 @@ from logging.handlers import RotatingFileHandler
 import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
-from read_settings import get_settings
+from read_settings import get_settings, get_sensors
 from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, check_wittypi, set_wittypi_rtc
 
 from multiprocessing import Process, Queue, Value
 from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
-
+from read_gps import init_gps, timesync_gps
 logger = logging.getLogger('HoneyPi.main')
 
 # global vars
@@ -59,6 +59,12 @@ def timesync(settings, wittypi_status):
     else:
         logger.info('Time syncronized to NTP - diff: ' + ntptimediff)
 
+def gpstimesync(gpsSensor, blank=None):
+    try:
+        timesync_gps(gpsSensor)
+    except Exception as ex:
+        logger.exception("Exception in gpstimesync" + str(ex))
+    return False
 
 def start_ap():
     global isActive, GPIO_LED, settings
@@ -230,6 +236,13 @@ def main():
 
         # check wittypi
         wittypi_status = check_wittypi(settings)
+        
+        gpsSensors = get_sensors(settings, 99)
+        for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
+            init_gps(gpsSensor)
+            tgpstimesync = threading.Thread(target=gpstimesync, args=(gpsSensor, None))
+            tgpstimesync.start()
+            break
 
 
         if settings["offline"] != 3:
@@ -265,6 +278,9 @@ def main():
 
         #if settings['display']['enabled']:
         #    tOLed.join()
+
+        tgpstimesync.join(timeout=20)
+
         if settings["offline"] != 3:
             ttimesync.join(timeout=20)
 

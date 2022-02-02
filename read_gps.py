@@ -6,9 +6,9 @@
 
 import datetime as dt
 import pytz
-
+import os
 from sensors.PA1010D import *
-
+from timezonefinder import TimezoneFinder
 import logging
 import inspect
 
@@ -89,6 +89,56 @@ def get_gps_location(timeout=5):
         logger.exception("Exception " + str(ex))
     return longitude, latitude, altitude
 
+def set_timezonefromcoordinates(latitude, longitude):
+    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+    try:
+        assert (latitude != None)
+        assert (longitude != None)
+        tf = TimezoneFinder()
+        strtimezone = tf.timezone_at(lng=longitude, lat=latitude)
+        logger.info("Set timezone to '" + strtimezone + "' based on latitude: " + str(latitude) + " longitude: " + str(longitude))
+        os.system(f"sudo timedatectl set-timezone {strtimezone}")
+    except AssertionError as ex:
+        logger.error("Invalid Coordinates, could not set timezone!")
+    except Exception as ex:
+        logger.exception("Exception " + str(ex))
+
+def timesync_gps(gpsSensor):
+    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+    try:
+        gps_values = {}
+        UTCtime,localtime,timestamp = None, None, None
+        if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
+            timeout = gpsSensor["timeout"]
+        logger.debug("Start receiving GPS location and time, waiting "+ str(timeout) + " seconds for GPS fix!")
+        longitude, latitude, altitude = get_gps_location(timeout)
+        UTCtime,localtime,timestamp = get_gps_timestamp(timeout)
+        if UTCtime is not None and localtime is not None:
+            set_timezonefromcoordinates(latitude, longitude)
+            nowUTC = dt.datetime.now(utc_tz)
+            nowLOCAL = nowUTC.astimezone(local_tz)
+            logger.info('Writing GPS time ' + localtime.strftime("%a %d %b %Y %H:%M:%S") + ' to system, old time was ' + nowLOCAL.strftime("%a %d %b %Y %H:%M:%S") + ' ...')
+            value = os.system('sudo date -u -s "' + UTCtime.strftime("%d %b %Y %H:%M:%S") + '" >>/dev/null')
+            if value == 0:
+                logger.debug('Successfully wrote GPS time to system...')
+            else:
+                logger.error('Failure writing GPS time to system...')
+    except Exception as ex:
+        logger.exception("Exception " + str(ex))
+    return False
+
+
+def measure_gps_time(gpsSensor):
+    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+    UTCtime,localtime,timestamp = None, None, None
+    try:
+        if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
+            timeout = gpsSensor["timeout"]
+        logger.debug("Start receiving GPS time, waiting "+ str(timeout) + " seconds for GPS fix!")
+        UTCtime,localtime,timestamp = get_gps_timestamp(timeout)
+    except Exception as ex:
+        logger.exception("Exception " + str(ex))
+    return UTCtime,localtime,timestamp
 
 def measure_gps(gpsSensor):
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
