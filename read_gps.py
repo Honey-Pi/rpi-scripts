@@ -27,23 +27,29 @@ utc_tz = pytz.timezone('UTC')
 def init_gps(gpsSensor):
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     global gps
+    i2c_addr = 0x10
     try:
         if 'i2c_addr' in gpsSensor and gpsSensor["i2c_addr"] is not None:
             #i2c_addr = int(i2c_addr,16)
             i2c_addr = int(gpsSensor["i2c_addr"],0)
-        else:
-            i2c_addr = 0x10
         logger.debug("Initializing GPS at '" + format(i2c_addr, "x") +"'")
         gps = PA1010D(i2c_addr)
         # Turn off everything
         gps.send_command(b'PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
         # Turn on the basic GGA, RMC and VTG info (what you typically want)
         gps.send_command(b'PMTK314,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Could not access GPS at I2C Adress " + format(i2c_addr, "x") + "!")
+        else:
+            logger.exception("IOError " + str(ex))
+        return
     except Exception as ex:
         logger.exception("Exception " + str(ex))
+    return
 
 
-def get_gps_timestamp(timeout=5): 
+def get_gps_timestamp(timeout=timeout): 
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     nema_type="RMC"
     UTCtime,localtime,timestamp = None, None, None
@@ -60,11 +66,16 @@ def get_gps_timestamp(timeout=5):
             localtime = UTCtime.astimezone(local_tz)
             timestamp = int(time.mktime(UTCtime.timetuple()))
             logger.debug("GPS time is " + str(localtime.strftime("%a %d %b %Y %H:%M:%S")) + " " + str(local_tz))
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Could not access GPS!")
+        else:
+            logger.exception("IOError " + str(ex))
     except Exception as ex:
         logger.exception("Exception " + str(ex))
     return UTCtime,localtime,timestamp
 
-def get_gps_location(timeout=5): 
+def get_gps_location(timeout=timeout): 
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     nema_type="GGA"
     
@@ -86,6 +97,11 @@ def get_gps_location(timeout=5):
             logger.debug(f""" Latitude: {latitude: .5f} Longitude: {longitude: .5f} Altitude: {altitude}""")
         else:
             logger.debug("No GPS fix!")
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Could not access GPS!")
+        else:
+            logger.exception("IOError " + str(ex))
     except Exception as ex:
         logger.exception("Exception " + str(ex))
     return latitude, longitude, altitude
@@ -103,6 +119,7 @@ def set_timezonefromcoordinates(latitude, longitude):
         logger.error("Invalid Coordinates, could not set timezone!")
     except Exception as ex:
         logger.exception("Exception " + str(ex))
+    return
 
 
 
@@ -128,7 +145,7 @@ def timesync_gps(gpsSensor):
             elif abs_timedelta_totalseconds >= 120:
                 logger.warning("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
             else:
-                logger.debug("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds (GPS timne provided by NMEA is not accurate!)")
+                logger.debug("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds (GPS time provided by NMEA is not accurate!)")
             if updatesystemtime:
                 logger.info('Writing GPS time ' + localtime.strftime("%a %d %b %Y %H:%M:%S") + ' to system, old time was ' + nowLOCAL.strftime("%a %d %b %Y %H:%M:%S") + ' ...')
                 value = os.system('sudo date -u -s "' + UTCtime.strftime("%d %b %Y %H:%M:%S") + '" >>/dev/null')
