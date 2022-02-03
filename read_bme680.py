@@ -33,10 +33,17 @@ def initBME680(ts_sensor):
             if str(ex) == "[Errno 121] Remote I/O error":
                 logger.error("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed: Most likely wrong Sensor Chip-ID or sensor not connected.")
             else:
-                logger.exception("Initializing BME680 on I2C Adress '" + i2c_addr + "' failed")
+                logger.exception("IOError: Initializing BME680 on I2C Adress '" + i2c_addr + "' failed")
             return sensor
+        except RuntimeError as ex:
+            if str(ex) == "Unable to identify BME680 at 0x76 (IOError)" or str(ex) == "Unable to identify BME680 at 0x77 (IOError)":
+                logger.error("RuntimeError: Initializing BME680 on I2C Adress '" + i2c_addr + "' failed")
+                return sensor
+            else:
+                logger.exception("RuntimeError in initBME680 during initializing of BME680 "+ str(ex))
+                return sensor
         except Exception as ex:
-            logger.exception("Unhandled Exception initBME680 during initializing of BME680")
+            logger.exception("Unhandled Exception initBME680 during initializing of BME680" + str(ex))
             return sensor
         #finally:
             #The finally block, if specified, will be executed regardless if the try block raises an error or not. So a return here ends the function!
@@ -64,7 +71,7 @@ def initBME680(ts_sensor):
             sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
         return sensor
     except Exception as ex:
-        logger.exception("Unhandled Exception in initBME680")
+        logger.exception("Unhandled Exception in initBME680" + str(ex))
     return sensor
 
 def initBME680FromMain(ts_sensor):
