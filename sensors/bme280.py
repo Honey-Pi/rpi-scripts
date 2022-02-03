@@ -158,6 +158,8 @@ def readBME280All(addr=DEVICE):
         humidity = 0
 
       return temperature/100.0,pressure/100.0,humidity
+    except IOError as ex:
+            raise IOError(str(ex))
     except Exception as ex:
             logger.exception("Exception in readBME280All")  
 

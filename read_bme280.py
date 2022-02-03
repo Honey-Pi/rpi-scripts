@@ -17,19 +17,12 @@ def measure_bme280(ts_sensor):
 
     try:
         if 'i2c_addr' in ts_sensor and ts_sensor["i2c_addr"] is not None:
-            i2c_addr_string = ts_sensor["i2c_addr"]
-
-            if i2c_addr_string == "0x76":
-                i2c_addr = 0x76
-            elif i2c_addr_string == "0x77":
-                i2c_addr = 0x77
-            else:
-                logger.warning("Undefined BME280 I2C Address '" + str(i2c_addr_string) + "'")
-
+            i2c_addr = int(ts_sensor["i2c_addr"],0)
     except Exception as ex:
         logger.error("Error getting I2C Adress, using default: '" + str(i2c_addr))
 
     try:
+        logger.debug("Reading on  I2C Adress " + format(i2c_addr, "x"))
         temperature,pressure,humidity = readBME280All(i2c_addr)
 
 
@@ -47,8 +40,13 @@ def measure_bme280(ts_sensor):
             fields[ts_sensor["ts_field_absolutehumidity"]] = absoluteHumidity
         if 'ts_field_air_pressure' in ts_sensor and isinstance(pressure, (int, float)):
             fields[ts_sensor["ts_field_air_pressure"]] = round(pressure, 1)
+    except IOError as ex:
+        if str(ex) == "[Errno 121] Remote I/O error":
+            logger.error("Could not access BME280 Sensor on I2C Adress " + format(i2c_addr, "x") + "!")
+        else:
+            logger.exception("IOError " + str(ex))
     except OSError:
-        logger.error("No BME280 Sensor connected on I2C Adress.")
+            logger.exception("OSError " + str(ex))
     except Exception as ex:
         logger.exception("Unhandled Exception in measure_bme280")
 
