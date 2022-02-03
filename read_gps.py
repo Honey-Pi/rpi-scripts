@@ -9,6 +9,7 @@ import pytz
 import os
 from sensors.PA1010D import *
 from timezonefinder import TimezoneFinder
+from utilities import get_abs_timedifference
 import logging
 import inspect
 
@@ -67,8 +68,8 @@ def get_gps_location(timeout=5):
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     nema_type="GGA"
     
-    longitude = None
     latitude = None
+    longitude = None
     altitude = None
     
     try:
@@ -79,15 +80,15 @@ def get_gps_location(timeout=5):
             logger.warning("Could not get GPS location within " + str(timeout) + " seconds!")
             pass
         if gpsfix:
-            longitude = gps.longitude
             latitude = gps.latitude
+            longitude = gps.longitude
             altitude = gps.altitude
-            logger.debug(f""" Longitude: {longitude: .5f} Latitude: {latitude: .5f} Altitude: {altitude}""")
+            logger.debug(f""" Latitude: {latitude: .5f} Longitude: {longitude: .5f} Altitude: {altitude}""")
         else:
             logger.debug("No GPS fix!")
     except Exception as ex:
         logger.exception("Exception " + str(ex))
-    return longitude, latitude, altitude
+    return latitude, longitude, altitude
 
 def set_timezonefromcoordinates(latitude, longitude):
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
@@ -103,6 +104,8 @@ def set_timezonefromcoordinates(latitude, longitude):
     except Exception as ex:
         logger.exception("Exception " + str(ex))
 
+
+
 def timesync_gps(gpsSensor):
     logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     try:
@@ -111,18 +114,28 @@ def timesync_gps(gpsSensor):
         if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
             timeout = gpsSensor["timeout"]
         logger.debug("Start receiving GPS location and time, waiting "+ str(timeout) + " seconds for GPS fix!")
-        longitude, latitude, altitude = get_gps_location(timeout)
+        latitude, longitude, altitude = get_gps_location(timeout)
+        set_timezonefromcoordinates(latitude, longitude)
         UTCtime,localtime,timestamp = get_gps_timestamp(timeout)
         if UTCtime is not None and localtime is not None:
-            set_timezonefromcoordinates(latitude, longitude)
             nowUTC = dt.datetime.now(utc_tz)
             nowLOCAL = nowUTC.astimezone(local_tz)
-            logger.info('Writing GPS time ' + localtime.strftime("%a %d %b %Y %H:%M:%S") + ' to system, old time was ' + nowLOCAL.strftime("%a %d %b %Y %H:%M:%S") + ' ...')
-            value = os.system('sudo date -u -s "' + UTCtime.strftime("%d %b %Y %H:%M:%S") + '" >>/dev/null')
-            if value == 0:
-                logger.debug('Successfully wrote GPS time to system...')
+            updatesystemtime = False
+            abs_timedelta_totalseconds = get_abs_timedifference(nowUTC, UTCtime)
+            if abs_timedelta_totalseconds >= 300:
+                logger.critical("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
+                updatesystemtime = True
+            elif abs_timedelta_totalseconds >= 120:
+                logger.warning("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
             else:
-                logger.error('Failure writing GPS time to system...')
+                logger.debug("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds (GPS timne provided by NMEA is not accurate!)")
+            if updatesystemtime:
+                logger.info('Writing GPS time ' + localtime.strftime("%a %d %b %Y %H:%M:%S") + ' to system, old time was ' + nowLOCAL.strftime("%a %d %b %Y %H:%M:%S") + ' ...')
+                value = os.system('sudo date -u -s "' + UTCtime.strftime("%d %b %Y %H:%M:%S") + '" >>/dev/null')
+                if value == 0:
+                    logger.debug('Successfully wrote GPS time to system...')
+                else:
+                    logger.error('Failure writing GPS time to system...')
     except Exception as ex:
         logger.exception("Exception " + str(ex))
     return False
@@ -147,7 +160,7 @@ def measure_gps(gpsSensor):
         if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
             timeout = gpsSensor["timeout"]
         logger.debug("Start measureing GPS, waiting "+ str(timeout) + " seconds for GPS fix!")
-        gps_values['longitude'], gps_values['latitude'], gps_values['elevation'] = get_gps_location(timeout)
+        gps_values['latitude'], gps_values['longitude'], gps_values['elevation'] = get_gps_location(timeout)
     except Exception as ex:
         logger.exception("Exception " + str(ex))
     return gps_values

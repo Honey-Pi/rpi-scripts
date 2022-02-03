@@ -723,6 +723,19 @@ def check_wittypi_schedule(settings, wittypi_status):
     except Exception as ex:
         logger.exception("Error in function check_wittypi_schedule")
 
+def get_abs_timedifference(datetime1, datetime2):
+    get_abs_timedelta_totalseconds = 0
+    try:
+                datetime1 = datetime.now(local_tz)
+                if datetime2 >= datetime1:
+                    timedelta = datetime2 - datetime1
+                else:
+                    timedelta = datetime1 - datetime2
+                abs_timedelta_totalseconds = abs(timedelta.total_seconds())
+    except Exception as ex:
+        logger.exception("Error in function get_abs_timedifference")
+    return abs_timedelta_totalseconds
+
 def check_wittypi_rtc(settings, wittypi_status):
     try:
         if wittypi_status['is_rtc_connected']:
@@ -730,16 +743,13 @@ def check_wittypi_rtc(settings, wittypi_status):
                 logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
             else:
                 timenow = datetime.now(local_tz)
-                if wittypi_status['rtc_time_local'] >= timenow:
-                    timedelta = wittypi_status['rtc_time_local'] - timenow
+                abs_timedelta_totalseconds = get_abs_timedifference(wittypi_status['rtc_time_local'], timenow)
+                if abs_timedelta_totalseconds >= 300:
+                    logger.critical("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
+                elif abs_timedelta_totalseconds >= 60:
+                    logger.warning("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
                 else:
-                    timedelta = timenow - wittypi_status['rtc_time_local']
-                if abs(timedelta.total_seconds()) >= 300:
-                    logger.critical("Difference between RTC time and sytstem time is " + str(timedelta.total_seconds()) + "seconds")
-                elif abs(timedelta.total_seconds()) >= 60:
-                    logger.warning("Difference between RTC time and sytstem time is " + str(timedelta.total_seconds()) + "seconds")
-                else:
-                    logger.debug("Difference between RTC time and sytstem time is " + str(timedelta.total_seconds()) + "seconds")
+                    logger.debug("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
             if wittypi_status['startup_time_local'] is not None:
                 logger.debug("HoneyPi next scheduled wakeup is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
             if wittypi_status['shutdown_time_local'] is not None:
