@@ -14,7 +14,7 @@ logger = logging.getLogger('HoneyPi.read_dht_zero')
 try:
     import Adafruit_DHT
 except ImportError as ex:
-    logger.exception(" ImportError while importing Adafruit_DHT " + str(ex))
+    logger.exception("ImportError while importing Adafruit_DHT " + str(ex))
     def measure_dht_zero(ts_sensor):
         logger.critical("Adafruit_DHT missing" + str(ex))
         return {}
