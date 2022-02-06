@@ -70,8 +70,8 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             logger.exception("Unhandled Exception in measure_all_sensors / ds18b20Sensors")
 
         # measure gps (can only be one) [type 99]
-        for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
-            gps_values = measure_gps(gpsSensor)
+        if gpsSensors and len(gpsSensors) == 1:
+            gps_values = measure_gps(gpsSensors[0])
             if gps_values is not None:
                 ts_fields.update(gps_values)
 
@@ -136,7 +136,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             aht10_fields = measure_aht10(sensor)
             if aht10_fields is not None:
                 ts_fields.update(aht10_fields)
-                
+
         # measure bh1750 (can only be one) [type 11]
         if bh1750Sensors and len(bh1750Sensors) == 1:
             bh1750_fields = measure_bh1750(bh1750Sensors[0])
