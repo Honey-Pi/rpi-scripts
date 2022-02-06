@@ -24,12 +24,6 @@ from read_ds18b20 import read_unfiltered_temperatur_values, filtered_temperature
 from read_hx711 import init_hx711
 from read_gps import init_gps
 
-#from read_aht10 import measure_aht10
-#from read_sht31 import measure_sht31
-#from read_sht25 import measure_sht25
-#from read_hdc1008 import measure_hdc1008
-#from read_bh1750 import measure_bh1750
-
 from read_settings import get_settings, get_sensors
 from utilities import reboot, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led, check_undervoltage, thingspeak_datetime
 from write_csv import write_csv
@@ -172,7 +166,7 @@ def start_measurement(measurement_stop):
         start_time = time.time()
 
         # load settings
-        
+
         ts_channels = settings["ts_channels"] # ThingSpeak data (ts_channel_id, ts_write_key)
         ts_server_url = settings["ts_server_url"]
         debuglevel = settings["debuglevel"]

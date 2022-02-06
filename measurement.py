@@ -86,7 +86,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
                 bme680Init['gas_baseline'] = gas_baseline
                 bme680Inits[sensorIndex]=bme680Init
 
-        # measure every sensor with type 3 [DHT11/DHT22]
+        # measure every sensor with type 3 [DHT11/DHT22/AM2302]
         for (i, sensor) in enumerate(dhtSensors):
             if is_zero():
                 tempAndHum = measure_dht_zero(sensor)
@@ -119,7 +119,7 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             if ee895_values is not None:
                 ts_fields.update(ee895_values)
 
-        # measure every hdc1008 sensor [type 8]
+        # measure every HDC1080/HDC2080 sensor [type 8]
         for (i, sensor) in enumerate(hdc1008Sensors):
             hdc1008_fields = measure_hdc1008(sensor)
             if hdc1008_fields is not None:
