@@ -19,8 +19,7 @@ reconnect_modem () {
     if [ -n "$(/bin/ping -q -W$TIMEOUT -c4 $PINGip | grep '0 received')" ]; then
         echo ">>> $PINGip is not reachable. => Reconnecing device $VENDOR:$PRODUCT"
         for DIR in $(find /sys/bus/usb/devices/ -maxdepth 1 -type l); do
-            if [[ -f $DIR/idVendor && -f $DIR/idProduct &&
-                        $(cat $DIR/idVendor) == $VENDOR && $(cat $DIR/idProduct) == $PRODUCT ]]; then
+            if [[ -f $DIR/idVendor && -f $DIR/idProduct && $(cat $DIR/idVendor) == $VENDOR && $(cat $DIR/idProduct) == $PRODUCT ]]; then
                 echo 0 > $DIR/authorized
                 sleep 0.5
                 echo 1 > $DIR/authorized
@@ -39,10 +38,10 @@ kill_old_wvdial () {
     # Kill a old wvdial process if ppp0 does not show up anymore
     pppExists=$(ip link show ppp0 | grep -c UP)
     if [ $pppExists != "1" ]; then
-            time_stopped=`date +%s`
-            time_running=$((time_stopped-time_started))
-            echo ">>> ppp0 does not show up => Clean old processes. Runtime was $time_running seconds"
-            killall wvdial
+        time_stopped=`date +%s`
+        time_running=$((time_stopped-time_started))
+        echo ">>> ppp0 does not show up => Clean old processes. Runtime was $time_running seconds"
+        killall wvdial
     fi
 }
 
@@ -51,28 +50,28 @@ start_wvdial () {
     if ls -la /dev/$ttyUSB 2>/dev/null; then
         # Check if wvdial process is running
         if ! ps -C wvdial
-                then
-                        echo ">>> No wvdial process running... Start WvDial to connect modem to internet."
-                        wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
-                        time_started=`date +%s`
-                fi
+            then
+                echo ">>> No wvdial process running... Start WvDial to connect modem to internet."
+                wvdial >> /home/pi/HoneyPi/rpi-scripts/wvdial.log 2>&1&
+                time_started=`date +%s`
+            fi
     fi
 }
 
 # main routine
 run () {
-        while true; do
-            # Run usb_modewitch rule for specific surfsticks
-            connect_modems
-            # Check if wvdial process is running
-            start_wvdial
+    while true; do
+        # Run usb_modewitch rule for specific surfsticks
+        connect_modems
+        # Check if wvdial process is running
+        start_wvdial
         sleep 180
-            # Kill a old wvdial process if ppp0 does not show up anymore
+        # Kill a old wvdial process if ppp0 does not show up anymore
         kill_old_wvdial
         sleep 5
-            reconnect_modem "12d1" "14dc"
-            reconnect_modem "12d1" "1506"
-        done
+        reconnect_modem "12d1" "14dc"
+        reconnect_modem "12d1" "1506"
+    done
 }
 if [ "$1" = "run" ] ; then
     if [ -f /var/run/connection.pid ] ; then
