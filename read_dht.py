@@ -59,24 +59,32 @@ def measure_dht(ts_sensor):
                 dht = adafruit_dht.DHT11(SENSOR_PIN, use_pulseio=True)
             else:
                 dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
-            logger.debug('Measuring temperature (try: '+ str(timer)+')')
-            temperature = dht.temperature
-            logger.debug('Measuring humidity (try: '+ str(timer)+')')
-            humidity = dht.humidity
-            logger.debug('Finished measuring, closing sensor...')
-            dht.exit()
-            logger.debug('Finidsed closing sensor...')
-            break # break while if no Exception occured
         except RuntimeError as error:
             # Errors happen fairly often, DHT's are hard to read, just keep going
             errorMessage = "Failed reading DHT: " + error.args[0]
             logger.debug(errorMessage)
             time.sleep(1)
             timer = timer + 1
-            dht.exit()
         except NameError as ex:
             logger.error("NameError reading DHT " + str(ex))
             return fields
+        else:
+            try:
+                logger.debug('Measuring temperature (try: '+ str(timer)+')')
+                temperature = dht.temperature
+                logger.debug('Measuring humidity (try: '+ str(timer)+')')
+                humidity = dht.humidity
+                logger.debug('Finished measuring, closing sensor...')
+                dht.exit()
+                logger.debug('Finished closing sensor...')
+                break # break while if no Exception occured
+            except RuntimeError as error:
+                # Errors happen fairly often, DHT's are hard to read, just keep going
+                errorMessage = "Failed reading DHT: " + error.args[0]
+                logger.debug(errorMessage)
+                time.sleep(1)
+                timer = timer + 1
+                dht.exit()
         
     if timer > 8: # end reached
         logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(pin) + ". " + errorMessage)
