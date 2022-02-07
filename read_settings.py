@@ -304,29 +304,44 @@ def validate_settings(settings):
         settings["enable_reset"] = get_defaults()["enable_reset"]
     try:
         settings['wittyPi']["dummyload"]
+        if settings['wittyPi']["dummyload"] == None:
+            updateSettingsFile = True
+            settings['wittyPi']["dummyload"] = get_defaults()['wittyPi']["dummyload"]
     except:
         updateSettingsFile = True
         settings['wittyPi']["dummyload"] = get_defaults()['wittyPi']["dummyload"]
     try:
         settings['wittyPi']['default_state']
+        if settings['wittyPi']['default_state'] == None:
+            updateSettingsFile = True
+            settings['wittyPi']['default_state'] = get_defaults()['wittyPi']['default_state']
     except:
         updateSettingsFile = True
         settings['wittyPi']['default_state'] = get_defaults()['wittyPi']['default_state']
     try:
         settings['wittyPi']['power_cut_delay']
+        if settings['wittyPi']['power_cut_delay'] == None:
+            updateSettingsFile = True
+            settings['wittyPi']['power_cut_delay'] = get_defaults()['wittyPi']['power_cut_delay']
     except:
         updateSettingsFile = True
         settings['wittyPi']['power_cut_delay'] = get_defaults()['wittyPi']['power_cut_delay']
     try:
         settings['wittyPi']['pulsing_interval']
+        if settings['wittyPi']['pulsing_interval'] == None:
+            updateSettingsFile = True
+            settings['wittyPi']['pulsing_interval'] = get_defaults()['wittyPi']['pulsing_interval']
     except:
         updateSettingsFile = True
         settings['wittyPi']['pulsing_interval'] = get_defaults()['wittyPi']['pulsing_interval']
     try:
         settings['wittyPi']['white_led_duration']
+        if settings['wittyPi']['white_led_duration'] == None:
+            updateSettingsFile = True
+            settings['wittyPi']['white_led_duration'] = get_defaults()['wittyPi']['white_led_duration']
     except:
-        settings['wittyPi']['white_led_duration'] = get_defaults()['wittyPi']['white_led_duration']
         updateSettingsFile = True
+        settings['wittyPi']['white_led_duration'] = get_defaults()['wittyPi']['white_led_duration']
 
     if updateSettingsFile:
         logger.warning("Settings have been changed because of version migration.")

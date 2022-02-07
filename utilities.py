@@ -706,9 +706,9 @@ def check_wittypi_schedule(settings, wittypi_status):
                             logger.warning("WittyPi " + schedule + " 'schutdown after transfer' is not enabled!")
                 else:
                     if settings['wittyPi'][schedule]['interval']==1:
-                        logger.critical("WittyPi " + schedule + " not enabled but Interval is not set to 'single measurement'!")
-                        if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
-                            logger.critical("WittyPi " + schedule + " 'schutdown after transfer' is enabled but WittyPi is not enabled!")
+                        logger.critical("WittyPi is not enabled in '" + schedule + "' but Interval is set to 'single measurement'!")
+                    if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
+                        logger.critical("WittyPi is not enabled in '" + schedule + "' but 'schutdown after transfer' is enabled!")
                     print(schedule)
                     #Nothing
 
