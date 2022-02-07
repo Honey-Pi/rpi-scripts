@@ -14,12 +14,12 @@ try:
     import adafruit_dht
     
 except ImportError as ex:
-    logger.exception("ImportError while importing Adafruit_DHT " + str(ex))
+    logger.error("ImportError while importing Adafruit_DHT " + str(ex))
 try:
     #import board
     import digitalio
 except ImportError as ex:
-    logger.exception("ImportError while importing digitalio " + str(ex))
+    logger.error("ImportError while importing digitalio " + str(ex))
 
 def measure_dht(ts_sensor):
     fields = {}
