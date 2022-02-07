@@ -14,10 +14,7 @@ logger = logging.getLogger('HoneyPi.read_dht_zero')
 try:
     import Adafruit_DHT
 except ImportError as ex:
-    logger.exception("ImportError while importing Adafruit_DHT " + str(ex))
-    def measure_dht_zero(ts_sensor):
-        logger.critical("Adafruit_DHT missing" + str(ex))
-        return {}
+    logger.error("ImportError while importing Adafruit_DHT " + str(ex))
 
 os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
 
@@ -25,34 +22,106 @@ os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
 
 def measure_dht_zero(ts_sensor):
     fields = {}
-
-    try:
-        pin = int(ts_sensor["pin"])
+    timer = 1
+    errorMessage = ""
+    dht_type= 0
+    pin = 0
+    temperature = None
+    humidity = None
+    if 'dht_type' in ts_sensor and dht_type is not None:
         dht_type = int(ts_sensor["dht_type"])
-
-        # setup sensor
-        if dht_type == 2302:
-            sensorDHT = Adafruit_DHT.AM2302
-        elif dht_type == 11:
-            sensorDHT = Adafruit_DHT.DHT11
+    else:
+        logger.warning("DHT type not defined, using DHT22")
+        dht_type = 22
+    if 'pin' in ts_sensor and pin is not None:
+        pin = int(ts_sensor["pin"])
+    else:
+        logger.error("DHT PIN not defined!")
+        return fields
+    while timer <= 8:
+        try:
+            # setup sensor
+            if dht_type == 2302:
+                sensorDHT = Adafruit_DHT.AM2302
+            elif dht_type == 11:
+                sensorDHT = Adafruit_DHT.DHT11
+            else:
+                sensorDHT = Adafruit_DHT.DHT22
+        except RuntimeError as error:
+            # Errors happen fairly often, DHT's are hard to read, just keep going
+            errorMessage = "Failed reading DHT: " + error.args[0]
+            logger.debug(errorMessage)
+            time.sleep(1)
+            timer = timer + 1
+        except NameError as ex:
+            logger.error("NameError reading DHT " + str(ex))
+            return fields
         else:
-            sensorDHT = Adafruit_DHT.DHT22
+            try:
+                logger.debug('Measuring temperature (try: '+ str(timer)+')')
+                humidity, temperature = Adafruit_DHT.read_retry(sensorDHT, pin)
+                logger.debug('Finished measuring, closing sensor...')
+                break # break while if no Exception occured
+            except RuntimeError as error:
+                # Errors happen fairly often, DHT's are hard to read, just keep going
+                errorMessage = "Failed reading DHT: " + error.args[0]
+                logger.debug(errorMessage)
+                time.sleep(1)
+                timer = timer + 1
+            except ImportError as ex:
+                logger.error("ImportError while measuring Adafruit_DHT " + str(ex))
+                break
 
-    except Exception as ex1:
-        logger.error("DHT missing param: " + repr(ex1))
-
-    try:
-        humidity, temperature = Adafruit_DHT.read_retry(sensorDHT, pin)
-
-        # Create returned dict if ts-field is defined
-        if 'ts_field_temperature' in ts_sensor and temperature is not None:
-            if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
-                temperature = temperature-float(ts_sensor["offset"])
-            fields[ts_sensor["ts_field_temperature"]] = round(temperature, 1)
-        if 'ts_field_humidity' in ts_sensor and humidity is not None:
-            fields[ts_sensor["ts_field_humidity"]] = round(humidity, 1)
-
-    except Exception as ex:
-        logger.exception("Reading DHT (running on Raspi Zero) failed. DHT: " + str(dht_type) + " " + str(sensorDHT) + ", GPIO: " + str(pin))
-
+    if timer > 8: # end reached
+        logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(pin) + ". " + errorMessage)
+        return fields
+    # Create returned dict if ts-field is defined
+    if 'ts_field_temperature' in ts_sensor and temperature is not None:
+        if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
+            temperature = temperature-float(ts_sensor["offset"])
+        fields[ts_sensor["ts_field_temperature"]] = round(temperature, 1)
+    if 'ts_field_humidity' in ts_sensor and humidity is not None:
+        fields[ts_sensor["ts_field_humidity"]] = round(humidity, 1)
     return fields
+
+
+# For testing you can call this script directly (python3 read_dht_zero.py)
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.DEBUG)
+    try:
+
+
+        fields = measure_dht_zero ({"dht_type" : 2302, "pin" : 5, 'ts_field_temperature': "temperature", 'ts_field_humidity': "humidity"})
+        if fields != {}:
+            print("Temp: {:.1f} F / {:.1f} °C    Humidity: {}% ".format(fields['temperature']* (9 / 5) + 32, fields['temperature'], fields['humidity']))
+        """SENSOR_PIN = digitalio.Pin(5) # change GPIO pin
+        dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
+
+        timer = 0
+        while timer <= 10:
+            try:
+                temperature = dht.temperature
+                temperature_f = temperature * (9 / 5) + 32
+                humidity = dht.humidity
+                dht.exit()
+
+                print("Temp: {:.1f} F / {:.1f} °C    Humidity: {}% ".format(temperature_f, temperature, humidity))
+
+                break # break while if it worked
+            except RuntimeError as error:
+                # Errors happen fairly often, DHT's are hard to read, just keep going
+                print(error.args[0])
+                time.sleep(2.0)
+                timer = timer + 2
+
+            if timer > 10: # end reached
+                print("Loop finished. Error.")"""
+
+    except (KeyboardInterrupt, SystemExit):
+       pass
+
+    except RuntimeError as error:
+        logger.error("RuntimeError in DHT measurement: " + error.args[0])
+
+    except Exception as e:
+       logger.exception("Unhandled Exception in DHT measurement")
