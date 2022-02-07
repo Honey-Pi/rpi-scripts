@@ -12,7 +12,7 @@ import time
 
 try:
     import adafruit_dht
-    
+
 except ImportError as ex:
     logger.error("ImportError while importing Adafruit_DHT " + str(ex))
 try:
@@ -85,7 +85,7 @@ def measure_dht(ts_sensor):
                 time.sleep(1)
                 timer = timer + 1
                 dht.exit()
-        
+
     if timer > 8: # end reached
         logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(pin) + ". " + errorMessage)
         return fields
@@ -107,28 +107,6 @@ if __name__ == '__main__':
         fields = measure_dht ({"dht_type" : 2302, "pin" : 5, 'ts_field_temperature': "temperature", 'ts_field_humidity': "humidity"})
         if fields != {}:
             print("Temp: {:.1f} F / {:.1f} °C    Humidity: {}% ".format(fields['temperature']* (9 / 5) + 32, fields['temperature'], fields['humidity']))
-        """SENSOR_PIN = digitalio.Pin(5) # change GPIO pin
-        dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
-
-        timer = 0
-        while timer <= 10:
-            try:
-                temperature = dht.temperature
-                temperature_f = temperature * (9 / 5) + 32
-                humidity = dht.humidity
-                dht.exit()
-
-                print("Temp: {:.1f} F / {:.1f} °C    Humidity: {}% ".format(temperature_f, temperature, humidity))
-
-                break # break while if it worked
-            except RuntimeError as error:
-                # Errors happen fairly often, DHT's are hard to read, just keep going
-                print(error.args[0])
-                time.sleep(2.0)
-                timer = timer + 2
-
-            if timer > 10: # end reached
-                print("Loop finished. Error.")"""
 
     except (KeyboardInterrupt, SystemExit):
        pass
