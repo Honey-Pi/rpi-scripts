@@ -96,7 +96,7 @@ echo "Install required modules after v1.3.7 used for rak811..."
 pip3 install --upgrade rak811
 
 echo "Install required modules after v1.3.7 used for WittyPi..."
-pip3 install --upgrade smbus2 pytz adafruit-circuitpython-gps
+pip3 install --upgrade smbus2 pytz
 
 echo "Install required modules after v1.3.7 used for PA1010D..."
 pip3 install --upgrade pynmea2 timezonefinder
