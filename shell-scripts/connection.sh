@@ -3,7 +3,7 @@
 
 if [ -z "$1" ] ; then
 	echo "Error: Missing argument mode (run,start,stop,set-apn)."
-    exit 1
+	exit 1
 fi
 
 # global variables
@@ -107,26 +107,26 @@ elif [ "$1" = "stop" ] ; then
 		rm /var/run/connection.pid
 	fi
 elif [ "$1" = "set-apn" ] ; then
-    if [ -z "$2" ] ; then
-    	echo "Warning: Missing argument APN."
-        APN="pinternet.interkom.de" # default: NetzClub
-    else
-        APN="$2"
-    fi
+	if [ -z "$2" ] ; then
+		echo "Warning: Missing argument APN."
+		APN="pinternet.interkom.de" # default: NetzClub
+	else
+		APN="$2"
+	fi
 
 	if [ -z "$3" ] ; then
-    	echo "Warning: Missing argument ttyUSB."
-        ttyUSB="ttyUSB0" # default: ttyUSB0
-    else
-        ttyUSB="$3"
-    fi
+		echo "Warning: Missing argument ttyUSB."
+		ttyUSB="ttyUSB0" # default: ttyUSB0
+	else
+		ttyUSB="$3"
+	fi
 
-    export APN && export ttyUSB
-    # Create the config for wvdial
-    cat /etc/wvdial.conf.tmpl | envsubst > /etc/wvdial.conf
+	export APN && export ttyUSB
+	# Create the config for wvdial
+	cat /etc/wvdial.conf.tmpl | envsubst > /etc/wvdial.conf
 else
-    echo "Error: Unknown argument."
-    exit 1
+	echo "Error: Unknown argument."
+	exit 1
 fi
 
 exit 0
