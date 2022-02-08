@@ -33,6 +33,8 @@ def diag():
         os.system("sudo ls -la /dev/ttyUSB* >> /tmp/diag.txt")
         os.system("echo '\n\nlog entris in /var/log/messages for usb_modeswitch | modem | pppd | PPP | ppp0 | ttyUSB0 | wvdial:\n' >> /tmp/diag.txt")
         os.system("sudo grep -a -B 2 -A 2 'usb_modeswitch\|modem\|pppd\|PPP\|ppp0\|ttyUSB0\|wvdial' /var/log/messages >> /tmp/diag.txt")
+        os.system("echo '\n\WittyPi*:\n' >> /tmp/diag.txt")
+        os.system("sudo python3 /home/pi/HoneyPi/rpi-scripts/wittypi/wittypi.py>> /tmp/diag.txt")
 
         with io.open("/tmp/diag.txt", encoding="utf-8") as data_file:
             diag = data_file.read()
