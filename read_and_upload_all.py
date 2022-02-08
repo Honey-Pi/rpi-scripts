@@ -283,7 +283,10 @@ def start_measurement(measurement_stop):
                     q = Queue()
                     p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
-                    p.join()
+                    p.join(timeout=interval)
+                    if p.is_alive():
+                        logger.warning("Measurement is still not finished!")
+
 
                 else:
                     logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")

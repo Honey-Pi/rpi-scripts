@@ -61,6 +61,9 @@ def timesync(settings, wittypi_status):
             set_wittypi_rtc(settings, wittypi_status)
         else:
             logger.info('Time syncronized to NTP - diff: ' + strntptimediff)
+    except ValueError as ex:
+        if str(ex) == "could not convert string to float":
+            logger.error('Time syncronisation did not return the time difference')
     except Exception as ex:
         logger.exception("Exception in timesync" + str(ex))
     return False
@@ -77,7 +80,7 @@ def start_ap():
     start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
-    t1.join()
+    t1.join(timeout=30)
     isActive = 1 # measurement shall start next time
     logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
     superglobal.isMaintenanceActive=True
@@ -92,7 +95,7 @@ def stop_ap():
     stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode)
     t2.start()
-    t2.join()
+    t2.join(timeout=30)
     isActive = 0 # measurement shall stop next time
     superglobal.isMaintenanceActive=False
     #isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
@@ -305,9 +308,13 @@ def main():
 
         if len(gpsSensors) >= 1:
             tgpstimesync.join(timeout=20)
+            if tgpstimesync.is_alive():
+                logger.warning("Thread to syncronize time with GPS is still not finished!")
 
         if settings["offline"] != 3:
             ttimesync.join(timeout=20)
+            if ttimesync.is_alive():
+                logger.warning("Thread to syncronize time with NTP Server is still not finished!")
 
         # start as seperate background thread
         # because Taster pressing was not recognised

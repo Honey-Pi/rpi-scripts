@@ -92,9 +92,10 @@ def get_settings():
             if str(getgrgid(os.stat(settingsFile).st_gid).gr_name) != "www-data":
                 os.system("sudo chgrp www-data " + str(settingsFile))
 
-        if os.path.exists(logfile):
+        #Already handeled in main
+        """if os.path.exists(logfile):
             if str(getpwuid(os.stat(settingsFile).st_uid).pw_name) != "pi":
-                os.system("sudo chown -R pi:pi " + str(logfile))
+                os.system("sudo chown -R pi:pi " + str(logfile))"""
 
         if os.path.exists(wittypi_scheduleFile):
             if str(getpwuid(os.stat(wittypi_scheduleFile).st_uid).pw_name) != "www-data":
