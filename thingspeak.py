@@ -1,6 +1,6 @@
 import requests
 from utilities import wait_for_internet_connection, clean_fields, get_default_gateway_interface_linux, get_ip_address
-import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
+#import thingspeak # Source: https://github.com/mchwalisz/thingspeak/
 import logging
 import struct
 import math
