@@ -767,13 +767,13 @@ def check_wittypi_rtc(settings, wittypi_status):
                 logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
             else:
                 timenow = datetime.now(local_tz)
-                abs_timedelta_totalseconds = get_abs_timedifference(wittypi_status['rtc_time_local'], timenow)
+                abs_timedelta_totalseconds = round(get_abs_timedifference(wittypi_status['rtc_time_local'], timenow))
                 if abs_timedelta_totalseconds >= 300:
-                    logger.critical("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
+                    logger.critical("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
                 elif abs_timedelta_totalseconds >= 60:
-                    logger.warning("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
+                    logger.warning("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
                 else:
-                    logger.debug("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
+                    logger.debug("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
             if wittypi_status['startup_time_local'] is not None:
                 logger.debug("HoneyPi next scheduled wakeup is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
             if wittypi_status['shutdown_time_local'] is not None:

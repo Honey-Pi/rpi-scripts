@@ -138,14 +138,14 @@ def timesync_gps(gpsSensor):
             nowUTC = dt.datetime.now(utc_tz)
             nowLOCAL = nowUTC.astimezone(local_tz)
             updatesystemtime = False
-            abs_timedelta_totalseconds = get_abs_timedifference(nowUTC, UTCtime)
+            abs_timedelta_totalseconds = round(get_abs_timedifference(nowUTC, UTCtime))
             if abs_timedelta_totalseconds >= 300:
-                logger.critical("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
+                logger.critical("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
                 updatesystemtime = True
             elif abs_timedelta_totalseconds >= 120:
-                logger.warning("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds")
+                logger.warning("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
             else:
-                logger.debug("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + "seconds (GPS time provided by NMEA is not accurate!)")
+                logger.debug("Difference between GPS time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds (GPS time provided by NMEA is not accurate!)")
             if updatesystemtime:
                 logger.info('Writing GPS time ' + localtime.strftime("%a %d %b %Y %H:%M:%S") + ' to system, old time was ' + nowLOCAL.strftime("%a %d %b %Y %H:%M:%S") + ' ...')
                 value = os.system('sudo date -u -s "' + UTCtime.strftime("%d %b %Y %H:%M:%S") + '" >>/dev/null')
