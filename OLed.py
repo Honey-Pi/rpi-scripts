@@ -13,7 +13,7 @@ from Oled.lib_oled96 import ssd1306
 from PIL import Image
 from sensors.sensor_utilities import get_smbus
 
-from read_settings import get_defaults
+from read_settings import get_defaults, get_settings
 from utilities import scriptsFolder, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, check_undervoltage, get_ip_address, check_internet_connection, get_cpu_temp, get_ntp_status, sync_time_ntp, get_interfacelist, offlinedata_prepare
 #from Oled.diag_onOLED import diag_onOLED
 
