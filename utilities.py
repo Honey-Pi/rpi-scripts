@@ -33,10 +33,20 @@ wittypi_scheduleFileName = "/schedule.wpi"
 wittypi_scheduleFile = backendFolder + wittypi_scheduleFileName
 logfile = scriptsFolder + '/error.log'
 
+def whoami():
+    try:
+        iam = pwd.getpwuid(os.geteuid()).pw_name
+        return iam
+    except Exception as ex:
+        logger.exception("Exception in whoami ")
+        
 def fix_fileaccess(file=scriptsFolder + '/err*.*'):
+    try:
             os.system('sudo chown pi ' + file)
             os.system('sudo chgrp pi ' + file)
             os.system('sudo chmod ug+w ' + file)
+    except Exception as ex:
+        logger.exception("Exception in fix_fileaccess ")
 
 def offlinedata_prepare(ts_channels):
     try:
