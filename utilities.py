@@ -33,7 +33,10 @@ wittypi_scheduleFileName = "/schedule.wpi"
 wittypi_scheduleFile = backendFolder + wittypi_scheduleFileName
 logfile = scriptsFolder + '/error.log'
 
-
+def fix_fileaccess(file=scriptsFolder + '/err*.*'):
+            os.system('sudo chown pi ' + file)
+            os.system('sudo chgrp pi ' + file)
+            os.system('sudo chmod ug+w ' + file)
 
 def offlinedata_prepare(ts_channels):
     try:
@@ -534,6 +537,12 @@ def miliseconds():
 # reduce size if file is to big
 def check_file(file, size=5, entries=25, skipFirst=0):
     try:
+        # If file is writable
+        if os.access(file, os.W_OK):
+            logger.debug("File access rights are correct for '"+ file + "'")
+        else:
+            logger.info("File access rights were missing for '"+ file + "', applying permission changes...")
+            fix_fileaccess(file)
         # If bigger than 5MB
         if os.path.getsize(file) > size * 1024 * 1024:
             readFile = open(file)

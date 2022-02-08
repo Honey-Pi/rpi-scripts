@@ -13,7 +13,7 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings, get_sensors
-from utilities import logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, check_wittypi, set_wittypi_rtc
+from utilities import scriptsFolder, logfile, stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, update_wittypi_schedule, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, check_wittypi, set_wittypi_rtc, fix_fileaccess
 
 from multiprocessing import Process, Queue, Value
 from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
@@ -207,7 +207,13 @@ def main():
 
         logger = logging.getLogger('HoneyPi')
         logger.setLevel(logging.DEBUG)
-        fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
+        try:
+            fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
+        except PermissionError:
+            #set file access
+            fix_fileaccess(scriptsFolder + '/err*.*')
+            fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
+
         fh.setLevel(logging.getLevelName(debuglevel_logfile))
         # create console handler with a higher log level
         ch = logging.StreamHandler()
@@ -305,6 +311,10 @@ def main():
             pass
 
         print("This text will never be printed.")
+    except RuntimeError as ex:
+        logger.exception("RuntimeError: ") # + str(ex))
+    except PermissionError as ex:
+        logger.exception("PermissionError: ") # + str(ex))
     except Exception as ex:
         logger.critical("Unhandled Exception in main: " + repr(ex))
         if not debug:
