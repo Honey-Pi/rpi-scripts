@@ -18,11 +18,10 @@ except ImportError as ex:
 
 os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
 
-
-
 def measure_dht_zero(ts_sensor):
     fields = {}
     timer = 1
+    max_timer = 8
     errorMessage = ""
     dht_type = 22
     pin = 0
@@ -34,14 +33,14 @@ def measure_dht_zero(ts_sensor):
     else:
         logger.warning("DHT type not defined, using DHT22 by default.")
         dht_type = 22
-        
+
     if 'pin' in ts_sensor:
         pin = int(ts_sensor["pin"])
     else:
         logger.error("DHT PIN not defined!")
         return fields
 
-    while timer <= 8:
+    while timer <= max_timer:
         try:
             # setup sensor
             if dht_type == 2302:
@@ -50,33 +49,27 @@ def measure_dht_zero(ts_sensor):
                 sensorDHT = Adafruit_DHT.DHT11
             else:
                 sensorDHT = Adafruit_DHT.DHT22
+
+            logger.debug('Measuring DHT temperature...')
+            humidity, temperature = Adafruit_DHT.read_retry(sensorDHT, pin)
+            logger.debug('Finished measuring, closing sensor...')
+            break # break while if no Exception occured
         except RuntimeError as error:
             # Errors happen fairly often, DHT's are hard to read, just keep going
-            errorMessage = "Failed reading DHT: " + error.args[0]
+            errorMessage = "Failed reading DHT ("+str(timer)+"/"+str(max_timer)+"): " + error.args[0]
             logger.debug(errorMessage)
             time.sleep(1)
             timer = timer + 1
+            pass # try again
         except NameError as ex:
             logger.error("NameError reading DHT " + str(ex))
             return fields
-        else:
-            try:
-                logger.debug('Measuring temperature (try: '+ str(timer)+')')
-                humidity, temperature = Adafruit_DHT.read_retry(sensorDHT, pin)
-                logger.debug('Finished measuring, closing sensor...')
-                break # break while if no Exception occured
-            except RuntimeError as error:
-                # Errors happen fairly often, DHT's are hard to read, just keep going
-                errorMessage = "Failed reading DHT: " + error.args[0]
-                logger.debug(errorMessage)
-                time.sleep(1)
-                timer = timer + 1
-            except ImportError as ex:
-                logger.error("ImportError while measuring Adafruit_DHT " + str(ex))
-                break
+        except ImportError as ex:
+            logger.error("ImportError while measuring Adafruit_DHT " + str(ex))
+            return fields
 
-    if timer > 8: # end reached
-        logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(pin) + ". " + errorMessage)
+    if timer > max_timer: # end reached
+        logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(pin))
         return fields
 
     # Create returned dict if ts-field is defined
@@ -86,6 +79,7 @@ def measure_dht_zero(ts_sensor):
         fields[ts_sensor["ts_field_temperature"]] = round(temperature, 1)
     if 'ts_field_humidity' in ts_sensor and humidity is not None:
         fields[ts_sensor["ts_field_humidity"]] = round(humidity, 1)
+
     return fields
 
 # For testing you can call this script directly (python3 read_dht_zero.py)
