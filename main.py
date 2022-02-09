@@ -51,7 +51,7 @@ def oled():
         oled_off()
     return
 
-def timesync(settings, wittypi_status):
+def timesync(settings, wittypi_status): # TODO outsource to utilities bc not related to main
     try:
         strntptimediff=sync_time_ntp()
         ntptimediff = 0
@@ -68,7 +68,7 @@ def timesync(settings, wittypi_status):
         logger.exception("Exception in timesync" + str(ex))
     return False
 
-def gpstimesync(gpsSensor, blank=None):
+def gpstimesync(gpsSensor, blank=None): # TODO outsource to utilities bc not related to main
     try:
         timesync_gps(gpsSensor)
     except Exception as ex:
@@ -206,6 +206,7 @@ def main():
         debuglevel=int(settings["debuglevel"])
         debuglevel_logfile=int(settings["debuglevel_logfile"])
 
+        # TODO outsource RotatingFileHandler as this code block is called multiple times
         logger = logging.getLogger('HoneyPi')
         logger.setLevel(logging.DEBUG)
         try:
@@ -242,14 +243,18 @@ def main():
         else:
             logger.info('HoneyPi '+ get_rpiscripts_version() + ' Started on ' + get_pi_model() + ' as User ' + whoami())
             start_hdd_led()
-        q = Queue()
+
+        q = Queue() # TODO check is this used anywhere?
+
+        # TODO add description what is done here and why
         if settings['display']['enabled']:
             tOLed = threading.Thread(target=oled, args=())
             tOLed.start()
 
-        # check wittypi
+        # check wittypi TODO add description what is done here and why
         wittypi_status = check_wittypi(settings)
 
+        # TODO add description what is done here and why
         gpsSensors = get_sensors(settings, 99)
         for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
             init_gps(gpsSensor)
@@ -257,12 +262,14 @@ def main():
             tgpstimesync.start()
             break
 
+        # TODO add description what is done here and why
         if settings["offline"] != 3:
             ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
             ttimesync.start()
         else:
             logger.debug('Offline mode - no time syncronization to NTP')
 
+        # TODO add description what is done here and why
         runpostupgradescript()
 
         GPIO_BTN = settings["button_pin"]
@@ -299,13 +306,13 @@ def main():
         # register button press event
         GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
 
-
-
+        # TODO add description what is done here and why
         if len(gpsSensors) >= 1:
             tgpstimesync.join(timeout=20)
             if tgpstimesync.is_alive():
                 logger.warning("Thread to syncronize time with GPS is still not finished!")
 
+        # TODO add description what is done here and why
         if settings["offline"] != 3:
             ttimesync.join(timeout=20)
             if ttimesync.is_alive():
