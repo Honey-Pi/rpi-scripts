@@ -18,7 +18,7 @@ from utilities import scriptsFolder, get_default_gateway_linux, get_interface_up
 #from Oled.diag_onOLED import diag_onOLED
 
 logger = logging.getLogger('HoneyPi.OLed')
-import sys 
+import sys
 
 superglobal = superglobal.SuperGlobal()
 
@@ -37,7 +37,7 @@ def oled_init():
     except Exception as ex:
         logger.error("Exception in function oled_init:" + str(ex))
         #pass
-    
+
 
 
 def oled_off():
@@ -51,7 +51,7 @@ def oled_off():
         draw.text((0, 44), "", fill=1)
         draw.text((0, 54), "", fill=1)
         oled.display()
-        oled.onoff(0) 
+        oled.onoff(0)
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("communication with oled ssd1306 failed, most likely display not connected.")
@@ -82,7 +82,7 @@ def oled_Logo():
 def oled_start_honeypi():
     try:
         oled_Logo()
-        #oled.cls() # Nach dem Logo wird es drüber geschieben 
+        #oled.cls() # Nach dem Logo wird es drüber geschieben
         # Versionsnummern auslesen und an OLED senden
         version_file = "/var/www/html/version.txt"
         fp = open(version_file)
@@ -149,36 +149,27 @@ def oled_diag_data():
         lcdLine4= ""
         lcdLine5= ""
         lcdLine6= ""
-        
+
         lcdLine1= "Actual Date & Time"
         lcdLine2 = datetime.now().strftime('%Y-%m-%d %H:%M')
-        
+
         lcdLine3= "Clock sync:" + str(get_ntp_status())
         lcdLine4 = "CPU T: %.2f" % get_cpu_temp()
-        
+
         undervoltage = check_undervoltage()
-        #error_log("undervoltagecheck")
-        #print(undervoltage)
-        
-        
+
         if "No undervoltage alarm" in undervoltage:
-            #error_log("Info: No undervoltage alarm")
-            #print("Unterspannung 0x0 " + undervoltage)
-            lcdLine5= "Undervoltage:" 
+            lcdLine5= "Undervoltage:"
             lcdLine6= "No alarm"
-        
+
         elif "0x50000" in undervoltage:
-            #error_log("Warning: Undervoltage alarm had happened since system start ", undervoltage)
-            #print("Undervoltage " + undervoltage)
             lcdLine5= "Undervoltage check:"
             lcdLine6= "Alarm since start!"
-        
+
         elif "0x50005" in undervoltage:
-            #error_log("Warning: Undervoltage alarm is currently raised ", undervoltage)
-            #print("Undervoltage 0x50005 " + undervoltage)
-            lcdLine5= "Undervoltage check: Alarm " 
+            lcdLine5= "Undervoltage check: Alarm "
             lcdLine6= "Alarm currently!"
-        
+
         oled.cls()
         draw.text((0, 2), lcdLine1, fill=1)
         draw.text((0, 12), lcdLine2, fill=1)
@@ -198,7 +189,7 @@ def oled_diag_data():
 
 def oled_interface_data():
     try:
-    
+
         ifaces = get_interfacelist()
         for i in range (0,len(ifaces)):
             lcdLine1 = "Interface " + str(ifaces[i])
@@ -229,7 +220,7 @@ def oled_interface_data():
 def oled_maintenance_data(settings):
     try:
         if superglobal.isMaintenanceActive:
-            
+
             honeypi = settings['internet']['honeypi']
             if honeypi['password'] == get_defaults()['internet']['honeypi']['password']:
                     password = honeypi["password"]
@@ -313,13 +304,13 @@ def oled_view_channels(offlinedata):
 
 def oled_view_channel(ChannelId, lcdTime, lcdDate, field1="", field2="", field3="", field4="", field5="", field6="", field7="", field8=""):
     try:
-        #oled.onoff(1) 
+        #oled.onoff(1)
         #oled.cls()
         #draw.rectangle((0, 0, 128, 64), outline=1, fill=1)
         #draw.bitmap((0, 0), Image.open('HoneyPi_logo.png'), fill=0)
         #oled.display()
         #time.sleep(2)
-        
+
         lcdLine1="Channel: " + str(ChannelId)
         lcdLine2=('Date:'+ lcdDate).ljust(10)  + " " + ('Time:' + lcdTime).ljust(10)
         lcdLine3=field1.rjust(10) + "|" + field2.rjust(10)
@@ -339,7 +330,7 @@ def oled_view_channel(ChannelId, lcdTime, lcdDate, field1="", field2="", field3=
         #oled.onoff(0)   # kill the oled.  RAM contents still there.
         logger.debug("Channel data for " + str(ChannelId) + " successfully sent to the LCD")
         return ChannelId
-        
+
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Initializing oled ssd1306 failed, most likely display not connected.")
