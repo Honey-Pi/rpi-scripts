@@ -207,7 +207,7 @@ def main():
         debuglevel_logfile=int(settings["debuglevel_logfile"])
 
         # TODO outsource RotatingFileHandler as this code block is called multiple times
-        logger = logging.getLogger('HoneyPi')
+        logger = logging.getLogger('HoneyPi') # TODO make loggername as file name generic
         logger.setLevel(logging.DEBUG)
         try:
             fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
