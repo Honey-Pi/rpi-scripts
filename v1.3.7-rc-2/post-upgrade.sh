@@ -86,7 +86,7 @@ apt-get -y install libgpiod2
 pip3 install --upgrade adafruit-circuitpython-dht
 
 echo "Install required modules after v1.3.7 used for oled display..."
-pip3 install --upgrade Pillow smbus2 
+pip3 install --upgrade Pillow smbus2
 apt-get -y install libopenjp2-7 libtiff5
 
 echo "Install required modules after v1.3.7 used for ds18b20..."
@@ -101,6 +101,9 @@ pip3 install --upgrade smbus2 pytz
 echo "Install required modules after v1.3.7 used for PA1010D..."
 pip3 install --upgrade pynmea2 timezonefinder
 #pip3 install --upgrade pa1010d
+
+echo "Install required modules after v1.3.7...for for dht..."
+apt-get -y install python3-psutil
 echo "Finished installing modules"
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
