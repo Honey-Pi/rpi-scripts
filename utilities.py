@@ -21,8 +21,7 @@ from wittypi.wittypi import *
 import subprocess
 import re
 
-loggername='HoneyPi.utilities'
-logger = logging.getLogger(loggername)
+logger = logging.getLogger('HoneyPi.utilities')
 
 homeFolder = '/home/pi'
 honeypiFolder = homeFolder + '/HoneyPi'
@@ -573,7 +572,7 @@ def error_log(e=None, printText=None):
     logger.error("Do not call this function. Deprecated.")
 
 def check_undervoltage(since_last_check=""):
-    #since_last_check = '0x7' #for check since last check
+    #since_last_check = '0x7' #for check since last check # TODO add comment with info what 0x7 means
     message = ""
     try:
         undervoltage = str(os.popen("sudo vcgencmd get_throttled " + since_last_check).readlines())
@@ -635,7 +634,6 @@ def clean_fields(ts_fields, countChannels, debug):
         fieldNumberNew = fieldNumber - (8 * countChannels)
         if fieldNumberNew <= 8 and fieldNumberNew > 0 :
             ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
-    #logger.debug('Cleaned dictionary: ' + json.dumps(ts_fields_cleaned))
     return ts_fields_cleaned
 
 # decorater used to block function printing to the console
@@ -733,12 +731,12 @@ def check_wittypi_schedule(settings, wittypi_status): # TODO move to a seperate 
 def get_abs_timedifference(datetime1, datetime2):
     get_abs_timedelta_totalseconds = 0
     try:
-                datetime1 = datetime.now(local_tz)
-                if datetime2 >= datetime1:
-                    timedelta = datetime2 - datetime1
-                else:
-                    timedelta = datetime1 - datetime2
-                abs_timedelta_totalseconds = abs(timedelta.total_seconds())
+        datetime1 = datetime.now(local_tz)
+        if datetime2 >= datetime1:
+            timedelta = datetime2 - datetime1
+        else:
+            timedelta = datetime1 - datetime2
+        abs_timedelta_totalseconds = abs(timedelta.total_seconds())
     except Exception as ex:
         logger.exception("Error in function get_abs_timedifference")
     return abs_timedelta_totalseconds
@@ -792,7 +790,7 @@ def check_wittypi(settings): # TODO move to a seperate wittypi utilities
                 logger.debug("WittyPi recovery voltage threshold is set to '" + str(wittypi_status['recovery_voltage_threshold']) + " Volt', HoneyPi low voltage threshold  is set to '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
             else:
                 logger.debug("WittyPi recovery voltage threshold is set to " + str(wittypi_status['recovery_voltage_threshold']) + " Volt" )
-        check_wittypi_rtc(settings, wittypi_status)
+        check_wittypi_rtc(settings, wittypi_status) # TODO this will be called each time from main even if wittypi is disabled/ not connected - sure? Call it seperately after check_wittypi got called if required
         if settings['wittyPi']['enabled']:
             if wittypi_status['is_mc_connected']:
                 if settings['wittyPi']['dummyload'] is not None and (wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']):
