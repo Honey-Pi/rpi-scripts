@@ -732,12 +732,12 @@ def check_wittypi_schedule(settings, wittypi_status): # TODO move to a seperate 
 def get_abs_timedifference(datetime1, datetime2):
     get_abs_timedelta_totalseconds = 0
     try:
-                datetime1 = datetime.now(local_tz)
-                if datetime2 >= datetime1:
-                    timedelta = datetime2 - datetime1
-                else:
-                    timedelta = datetime1 - datetime2
-                abs_timedelta_totalseconds = abs(timedelta.total_seconds())
+        datetime1 = datetime.now(local_tz)
+        if datetime2 >= datetime1:
+            timedelta = datetime2 - datetime1
+        else:
+            timedelta = datetime1 - datetime2
+        abs_timedelta_totalseconds = abs(timedelta.total_seconds())
     except Exception as ex:
         logger.exception("Error in function get_abs_timedifference")
     return abs_timedelta_totalseconds
