@@ -60,7 +60,5 @@ def computeAbsoluteHumidity(humidity, temperature):
         return round(absHumidity, 2)
 
     except Exception as ex:
-        error_log(ex, "Exception during computeAbsoluteHumidity")
-        return None
-
-    return round(absHumidity, 2)
+        logger.exception("Unhandled Exception in computeAbsoluteHumidity")
+    return None

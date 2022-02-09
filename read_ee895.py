@@ -5,7 +5,8 @@
 import smbus
 import time
 from sensors.sensor_utilities import get_smbus
-from utilities import error_log
+import logging
+logger = logging.getLogger('HoneyPi.read_ee895')
 
 # Main Source: http://www.diyblueprints.net/measuring-voltage-with-raspberry-pi/#Measure_Voltage_Python
 
@@ -40,7 +41,7 @@ def _measure_all():
         return co,temp,pressure
 
     except Exception as e:
-        error_log(e, 'Error: Error while reading EE895 Sensor. Is it connected?')
+        logger.exception("Error while reading EE895 Sensor. Is it connected")
 
     return None, None, None
 
@@ -68,9 +69,9 @@ def measure_ee895(ts_sensor):
         if 'ts_field_air_pressure' in ts_sensor and isinstance(pressure, (int, float)):
             fields[ts_sensor["ts_field_air_pressure"]] = round(pressure, 1)
     except OSError:
-        error_log('Warning: No EE895 Sensor connected.')
+        logger.warning("No EE895 Sensor connected.")
     except Exception as ex:
-        error_log(ex, 'Error: Error while measuring EE895 Sensor.')
+        logger.exception("Error while measuring EE895 Sensor.")
 
     return fields
 
@@ -85,4 +86,4 @@ if __name__ == '__main__':
         pass
 
     except Exception as e:
-        error_log(e, "Unhandled Exception in EE895 Measurement")
+        logger.exception("Unhandled Exception in EE895 Measurement")
