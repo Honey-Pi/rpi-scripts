@@ -33,7 +33,7 @@ local_tz = dt.datetime.utcnow().astimezone().tzinfo
 utc_tz = pytz.timezone('UTC')
 
 from smbus2 import SMBus
-
+import RPi.GPIO as GPIO
 
 RTC_ADDRESS = 0x68
 I2C_MC_ADDRESS = 0x69
@@ -62,6 +62,20 @@ I2C_CONF_ADJ_IOUT=19
 
 HALT_PIN=4    # halt by GPIO-4 (BCM naming)
 SYSUP_PIN=17  # output SYS_UP signal on GPIO-17 (BCM naming)
+
+
+def send_sysup():
+    try:
+        GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+        GPIO.setwarnings(False)
+        GPIO.setup(SYSUP_PIN, GPIO.OUT)
+        GPIO.output(SYSUP_PIN, GPIO.HIGH)
+        time.sleep(0.5)
+        GPIO.output(SYSUP_PIN, GPIO.LOW)
+    except RuntimeError as ex:
+        logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
+    except Exception as ex:
+        logger.exception("Exception in send_sysup " + str(ex))
 
 
 def dec2hex(datalist):
@@ -626,24 +640,29 @@ def get_temperature():
     except Exception as ex:
         logger.exception("Exception in get_temperature" + str(ex))
 
-def clear_alarm_flags():
+def clear_alarm_flags(byte_F=0x0):
     try:
         if rtc_connected:
-            byte_F=0x0
-            """{
-            if [ -z "$1" ]:"""
-            with SMBus(1) as bus:
-                byte_F=bus.read_byte_data(RTC_ADDRESS, 0x0F)
-            """else:
-                byte_F=$1"""
-            print(str((byte_F)))
+            if byte_F==0x0:
+                with SMBus(1) as bus:
+                    byte_F=bus.read_byte_data(RTC_ADDRESS, 0x0F)
+            print(format(byte_F, '0>8b')) #((byte_F)))
             byte_F=(byte_F&0xFC)
-            print(str((byte_F)))
+            print(format(byte_F, '0>8b')) #((byte_F)))
             with SMBus(1) as bus:
                 bus.write_byte_data(RTC_ADDRESS, 0x0F, byte_F)
-                #bus.write_byte_data(RTC_ADDRESS, 0x0F, 0x0)
     except Exception as ex:
-        logger.exception("Exception in get_temperature" + str(ex))
+        logger.exception("Exception in clear_alarm_flags" + str(ex))
+
+def get_alarm_flags(RTC_ALARM_ADDRESS=0x0F):
+    try:
+        if rtc_connected:
+            with SMBus(1) as bus:
+                byte_F=bus.read_byte_data(RTC_ADDRESS, RTC_ALARM_ADDRESS)
+            print(format(byte_F, '0>8b')) #((byte_F)))
+            return byte_F
+    except Exception as ex:
+        logger.exception("Exception in clear_alarm_flags" + str(ex))
 
 def get_power_cut_delay():
     try:
@@ -1220,6 +1239,7 @@ def getAll():
         wittypi['shutdown_str_time'] = shutdown_str_time
         wittypi['shutdown_timedelta'] = shutdown_timedelta
         wittypi['temperature'] = get_temperature()
+        wittypi['alarm_flags'] = get_alarm_flags()
     wittypi['is_mc_connected'] = is_mc_connected()
     if wittypi['is_mc_connected']:
         wittypi['is_mc_connected'] = True
@@ -1268,6 +1288,7 @@ def main():
             else: 
                 str_startup_time_local = "Never"
             print(">>> Schedule next startup at:  " + str_startup_time_local)
+            print(">>> RTC Alarm flags: " +  format(wittypi['alarm_flags'], '0>8b'))
         else:
             print("no WittyPi RTC is connected")
         if wittypi['is_mc_connected']:
