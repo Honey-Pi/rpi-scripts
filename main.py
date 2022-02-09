@@ -18,6 +18,7 @@ from utilities import scriptsFolder, logfile, stop_tv, stop_led, toggle_blink_le
 from multiprocessing import Process, Queue, Value
 from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
 from read_gps import init_gps, timesync_gps
+
 logger = logging.getLogger('HoneyPi.main')
 
 # global vars

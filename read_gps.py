@@ -178,7 +178,7 @@ def measure_gps(gpsSensor):
 def main():
 
     logging.basicConfig(level=logging.DEBUG)
-    
+
     try:
         get_gps_timestamp()
         get_gps_location()
