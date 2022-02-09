@@ -39,12 +39,12 @@ def whoami():
         return iam
     except Exception as ex:
         logger.exception("Exception in whoami ")
-        
+
 def fix_fileaccess(file=scriptsFolder + '/err*.*'):
     try:
-            os.system('sudo chown pi ' + file)
-            os.system('sudo chgrp pi ' + file)
-            os.system('sudo chmod ug+w ' + file)
+        os.system('sudo chown pi ' + file)
+        os.system('sudo chgrp pi ' + file)
+        os.system('sudo chmod ug+w ' + file)
     except Exception as ex:
         logger.exception("Exception in fix_fileaccess ")
 
@@ -93,22 +93,22 @@ def get_interfacelist():
     except Exception as ex:
         logger.exception("get_interfacelist")
         pass
-        return None
+    return None
 
 def thingspeak_datetime():
     return datetime.utcnow().replace(microsecond=0).isoformat()
 
 def get_cpu_temp():
     try:
-            ## CPU-Temperatur ermitteln
-            fd = open("/sys/class/thermal/thermal_zone0/temp")
-            temperatur = float(fd.readline().rstrip())/1000.0
-            fd.close()
-            return temperatur
+        ## CPU-Temperatur ermitteln
+        fd = open("/sys/class/thermal/thermal_zone0/temp")
+        temperatur = float(fd.readline().rstrip())/1000.0
+        fd.close()
+        return temperatur
     except Exception as ex:
         logger.exception("Exception in get_cpu_temp")
         pass
-        return None
+    return None
 
 def sync_time_ntp():
     try:
@@ -119,7 +119,7 @@ def sync_time_ntp():
     except Exception as ex:
         logger.exception("Exception in get_ntp_status")
         pass
-        return None
+    return None
 
 def get_ntp_status():
     try:
@@ -134,7 +134,7 @@ def get_ntp_status():
     except Exception as ex:
         logger.exception("Exception in get_ntp_status")
         pass
-        return None
+    return None
 
 
 def get_ip_address(ifname):
@@ -144,7 +144,7 @@ def get_ip_address(ifname):
     except Exception as ex:
         logger.exception("Exception in get_ip_address")
         pass
-        return None
+    return None
 
 def get_default_gateway_linux():
     """Read the default gateway directly from /proc."""
@@ -160,7 +160,7 @@ def get_default_gateway_linux():
     except Exception as ex:
         logger.exception("Exception in get_default_gateway_linux")
         pass
-        return None
+    return None
 
 def get_default_gateway_interface_linux():
     """Read the default gateway directly from /proc."""
@@ -175,7 +175,7 @@ def get_default_gateway_interface_linux():
                 return str(fields[0])
     except Exception as ex:
         logger.exception("Exception in get_default_gateway_interface_linux")
-        return None
+    return None
 
 def get_interface_upstatus_linux(interfacename):
     """/sys/class/net/'interfacename'/operstate'."""
@@ -210,7 +210,7 @@ def get_lsusb_linux():
 
     except Exception as ex:
         logger.exception("Exception in get_lsusb_linux")
-        return False
+    return False
 
 def stop_tv():
     os.system("sudo /usr/bin/tvservice -o")
@@ -680,7 +680,7 @@ def set_wittypi_rtc(settings, wittypi_status):
                 logger.critical("Failed to set RTC time")
     except Exception as ex:
         logger.exception("Error in function set_wittypi_rtc")
-    
+
 def log_verify_schedule_data(schedulename, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue):
     try:
         if beginissue != "":
@@ -701,7 +701,7 @@ def log_verify_schedule_data(schedulename, settings, count, script_duration, fou
             logger.critical(schedulename + ": Found no 'WAIT' in the 'ON' line, but schutdown after transfer' is enabled, you should add a 'WAIT' at the End of the 'ON' line")
     except Exception as ex:
         logger.exception("Error in function log_verify_schedule_data")
-        
+
 def check_wittypi_schedule(settings, wittypi_status):
     try:
         for schedule in ['normal', 'low']:
@@ -729,20 +729,12 @@ def check_wittypi_schedule(settings, wittypi_status):
                             logger.critical("WittyPi is not enabled in normal mode but Interval is set to 'single measurement'!")
                         elif schedule == 'low':
                             logger.critical("WittyPi is not enabled in power saving mode but Interval is set to 'single measurement'!")
-                        
+
                     if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
                         if schedule == 'normal':
                             logger.critical("WittyPi is not enabled in normal mode but 'schutdown after transfer' is enabled!")
                         elif schedule == 'low':
                             logger.critical("WittyPi is not enabled in power saving mode but but 'schutdown after transfer' is enabled!")
-
-        '''if settings['wittyPi']['low']['enabled']:
-            schedule_file_data_low = schedule_file_lines2schedule_file_data(settings['wittyPi']['low']['schedule'].split('\n'))
-            count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait = verify_schedule_data(schedule_file_data_low)
-            log_verify_schedule_data("low", settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait)'''
-        '''
-            print('File schedule: ' + str(wittypi_status['schedule_file_data']))
-            log_verify_schedule_data("file", settings, verify_schedule_data(wittypi_status['schedule_file_data']))'''
 
     except Exception as ex:
         logger.exception("Error in function check_wittypi_schedule")
@@ -796,16 +788,16 @@ def check_wittypi(settings):
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.warning("WittyPi is enabled in HoneyPi settings but WittyPi service is not active!")
         if str(wittypi_status['low_voltage_threshold']) != 'disabled':
-            if settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['low_voltage_threshold'] >= settings['wittyPi']['low']['voltage']): 
+            if settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['low_voltage_threshold'] >= settings['wittyPi']['low']['voltage']):
                 logger.critical("WittyPi low voltage threshold '" + str(wittypi_status['low_voltage_threshold']) + " Volt' is set to a higher value than HoneyPi low voltage threshold '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
-            elif settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['low_voltage_threshold'] < settings['wittyPi']['low']['voltage']): 
+            elif settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['low_voltage_threshold'] < settings['wittyPi']['low']['voltage']):
                 logger.debug("WittyPi low voltage threshold is set to '" + str(wittypi_status['low_voltage_threshold']) + " Volt', HoneyPi low voltage threshold is set to '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
             else:
                 logger.debug("WittyPi low voltage threshold is set to " + str(wittypi_status['low_voltage_threshold']) + " Volt" )
         if str(wittypi_status['recovery_voltage_threshold']) != 'disabled':
-            if settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['recovery_voltage_threshold'] >= settings['wittyPi']['low']['voltage']): 
+            if settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['recovery_voltage_threshold'] >= settings['wittyPi']['low']['voltage']):
                 logger.critical("WittyPi recovery voltage threshold '" + str(wittypi_status['recovery_voltage_threshold']) + " Volt' is set to a higher value than HoneyPi low voltage threshold '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
-            elif settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['recovery_voltage_threshold'] < settings['wittyPi']['low']['voltage']): 
+            elif settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['recovery_voltage_threshold'] < settings['wittyPi']['low']['voltage']):
                 logger.debug("WittyPi recovery voltage threshold is set to '" + str(wittypi_status['recovery_voltage_threshold']) + " Volt', HoneyPi low voltage threshold  is set to '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
             else:
                 logger.debug("WittyPi recovery voltage threshold is set to " + str(wittypi_status['recovery_voltage_threshold']) + " Volt" )
@@ -907,7 +899,7 @@ def set_wittypi_schedule():
             else:
                 logger.debug("Pausing wittyPi schedule...")
                 #os.system("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null")
-                """process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null", shell=True, stdout=subprocess.PIPE) #Aufruf von wittyPi.sh und löschen der Start / Stop 
+                """process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 0 > /dev/null", shell=True, stdout=subprocess.PIPE) #Aufruf von wittyPi.sh und löschen der Start / Stop
                 for line in process.stdout:
                     logger.debug(line.decode("utf-8"))
                 process.wait()"""

@@ -85,7 +85,6 @@ def start_ap():
     logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
     superglobal.isMaintenanceActive=True
     start_led(GPIO_LED)
-    #isMaintenanceActive=setStateToStorage('isMaintenanceActive', True)
     if settings['display']['enabled']:
         oled_init()
         oled_maintenance_data(settings)
@@ -98,7 +97,6 @@ def stop_ap():
     t2.join(timeout=30)
     isActive = 0 # measurement shall stop next time
     superglobal.isMaintenanceActive=False
-    #isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
     if settings['display']['enabled']:
         oled_off()
 
@@ -165,7 +163,7 @@ def button_pressed_falling(self):
     MIN_TIME_TO_ELAPSE_SHUTDOWN = 5000
     MAX_TIME_TO_ELAPSE_SHUTDOWN = 10000
     MAX_TIME_TO_ELAPSE_RESET = 15000
-    
+
     if time_elapsed >= 0 and time_elapsed <= 30000:
         if time_elapsed > MIN_TIME_TO_ELAPSE and time_elapsed <= MAX_TIME_TO_ELAPSE_OLED:
             if settings['display']['enabled']:
@@ -251,14 +249,13 @@ def main():
 
         # check wittypi
         wittypi_status = check_wittypi(settings)
-        
+
         gpsSensors = get_sensors(settings, 99)
         for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
             init_gps(gpsSensor)
             tgpstimesync = threading.Thread(target=gpstimesync, args=(gpsSensor, None))
             tgpstimesync.start()
             break
-
 
         if settings["offline"] != 3:
             ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
@@ -290,7 +287,6 @@ def main():
         # check undervoltage for since system start
         check_undervoltage()
 
-        
         # setup Button
         try:
             GPIO.setup(GPIO_BTN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) # Set pin 16 to be an input pin and set initial value to be pulled low (off)
@@ -303,8 +299,7 @@ def main():
         # register button press event
         GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
 
-        #if settings['display']['enabled']:
-        #    tOLed.join()
+
 
         if len(gpsSensors) >= 1:
             tgpstimesync.join(timeout=20)
@@ -319,7 +314,6 @@ def main():
         # start as seperate background thread
         # because Taster pressing was not recognised
         superglobal.isMaintenanceActive=False
-        #isMaintenanceActive=setStateToStorage('isMaintenanceActive', False)
         measurement_stop = threading.Event() # create event to stop measurement
         measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
         measurement.start() # start measurement
@@ -346,6 +340,3 @@ if __name__ == '__main__':
 
     except Exception as ex:
         logger.exception("Unhandled Exception in __main__ ")
-        #if not debug:
-            #time.sleep(60)
-            #reboot()
