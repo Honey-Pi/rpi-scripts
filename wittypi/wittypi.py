@@ -646,9 +646,9 @@ def clear_alarm_flags(byte_F=0x0):
             if byte_F==0x0:
                 with SMBus(1) as bus:
                     byte_F=bus.read_byte_data(RTC_ADDRESS, 0x0F)
-            print(format(byte_F, '0>8b')) #((byte_F)))
+            #print(format(byte_F, '0>8b')) #((byte_F)))
             byte_F=(byte_F&0xFC)
-            print(format(byte_F, '0>8b')) #((byte_F)))
+            #print(format(byte_F, '0>8b')) #((byte_F)))
             with SMBus(1) as bus:
                 bus.write_byte_data(RTC_ADDRESS, 0x0F, byte_F)
     except Exception as ex:
@@ -659,7 +659,7 @@ def get_alarm_flags(RTC_ALARM_ADDRESS=0x0F):
         if rtc_connected:
             with SMBus(1) as bus:
                 byte_F=bus.read_byte_data(RTC_ADDRESS, RTC_ALARM_ADDRESS)
-            print(format(byte_F, '0>8b')) #((byte_F)))
+            #print(format(byte_F, '0>8b')) #((byte_F)))
             return byte_F
     except Exception as ex:
         logger.exception("Exception in clear_alarm_flags" + str(ex))
@@ -1252,6 +1252,8 @@ def getAll():
         wittypi['power_cut_delay'] = get_power_cut_delay()
         wittypi['pulsing_interval'] = get_pulsing_interval()
         wittypi['white_led_duration'] = get_white_led_duration()
+        wittypi['low_voltage_threshold'] = get_low_voltage_threshold()
+        wittypi['recovery_voltage_threshold'] = get_recovery_voltage_threshold()
     wittypi['wittyPiPath'] = get_wittypi_folder()
     wittypi['is_schedule_file_in_use'] = is_schedule_file_in_use()
     if wittypi['is_schedule_file_in_use']:
@@ -1294,6 +1296,9 @@ def main():
         if wittypi['is_mc_connected']:
             print(">>> Vout=" + str(wittypi['output_voltage']) + "V, Iout=" + str(wittypi['outputcurrent']) + "A")
             print(">>> Vin= " + str(wittypi['input_voltage']) + "V")
+            print(">>> low voltage threshold= " + str(wittypi['low_voltage_threshold']))
+            print(">>> recovery voltage threshold= " + str(wittypi['recovery_voltage_threshold']))
+            
             print(">>> Firmware version: " + str(wittypi['firmwareversion']))
             if  wittypi['default_state'] == 0:
                 print(">>> Default state when powered [OFF]")

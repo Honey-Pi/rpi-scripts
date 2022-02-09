@@ -795,6 +795,16 @@ def check_wittypi(settings):
             logger.warning("WittyPi service is active but WittyPi is disabled in HoneyPi settings!")
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.warning("WittyPi is enabled in HoneyPi settings but WittyPi service is not active!")
+        if str(wittypi_status['low_voltage_threshold']) != 'disabled':
+            if settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['low_voltage_threshold'] >= settings['wittyPi']['low']['voltage']): 
+                logger.debug("WittyPi low voltage threshold '" + str(wittypi_status['low_voltage_threshold']) + " Volt' is set to a higher value than HoneyPi low voltage threshold '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
+            else:
+                logger.debug("WittyPi recovery voltage threshold is set to " + str(wittypi_status['recovery_voltage_threshold']) + " Volt" )
+        if str(wittypi_status['recovery_voltage_threshold']) != 'disabled':
+            if settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['recovery_voltage_threshold'] >= settings['wittyPi']['low']['voltage']): 
+                logger.critical("WittyPi recovery voltage threshold '" + str(wittypi_status['recovery_voltage_threshold']) + " Volt' is set to a higher value than HoneyPi low voltage threshold '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
+            else:
+                logger.debug("WittyPi recovery voltage threshold is set to " + str(wittypi_status['recovery_voltage_threshold']) + " Volt" )
         check_wittypi_rtc(settings, wittypi_status)
         if settings['wittyPi']['enabled']:
             if wittypi_status['is_mc_connected']:
