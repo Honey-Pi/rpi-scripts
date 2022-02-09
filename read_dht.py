@@ -31,13 +31,13 @@ def measure_dht(ts_sensor):
     humidity = None
     dht = None
 
-    if 'dht_type' in ts_sensor:
+    if 'dht_type' in ts_sensor and ts_sensor["dht_type"] is not None:
         dht_type = int(ts_sensor["dht_type"])
     else:
         logger.warning("DHT type not defined, using DHT22 by default.")
         dht_type = 22
 
-    if 'pin' in ts_sensor:
+    if 'pin' in ts_sensor and ts_sensor["pin"] is not None:
         pin = int(ts_sensor["pin"])
     else:
         logger.error("DHT GPIO-Pin not defined!")
@@ -67,6 +67,7 @@ def measure_dht(ts_sensor):
                 dht = adafruit_dht.DHT11(SENSOR_PIN, use_pulseio=True)
             else:
                 dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
+                
             temperature = dht.temperature
             humidity = dht.humidity
             dht.exit()

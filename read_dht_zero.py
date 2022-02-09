@@ -28,13 +28,13 @@ def measure_dht_zero(ts_sensor):
     temperature = None
     humidity = None
 
-    if 'dht_type' in ts_sensor:
+    if 'dht_type' in ts_sensor and ts_sensor["dht_type"] is not None:
         dht_type = int(ts_sensor["dht_type"])
     else:
         logger.warning("DHT type not defined, using DHT22 by default.")
         dht_type = 22
 
-    if 'pin' in ts_sensor:
+    if 'pin' in ts_sensor and ts_sensor["pin"] is not None:
         pin = int(ts_sensor["pin"])
     else:
         logger.error("DHT PIN not defined!")
@@ -69,7 +69,7 @@ def measure_dht_zero(ts_sensor):
             return fields
 
     if timer > max_timer: # end reached
-        logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(pin))
+        logger.error("Failed reading DHT ("+str(timer-1)+" times) on GPIO " + str(pin))
         return fields
 
     # Create returned dict if ts-field is defined
