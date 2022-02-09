@@ -4,7 +4,7 @@
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
 from read_hx711 import measure_weight
-from utilities import start_single, stop_single, blockPrinting, error_log
+from utilities import start_single, stop_single, blockPrinting
 import sys
 import logging
 
