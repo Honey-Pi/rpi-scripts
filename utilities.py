@@ -21,8 +21,7 @@ from wittypi.wittypi import *
 import subprocess
 import re
 
-loggername='HoneyPi.utilities'
-logger = logging.getLogger(loggername)
+logger = logging.getLogger('HoneyPi.utilities')
 
 homeFolder = '/home/pi'
 honeypiFolder = homeFolder + '/HoneyPi'

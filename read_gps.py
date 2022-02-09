@@ -13,8 +13,7 @@ from utilities import get_abs_timedifference
 import logging
 import inspect
 
-loggername='HoneyPi.gps' #+ inspect.getfile(inspect.currentframe())
-logger = logging.getLogger(loggername)
+logger = logging.getLogger('HoneyPi.gps')
 
 gps = PA1010D()
 
@@ -25,7 +24,6 @@ local_tz = dt.datetime.utcnow().astimezone().tzinfo
 utc_tz = pytz.timezone('UTC')
 
 def init_gps(gpsSensor):
-    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     global gps
     i2c_addr = 0x10
     try:
@@ -49,14 +47,13 @@ def init_gps(gpsSensor):
     return
 
 
-def get_gps_timestamp(timeout=timeout): 
-    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+def get_gps_timestamp(timeout=timeout):
     nema_type="RMC"
     UTCtime,localtime,timestamp = None, None, None
     try:
         gpsfix = False
         try:
-            gpsfix = gps.update(nema_type, timeout, waitforfix) 
+            gpsfix = gps.update(nema_type, timeout, waitforfix)
         except TimeoutError:
             logger.warning("Could not get GPS time within " + str(timeout) + " seconds!")
             pass
@@ -75,18 +72,17 @@ def get_gps_timestamp(timeout=timeout):
         logger.exception("Exception " + str(ex))
     return UTCtime,localtime,timestamp
 
-def get_gps_location(timeout=timeout): 
-    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
+def get_gps_location(timeout=timeout):
     nema_type="GGA"
-    
+
     latitude = None
     longitude = None
     altitude = None
-    
+
     try:
         gpsfix = False
         try:
-            gpsfix = gps.update(nema_type, timeout, waitforfix) 
+            gpsfix = gps.update(nema_type, timeout, waitforfix)
         except TimeoutError:
             logger.warning("Could not get GPS location within " + str(timeout) + " seconds!")
             pass
@@ -107,7 +103,6 @@ def get_gps_location(timeout=timeout):
     return latitude, longitude, altitude
 
 def set_timezonefromcoordinates(latitude, longitude):
-    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     try:
         assert (latitude != None)
         assert (longitude != None)
@@ -124,7 +119,6 @@ def set_timezonefromcoordinates(latitude, longitude):
 
 
 def timesync_gps(gpsSensor):
-    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     try:
         gps_values = {}
         UTCtime,localtime,timestamp = None, None, None
@@ -159,7 +153,6 @@ def timesync_gps(gpsSensor):
 
 
 def measure_gps_time(gpsSensor):
-    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     UTCtime,localtime,timestamp = None, None, None
     try:
         if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
@@ -171,7 +164,6 @@ def measure_gps_time(gpsSensor):
     return UTCtime,localtime,timestamp
 
 def measure_gps(gpsSensor):
-    logger = logging.getLogger(loggername + '.' + inspect.currentframe().f_code.co_name)
     gps_values = {}
     try:
         if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
@@ -184,8 +176,9 @@ def measure_gps(gpsSensor):
 
 
 def main():
-    #logger = logging.getLogger(loggername + '.' + __name__)
+
     logging.basicConfig(level=logging.DEBUG)
+    
     try:
         get_gps_timestamp()
         get_gps_location()

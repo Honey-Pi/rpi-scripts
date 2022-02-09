@@ -7,8 +7,7 @@ import pynmea2
 import logging
 import inspect
 
-loggername='PA1010D' #+ inspect.getfile(inspect.currentframe())
-logger = logging.getLogger(loggername)
+logger = logging.getLogger('PA1010D')
 
 __version__ = '0.0.3.1'
 
@@ -400,7 +399,7 @@ if __name__ == "__main__":
         nema_type="GGA"
 
 
-        # These are NMEA extensions for PMTK_314_SET_NMEA_OUTPUT 
+        # These are NMEA extensions for PMTK_314_SET_NMEA_OUTPUT
         # Turn off everything:
         gps.send_command(b'PMTK314,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0')
 
@@ -422,7 +421,7 @@ if __name__ == "__main__":
         #Turn on everything
         #gps.send_command(b'PMTK314,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0')
 
-        
+
         result=False
         while True:
             try:
