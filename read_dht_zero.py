@@ -24,20 +24,23 @@ def measure_dht_zero(ts_sensor):
     fields = {}
     timer = 1
     errorMessage = ""
-    dht_type= 0
+    dht_type = 22
     pin = 0
     temperature = None
     humidity = None
-    if 'dht_type' in ts_sensor and dht_type is not None:
+
+    if 'dht_type' in ts_sensor:
         dht_type = int(ts_sensor["dht_type"])
     else:
-        logger.warning("DHT type not defined, using DHT22")
+        logger.warning("DHT type not defined, using DHT22 by default.")
         dht_type = 22
-    if 'pin' in ts_sensor and pin is not None:
+        
+    if 'pin' in ts_sensor:
         pin = int(ts_sensor["pin"])
     else:
         logger.error("DHT PIN not defined!")
         return fields
+
     while timer <= 8:
         try:
             # setup sensor
@@ -75,6 +78,7 @@ def measure_dht_zero(ts_sensor):
     if timer > 8: # end reached
         logger.error("Failed reading DHT (tried "+str(timer)+"x times) on GPIO " + str(pin) + ". " + errorMessage)
         return fields
+
     # Create returned dict if ts-field is defined
     if 'ts_field_temperature' in ts_sensor and temperature is not None:
         if 'offset' in ts_sensor and ts_sensor["offset"] is not None:
@@ -84,13 +88,12 @@ def measure_dht_zero(ts_sensor):
         fields[ts_sensor["ts_field_humidity"]] = round(humidity, 1)
     return fields
 
-
 # For testing you can call this script directly (python3 read_dht_zero.py)
 if __name__ == '__main__':
+
     logging.basicConfig(level=logging.DEBUG)
+
     try:
-
-
         fields = measure_dht_zero ({"dht_type" : 2302, "pin" : 5, 'ts_field_temperature': "temperature", 'ts_field_humidity': "humidity"})
         if fields != {}:
             print("Temp: {:.1f} F / {:.1f} °C    Humidity: {}% ".format(fields['temperature']* (9 / 5) + 32, fields['temperature'], fields['humidity']))
