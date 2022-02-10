@@ -180,7 +180,7 @@ def get_firmwareversion():
     return firmwareversion
 
 
-def get_rtc_timestamp(): 
+def get_rtc_timestamp():
     out=[]
     UTCtime,localtime,timestamp = None, None, None
     try:
@@ -279,7 +279,7 @@ def calcTime(res=[0, 0, 0]):
                 pass
             except Exception as ex:
                 logger.exception("Another Exception in calcTime" + str(ex))
-            
+
             if (day == 80) and (hour != 80): # day not defined, start every day
                 time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,hour,minute,second) #.astimezone(utc_tz)
                 time_utc = utc_tz.localize(time_utc)
@@ -309,7 +309,7 @@ def calcTime(res=[0, 0, 0]):
             if ele == 80: strtime.append('??')
             else: strtime.append(str(ele))
         if len(strtime) == 4: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':' + strtime[-4]
-        else: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':00' 
+        else: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':00'
     except Exception as ex:
         logger.exception("Exception in calcTime" + str(ex))
     return time_utc,time_local,str_time,timedelta
@@ -338,7 +338,7 @@ def calcTimeOld(res):
         if ele == 80: strtime.append('??')
         else: strtime.append(str(ele))
     if len(strtime) == 4: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':' + strtime[-4]
-    else: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':00' 
+    else: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':00'
     timedelta = startup_time_local - nowLOCAL
     return startup_time_utc,startup_time_local,str_time,timedelta
 
@@ -363,7 +363,7 @@ def datetime2stringtime(dt):
     except Exception as ex:
         logger.exception("Exception in datetime2stringtime" + str(ex))
     return result
-    
+
 
 def stringtime2timetuple(stringtime='?? 20:00:00'):
     try:
@@ -374,37 +374,37 @@ def stringtime2timetuple(stringtime='?? 20:00:00'):
                 day = 80 #128
             elif 1<= int(day) <=31:
                 day = int(day)
-            else: 
+            else:
                 logger.debug('invalid day: ' + str(day))
-                day = None 
+                day = None
             hour = stringtime.split(' ')[1].split(':')[0]
             if hour == '??':
                 hour = 80 #128
             elif 0<= int(hour) <=23:
                 hour = int(hour)
-            else: 
+            else:
                 logger.debug('invalid hour: ' + str(hour))
-                hour = None 
+                hour = None
             minute = stringtime.split(' ')[1].split(':')[1]
             if minute == '??':
                 minute = 80 #128
             elif 0<= int(minute) <=59:
                 minute = int(minute)
-            else: 
+            else:
                 logger.debug('invalid minute: ' + str(minute))
-                minute = None 
+                minute = None
             if len(stringtime) > 8:
                 second = stringtime.split(' ')[1].split(':')[2]
                 if second == '??':
                     second = 80 #128
                 elif 0<= int(second) <=59:
                     second = int(second)
-                else: 
+                else:
                     logger.debug('invalid second: ' + str(second))
-                    second = None 
+                    second = None
                 logger.debug('day: ' + str(day) + ' hour: ' + str(hour) + 'minute: ' + str(minute)+ ' second: ' + str(second))
                 return (second,minute,hour,day)
-            else: 
+            else:
                 logger.debug('day: ' + str(day) + ' hour: ' + str(hour) + 'minute: ' + str(minute))
                 return (minute,hour,day)
     except Exception as ex:
@@ -458,9 +458,9 @@ def set_shutdown_time(stringtime='?? 20:00'):
             if (day is not None ) and (hour is not None) and (minute is not None):
                 with SMBus(1) as bus:
                     bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)
-                    bus.write_byte_data(RTC_ADDRESS, 11,dec2bcd(minute)) 
-                    bus.write_byte_data(RTC_ADDRESS, 12,dec2bcd(hour)) 
-                    bus.write_byte_data(RTC_ADDRESS, 13,dec2bcd(day)) 
+                    bus.write_byte_data(RTC_ADDRESS, 11,dec2bcd(minute))
+                    bus.write_byte_data(RTC_ADDRESS, 12,dec2bcd(hour))
+                    bus.write_byte_data(RTC_ADDRESS, 13,dec2bcd(day))
                 return True
             else:
                 logger.debug("invalid Time")
@@ -475,10 +475,10 @@ def set_startup_time(stringtime='?? 20:00:00'):
             if (day is not None ) and (hour is not None) and (minute is not None) and (second is not None):
                 with SMBus(1) as bus:
                     bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)
-                    bus.write_byte_data(RTC_ADDRESS, 7,dec2bcd(second)) 
-                    bus.write_byte_data(RTC_ADDRESS, 8,dec2bcd(minute)) 
-                    bus.write_byte_data(RTC_ADDRESS, 9,dec2bcd(hour)) 
-                    bus.write_byte_data(RTC_ADDRESS, 10,dec2bcd(day)) 
+                    bus.write_byte_data(RTC_ADDRESS, 7,dec2bcd(second))
+                    bus.write_byte_data(RTC_ADDRESS, 8,dec2bcd(minute))
+                    bus.write_byte_data(RTC_ADDRESS, 9,dec2bcd(hour))
+                    bus.write_byte_data(RTC_ADDRESS, 10,dec2bcd(day))
                 return True
             else:
                 logger.debug("invalid Time")
@@ -562,7 +562,7 @@ def get_recovery_voltage_threshold():
     except Exception as ex:
         logger.exception("Exception in get_recovery_voltage_threshold" + str(ex))
 
-def set_low_voltage_threshold(volt='11.5'): 
+def set_low_voltage_threshold(volt='11.5'):
     try:
         if mc_connected:
             if len(volt) == 4:
@@ -571,7 +571,7 @@ def set_low_voltage_threshold(volt='11.5'):
                 else: print(' setting threshold to ',volt)
                 try:
                     with SMBus(1) as bus:
-                        bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_LOW_VOLTAGE,volt) 
+                        bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_LOW_VOLTAGE,volt)
                     return True
                 except Exception as e:
                     print(e)
@@ -582,7 +582,7 @@ def set_low_voltage_threshold(volt='11.5'):
     except Exception as ex:
         logger.exception("Exception in set_low_voltage_threshold" + str(ex))
 
-def set_recovery_voltage_threshold(volt='12.8'): 
+def set_recovery_voltage_threshold(volt='12.8'):
     try:
         if mc_connected:
             if len(volt) == 4:
@@ -592,7 +592,7 @@ def set_recovery_voltage_threshold(volt='12.8'):
                 else:
                     print(' setting threshold to ',volt)
                     with SMBus(1) as bus:
-                        bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_RECOVERY_VOLTAGE,volt) 
+                        bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_RECOVERY_VOLTAGE,volt)
                     return True
             else:
                 logger.error('wrong input for voltage threshold ' + str(volt))
@@ -626,7 +626,7 @@ def get_temperature():
             with SMBus(1) as bus:
                 ctrl = bus.read_byte_data(RTC_ADDRESS, 14)
                 ctrl2 = 7|0x20 #39 bitwise or
-                bus.write_byte_data(RTC_ADDRESS, 14,ctrl2) 
+                bus.write_byte_data(RTC_ADDRESS, 14,ctrl2)
                 time.sleep(0.2)
                 t1 = bus.read_byte_data(RTC_ADDRESS, 0x11)
                 t2 = bus.read_byte_data(RTC_ADDRESS, 0x12)
@@ -815,7 +815,7 @@ def get_default_state(): #1=ON, 0=OFF
 
 def rtc_time_is_valid(rtc_time_utc):
     try:
-        
+
         if rtc_time_utc.strftime("%Y") == "1999" or rtc_time_utc.strftime("%Y") == "2000": # if you never set RTC time before
             logger.debug('RTC time ' + rtc_time_utc.strftime("%a %d %b %Y %H:%M:%S")+ ' ' + str(utc_tz) + ' has not been set before (stays in year 1999/2000).')
             return False
@@ -823,10 +823,10 @@ def rtc_time_is_valid(rtc_time_utc):
             logger.debug('RTC time ' + rtc_time_utc.strftime("%a %d %b %Y %H:%M:%S")+ ' ' + str(utc_tz) + ' is a valid time.')
             return True
     except Exception as ex:
-        logger.exception("Exception in rtc_time_is_valid" + str(ex))    
+        logger.exception("Exception in rtc_time_is_valid" + str(ex))
 
 def is_schedule_file_in_use(schedule_file = str(wittyPiPath) + '/schedule.wpi'):
-    
+
     if os.path.isfile(schedule_file) and os.stat(schedule_file).st_size > 1:
         return True
     else:
@@ -844,7 +844,7 @@ def extract_timestamp(datetimestr):
             logger.debug('extracted timestamp: ' + timestamp.strftime("%a %d %b %Y %H:%M:%S"))
         else:
             logger.debug('invalid timestamp!')
-        
+
     except Exception as ex:
         logger.exception("Exception in extract_timestamp" + str(ex))
     return timestamp
@@ -922,7 +922,7 @@ def schedule_script_interrupted():
         startup_time=get_local_date_time(startup_str_time, False)
         shutdown_time=get_local_date_time(shutdown_str_time, False)
         if startup_time is not None and shutdown_time is not None:
-            
+
             """    local st_timestamp=$(date --date="$(date +%Y-%m-)$startup_time" +%s)
             local sd_timestamp=$(date --date="$(date +%Y-%m-)$shutdown_time" +%s)"""
             cur_timestamp = dt.datetime.now(local_tz)
@@ -945,7 +945,7 @@ def get_schedule_file(schedule_file = str(wittyPiPath) + '/schedule.wpi'):
     except Exception as ex:
         logger.exception("Exception in get_schedule_file" + str(ex))
     return schedule_file_lines
-                
+
 def schedule_file_lines2schedule_file_data(schedule_file_lines):
     begin = None
     end = None
@@ -1091,7 +1091,7 @@ def verify_schedule_data(schedule_file_data):
     except Exception as ex:
         logger.exception("Exception in verify_schedule_data" + str(ex))
     return count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue
-    
+
 def process_schedule_data(schedule_file_data):
     begin = None
     end = None
@@ -1181,7 +1181,7 @@ def process_schedule_data(schedule_file_data):
                         else:
                             if interrupted and index != 0:
                                 # if [ ! -z "$2" ] && [ $interrupted == 0 ] && [ $index != 0 ] ; then
-                                # jump back to previous OFF state 
+                                # jump back to previous OFF state
                                 prev_state=states[(index-1)]
                                 prev_duration=extract_duration(prev_state)
                                 temptime=check_time-dt.timedelta(seconds=duration)-dt.timedelta(seconds=prev_duration)
@@ -1259,7 +1259,7 @@ def getAll():
     if wittypi['is_schedule_file_in_use']:
         wittypi['schedule_file_data'] = schedule_file_lines2schedule_file_data(get_schedule_file())
     return wittypi
-    
+
 
 def main():
     try:
@@ -1276,18 +1276,18 @@ def main():
         if wittypi['is_rtc_connected']:
             print(">>> Current temperature: " + str(wittypi['temperature']) + "°C / " + str(int(wittypi['temperature']) * 1.8 + 32) + " °F")
             print(">>> Your system time is:       " + str(dt.datetime.now(local_tz).strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz))
-            if wittypi['rtc_time_local'] is not None: 
+            if wittypi['rtc_time_local'] is not None:
                 print(">>> Your RTC time is:          " + str(wittypi['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " + str(local_tz))
                 if not wittypi['rtc_time_is_valid']:
                     print(">>> Your RTC time has not been set before (stays in year 1999/2000).")
             if wittypi['shutdown_time_local'] is not None:
                 str_shutdown_time_local = str(wittypi['shutdown_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz)
-            else: 
+            else:
                 str_shutdown_time_local = "Never"
             print(">>> Schedule next shutdown at: " + str_shutdown_time_local)
-            if wittypi['startup_time_local'] is not None: 
+            if wittypi['startup_time_local'] is not None:
                 str_startup_time_local = str(wittypi['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S")) + " " +  str(local_tz)
-            else: 
+            else:
                 str_startup_time_local = "Never"
             print(">>> Schedule next startup at:  " + str_startup_time_local)
             print(">>> RTC Alarm flags: " +  format(wittypi['alarm_flags'], '0>8b'))
@@ -1298,7 +1298,7 @@ def main():
             print(">>> Vin= " + str(wittypi['input_voltage']) + "V")
             print(">>> low voltage threshold= " + str(wittypi['low_voltage_threshold']))
             print(">>> recovery voltage threshold= " + str(wittypi['recovery_voltage_threshold']))
-            
+
             print(">>> Firmware version: " + str(wittypi['firmwareversion']))
             if  wittypi['default_state'] == 0:
                 print(">>> Default state when powered [OFF]")
