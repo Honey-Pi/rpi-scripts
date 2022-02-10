@@ -54,20 +54,20 @@ def oled():
 
 def timesync(settings, wittypi_status): # TODO outsource to utilities bc not related to main
     try:
-        strntptimediff=sync_time_ntp()
-        ntptimediff = 0
-        strntptimediff=strntptimediff.replace("s","")
-        ntptimediff= abs(int(float(strntptimediff)))
-        if ntptimediff >= 60:
-            logger.critical('Time syncronized to NTP - diff: ' + strntptimediff + ' was more than 60 seconds')
+        ntptimediff_str = sync_time_ntp()
+        ntptimediff_str = str(round(float(ntptimediff_str.replace("s","")),2))
+        ntptimediff_s = 0
+        ntptimediff_s = abs(int(float(ntptimediff_str)))
+        if ntptimediff_s >= 60:
+            logger.critical('Time syncronized to NTP - difference was: ' + ntptimediff_str + ' (more than 60 seconds)')
             set_wittypi_rtc(settings, wittypi_status)
         else:
-            logger.info('Time syncronized to NTP - diff: ' + strntptimediff)
+            logger.info('Time syncronized to NTP - difference was: ' + ntptimediff_str)
     except ValueError as ex:
         if str(ex) == "could not convert string to float":
             logger.error('Time syncronisation did not return the time difference')
     except Exception as ex:
-        logger.exception("Exception in timesync" + str(ex))
+        logger.exception("Exception in timesync")
     return False
 
 def gpstimesync(gpsSensor, blank=None): # TODO outsource to utilities bc not related to main
@@ -142,7 +142,7 @@ def toggle_measurement():
 def button_pressed(channel):
     global GPIO_BTN, LED_STATE, GPIO_LED
     LED_STATE = get_led_state(GPIO_LED)
-    if GPIO.input(GPIO_BTN): 
+    if GPIO.input(GPIO_BTN):
         button_pressed_rising("button_pressed")
     else:
         button_pressed_falling("button_pressed")
