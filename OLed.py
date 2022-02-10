@@ -300,7 +300,7 @@ def oled_view_channels(offlinedata):
                 channeldata['field7'],
                 channeldata['field8'])
     except Exception as ex:
-        logger.exception("oled_view_channels" + str(ex))
+        logger.exception("oled_view_channels")
 
 def oled_view_channel(ChannelId, lcdTime, lcdDate, field1="", field2="", field3="", field4="", field5="", field6="", field7="", field8=""):
     try:
@@ -337,7 +337,7 @@ def oled_view_channel(ChannelId, lcdTime, lcdDate, field1="", field2="", field3=
         else:
             logger.exception("Initializing oled ssd1306 failed")
     except Exception as ex:
-        logger.exception("oled_view_channel" + str(ex))
+        logger.exception("oled_view_channel")
     return False
 
 

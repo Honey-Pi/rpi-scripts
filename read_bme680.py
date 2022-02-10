@@ -40,10 +40,10 @@ def initBME680(ts_sensor):
                 logger.error("RuntimeError: Initializing BME680 on I2C Adress '" + i2c_addr + "' failed")
                 return sensor
             else:
-                logger.exception("RuntimeError in initBME680 during initializing of BME680 "+ str(ex))
+                logger.exception("RuntimeError in initBME680 during initializing of BME680 ")
                 return sensor
         except Exception as ex:
-            logger.exception("Unhandled Exception initBME680 during initializing of BME680" + str(ex))
+            logger.exception("Unhandled Exception initBME680 during initializing of BME680")
             return sensor
         #finally:
             #The finally block, if specified, will be executed regardless if the try block raises an error or not. So a return here ends the function!
@@ -61,7 +61,7 @@ def initBME680(ts_sensor):
         sensor.set_filter(bme680.FILTER_SIZE_3)
         sensor.set_temp_offset(offset)
         sensor.set_power_mode(bme680.FORCED_MODE)
-        
+
         if 'ts_field_air_quality' in ts_sensor:
             sensor.set_gas_status(bme680.ENABLE_GAS_MEAS)
             sensor.set_gas_heater_temperature(320)

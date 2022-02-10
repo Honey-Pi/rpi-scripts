@@ -44,9 +44,9 @@ def measure_bme280(ts_sensor):
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Could not access BME280 Sensor on I2C Adress " + format(i2c_addr, "x") + "!")
         else:
-            logger.exception("IOError " + str(ex))
+            logger.exception("IOError in measure_bme280")
     except OSError:
-            logger.exception("OSError " + str(ex))
+            logger.exception("OSError in measure_bme280")
     except Exception as ex:
         logger.exception("Unhandled Exception in measure_bme280")
 
