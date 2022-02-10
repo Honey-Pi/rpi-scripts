@@ -25,16 +25,7 @@ else
    cp /home/pi/HoneyPi/rpi-scripts/$VERSION/etc/network/interfaces /etc/network/interfaces
 
 fi
-if cmp -s /home/pi/HoneyPi/update.sh /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/update.sh
-then
-   echo "The update.sh file is already the correct file..."
-else
-   echo "The update.sh file is different..."
-   mv /home/pi/HoneyPi/update.sh /home/pi/HoneyPi/update.sh.orig
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/update.sh /home/pi/HoneyPi/update.sh
-   chmod a+x /home/pi/HoneyPi/update.sh
 
-fi
 if cmp -s /etc/dhcpcd.conf /home/pi/HoneyPi/rpi-scripts/$VERSION/home/pi/HoneyPi/overlays/dhcpcd.conf
 then
    echo "The dhcpcd.conf file is already the correct file..."
