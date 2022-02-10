@@ -37,7 +37,7 @@ def whoami():
         iam = pwd.getpwuid(os.geteuid()).pw_name
         return iam
     except Exception as ex:
-        logger.exception("Exception in whoami ")
+        logger.exception("Exception in whoami")
 
 def fix_fileaccess(file=scriptsFolder + '/err*.*'):
     try:
@@ -45,7 +45,7 @@ def fix_fileaccess(file=scriptsFolder + '/err*.*'):
         os.system('sudo chgrp pi ' + file)
         os.system('sudo chmod ug+w ' + file)
     except Exception as ex:
-        logger.exception("Exception in fix_fileaccess ")
+        logger.exception("Exception in fix_fileaccess")
 
 def offlinedata_prepare(ts_channels):
     try:
@@ -59,7 +59,7 @@ def offlinedata_prepare(ts_channels):
             #filename = scriptsFolder + "/offline-"
             if os.path.exists(csv_file):
                 with open(csv_file, "r") as fp:
-                    logger.debug("Offline file:" +  csv_file + " found")
+                    logger.debug("Offline file: " +  csv_file + " found")
                     for i, line in enumerate(fp):
                         pass
                     #print(line)
@@ -82,7 +82,7 @@ def offlinedata_prepare(ts_channels):
                 logger.debug("No offline File: " + csv_file + " does exist")
         return(offlinedata)
     except Exception as ex:
-        logger.exception("Exception in offlinedata_prepare "+ str(ex))
+        logger.exception("Exception in offlinedata_prepare")
 
 def get_interfacelist():
     try:
