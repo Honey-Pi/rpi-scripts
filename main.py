@@ -59,10 +59,10 @@ def timesync(settings, wittypi_status): # TODO outsource to utilities bc not rel
         ntptimediff_s = 0
         ntptimediff_s = abs(int(float(ntptimediff_str)))
         if ntptimediff_s >= 60:
-            logger.critical('Time syncronized to NTP - difference was: ' + ntptimediff_str + ' (more than 60 seconds)')
+            logger.critical('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's (more than 60 seconds)')
             set_wittypi_rtc(settings, wittypi_status)
         else:
-            logger.info('Time syncronized to NTP - difference was: ' + ntptimediff_str)
+            logger.info('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's')
     except ValueError as ex:
         if str(ex) == "could not convert string to float":
             logger.error('Time syncronisation did not return the time difference')
