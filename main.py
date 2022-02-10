@@ -56,9 +56,10 @@ def timesync(settings, wittypi_status): # TODO outsource to utilities bc not rel
     try:
         strntptimediff=sync_time_ntp()
         ntptimediff = 0
-        ntptimediff= abs(int(float(strntptimediff.replace("s",""))))
+        strntptimediff=strntptimediff.replace("s","")
+        ntptimediff= abs(int(float(strntptimediff)))
         if ntptimediff >= 60:
-            logger.critical('Time syncronized to NTP - diff: ' + ntptimediff + ' was more than 60seconds')
+            logger.critical('Time syncronized to NTP - diff: ' + strntptimediff + ' was more than 60 seconds')
             set_wittypi_rtc(settings, wittypi_status)
         else:
             logger.info('Time syncronized to NTP - diff: ' + strntptimediff)
