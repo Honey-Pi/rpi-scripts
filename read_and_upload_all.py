@@ -269,24 +269,24 @@ def start_measurement(measurement_stop):
             if isTimeToMeasure:
                 now = datetime.now()
                 if time_measured == 0:
-                    logger.debug("First time measurement. Now: " + str(now.strftime('%Y-%m-%d %H:%M')))
+                    logger.info("First time doing a measurement. Time is now: " + str(now.strftime('%Y-%m-%d %H:%M')))
                 else:
                     logger.debug("Last measurement was at " + str(superglobal.lastmeasurement.strftime('%Y-%m-%d %H:%M')))
-                    logger.debug("Time over for a new measurement. Time is now: " + str(now.strftime('%Y-%m-%d %H:%M')))
+                    logger.info("Time over for a new measurement. Time is now: " + str(now.strftime('%Y-%m-%d %H:%M')))
                 time_measured = time.time()
                 superglobal.lastmeasurement = now
                 superglobal.nextmeasurement = now + timedelta(seconds=1) * interval
 
+                # TODO Add description what and why this is checked here. What means 0x7?
                 check_undervoltage('0x7')
 
                 if measurementIsRunning.value == 0:
                     q = Queue()
                     p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
-                    p.join(timeout=interval)
+                    p.join(timeout=180)
                     if p.is_alive():
                         logger.warning("Measurement is still not finished!")
-
 
                 else:
                     logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")
@@ -299,11 +299,10 @@ def start_measurement(measurement_stop):
                     if shutdownAfterTransfer:
                         if superglobal.isMaintenanceActive is None:
                             superglobal.isMaintenanceActive = False
-                        logger.debug("Wert isMaintenanceActive: " + str(superglobal.isMaintenanceActive))
+                        logger.debug("Value of 'isMaintenanceActive' is: " + str(superglobal.isMaintenanceActive))
                         while superglobal.isMaintenanceActive:
-                            #isMaintenanceActive=getStateFromStorage('isMaintenanceActive', False)
                             logger.info("Shutting down was set but Maintenance mode is active, delaying shutdown!")
-                            logger.debug("Wert isMaintenanceActive: " + str(superglobal.isMaintenanceActive))
+                            logger.debug("Value of 'isMaintenanceActive' is: " + str(superglobal.isMaintenanceActive))
                             time.sleep(10)
                         logger.info("Shutting down was set => Waiting 10seconds and then shutdown.")
                         tblink = threading.Thread(target=blink_led, args = (settings["led_pin"], 0.25))
