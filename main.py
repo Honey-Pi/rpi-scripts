@@ -25,7 +25,7 @@ logger = logging.getLogger('HoneyPi.main')
 superglobal = superglobal.SuperGlobal()
 measurement = None
 settings = {}
-isActive = 0 # flag to know if measurement is active or not
+workingOnButtonpressIsActive = False # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
 time_rising = 0 # will be set by button_pressed event if the button is rised
 # the following will be overwritten by settings.json:
@@ -77,27 +77,27 @@ def gpstimesync(gpsSensor, blank=None): # TODO outsource to utilities bc not rel
     return False
 
 def start_ap():
-    global isActive, GPIO_LED, settings
-    isActive = 1 # measurement shall start next time
-    superglobal.isMaintenanceActive=True
+    global workingOnButtonpressIsActive, GPIO_LED, settings
+    superglobal.isMaintenanceActive = True # measurement shall start next time
     start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
     t1.join(timeout=30)
     logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
+    workingOnButtonpressIsActive = False
     start_led(GPIO_LED)
     if settings['display']['enabled']:
         oled_init()
         oled_maintenance_data(settings)
 
 def stop_ap():
-    global isActive, GPIO_LED, settings
+    global workingOnButtonpressIsActive, GPIO_LED, settings
     stop_led(GPIO_LED)
     t2 = threading.Thread(target=ap_to_client_mode)
     t2.start()
     t2.join(timeout=30)
-    isActive = 0 # measurement shall stop next time
-    superglobal.isMaintenanceActive=False
+    workingOnButtonpressIsActive = False
+    superglobal.isMaintenanceActive = False # measurement shall stop next time
     if settings['display']['enabled']:
         oled_off()
 
@@ -114,27 +114,29 @@ def close_script():
     sys.exit()
 
 def toggle_measurement():
-    global isActive, measurement_stop, measurement, GPIO_LED
-    if isActive == 0:
-        logger.info(">>> Button was pressed: Stop measurement / start AccessPoint")
-        # stop the measurement by setting event's flag
-        measurement_stop.set()
-        start_ap() # finally start AP
-    elif isActive == 1:
-        logger.info(">>> Button was pressed: Start measurement / stop AccessPoint")
-        if measurement.is_alive():
-            logger.warning("Thread should not be active anymore")
-        # start the measurement by clearing event's flag
-        measurement_stop.clear() # reset flag
-        measurement_stop = threading.Event() # create event to stop measurement
-        measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
-        measurement.start() # start measurement
-        stop_ap() # finally stop AP
-    else:
-        logger.error("Button press recognized but undefined state of Maintenance Mode")
-    # make signal, that job finished
-    tblink = threading.Thread(target=toggle_blink_led, args = (GPIO_LED, 0.2))
-    tblink.start()
+    global workingOnButtonpressIsActive, measurement_stop, measurement, GPIO_LED
+    if not workingOnButtonpressIsActive:
+        workingOnButtonpressIsActive = True
+        if not superglobal.isMaintenanceActive:
+            logger.info(">>> Button was pressed: Stop measurement / start AccessPoint")
+            # stop the measurement by setting event's flag
+            measurement_stop.set()
+            start_ap() # finally start AP
+        elif superglobal.isMaintenanceActive:
+            logger.info(">>> Button was pressed: Start measurement / stop AccessPoint")
+            if measurement.is_alive():
+                logger.warning("Thread should not be active anymore")
+            # start the measurement by clearing event's flag
+            measurement_stop.clear() # reset flag
+            measurement_stop = threading.Event() # create event to stop measurement
+            measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
+            measurement.start() # start measurement
+            stop_ap() # finally stop AP
+        else:
+            logger.error("Button press recognized but undefined state of Maintenance Mode")
+        # make signal, that job finished
+        tblink = threading.Thread(target=toggle_blink_led, args = (GPIO_LED, 0.2))
+        tblink.start()
 
 def button_pressed(channel):
     global GPIO_BTN, LED_STATE, GPIO_LED
@@ -197,7 +199,7 @@ def button_pressed_falling(self):
 
 def main():
     try:
-        global isActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED, settings
+        global workingOnButtonpressIsActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED, settings
 
         # Zaehlweise der GPIO-PINS auf der Platine
         GPIO.setmode(GPIO.BCM)
