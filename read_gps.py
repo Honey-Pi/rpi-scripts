@@ -40,10 +40,10 @@ def init_gps(gpsSensor):
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Could not access GPS at I2C Adress " + format(i2c_addr, "x") + "!")
         else:
-            logger.exception("IOError " + str(ex))
+            logger.exception("Other IOError ")
         return
     except Exception as ex:
-        logger.exception("Exception " + str(ex))
+        logger.exception("Exception in init_gps")
     return
 
 
@@ -67,9 +67,9 @@ def get_gps_timestamp(timeout=timeout):
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Could not access GPS!")
         else:
-            logger.exception("IOError " + str(ex))
+            logger.exception("Other IOError in get_gps_timestamp")
     except Exception as ex:
-        logger.exception("Exception " + str(ex))
+        logger.exception("Exceptionin get_gps_timestamp")
     return UTCtime,localtime,timestamp
 
 def get_gps_location(timeout=timeout):
@@ -97,9 +97,9 @@ def get_gps_location(timeout=timeout):
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Could not access GPS!")
         else:
-            logger.exception("IOError " + str(ex))
+            logger.exception("other IOError in get_gps_location")
     except Exception as ex:
-        logger.exception("Exception " + str(ex))
+        logger.exception("Exception in get_gps_location")
     return latitude, longitude, altitude
 
 def set_timezonefromcoordinates(latitude, longitude):
@@ -148,7 +148,7 @@ def timesync_gps(gpsSensor):
                 else:
                     logger.error('Failure writing GPS time to system...')
     except Exception as ex:
-        logger.exception("Exception " + str(ex))
+        logger.exception("Exception in timesync_gps")
     return False
 
 
@@ -171,7 +171,7 @@ def measure_gps(gpsSensor):
         logger.debug("Start measureing GPS, waiting "+ str(timeout) + " seconds for GPS fix!")
         gps_values['latitude'], gps_values['longitude'], gps_values['elevation'] = get_gps_location(timeout)
     except Exception as ex:
-        logger.exception("Exception " + str(ex))
+        logger.exception("Exception in measure_gps_time")
     return gps_values
 
 
@@ -184,7 +184,7 @@ def main():
         get_gps_location()
 
     except Exception as ex:
-        logger.exception("Unhandled Exception: " + str(ex))
+        logger.exception("Unhandled Exception in main")
 
 if __name__ == '__main__':
     try:
