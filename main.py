@@ -74,7 +74,7 @@ def gpstimesync(gpsSensor, blank=None): # TODO outsource to utilities bc not rel
     try:
         timesync_gps(gpsSensor)
     except Exception as ex:
-        logger.exception("Exception in gpstimesync" + str(ex))
+        logger.exception("Exception in gpstimesync")
     return False
 
 def start_ap():
