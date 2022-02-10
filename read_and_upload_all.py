@@ -231,8 +231,8 @@ def start_measurement(measurement_stop):
             bme680Inits.append(bme680Init)
 
         # if GPS PA1010D is configured
-        for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
-            init_gps(gpsSensor)
+        if gpsSensors and len(gpsSensors) == 1:
+            init_gps(gpsSensors[0])
 
         # if hx711 is set
         hxInits = []
@@ -241,8 +241,8 @@ def start_measurement(measurement_stop):
             hxInits.append(_hx)
 
         # PCF8591
-        if pcf8591Sensors and len(pcf8591Sensors) == 1:
-            voltage = get_raw_voltage(pcf8591Sensors[0]) # initial measurement as first measurement is always wrong
+        for (i, pcf8591Sensor) in enumerate(pcf8591Sensors):
+            voltage = get_raw_voltage(pcf8591Sensor) # initial measurement as first measurement is always wrong
 
         # -- End Pre Configuration --
 
