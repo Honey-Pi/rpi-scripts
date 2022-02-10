@@ -709,21 +709,26 @@ def check_wittypi_schedule(settings, wittypi_status): # TODO move to a seperate 
                             elif not isLowVoltage and schedule=="normal":
                                 logger.critical("WittyPi schedule file on filesystem is differnet from settings for normal mode!")
                     if settings['wittyPi'][schedule]['interval']!=1:
-                        logger.warning("WittyPi " + schedule + " Interval is not set to 'single measurement'!")
+                        if schedule == 'normal':
+                                logger.warning("WittyPi schedule is enabled in normal mode but Interval is not set to 'single measurement'!")
+                        elif schedule == 'low' and settings['wittyPi']['voltagecheck_enabled']:
+                                logger.warning("WittyPi schedule is enabled in power saving mode but Interval is not set to 'single measurement'!")
+                    else:
                         if not settings['wittyPi'][schedule]['shutdownAfterTransfer']:
-                            logger.warning("WittyPi " + schedule + " 'schutdown after transfer' is not enabled!")
+                            if schedule == 'normal':
+                                logger.warning("WittyPi schedule is enabled in normal mode, Interval is set to 'single measurement' but 'schutdown after transfer' is not enabled!")
+                            elif schedule == 'low' and settings['wittyPi']['voltagecheck_enabled']:
+                                logger.warning("WittyPi schedule is enabled in power saving mode, Interval is set to 'single measurement' but 'schutdown after transfer' is not enabled!")
                 else:
                     if settings['wittyPi'][schedule]['interval']==1:
                         if schedule == 'normal':
                             logger.critical("WittyPi schedule is not enabled in normal mode but Interval is set to 'single measurement'!")
+                            if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
+                                logger.critical("WittyPi schedule is not enabled in normal mode but 'shutdown after transfer' is enabled!")
                         elif schedule == 'low' and settings['wittyPi']['voltagecheck_enabled']:
                             logger.critical("WittyPi schedule is not enabled in power saving mode but Interval is set to 'single measurement'!")
-
-                    if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
-                        if schedule == 'normal':
-                            logger.critical("WittyPi schedule is not enabled in normal mode but 'shutdown after transfer' is enabled!")
-                        elif schedule == 'low' and settings['wittyPi']['voltagecheck_enabled']:
-                            logger.critical("WittyPi schedule is not enabled in power saving mode but 'shutdown after transfer' is enabled!")
+                            if settings['wittyPi'][schedule]['shutdownAfterTransfer']:
+                                logger.critical("WittyPi schedule is not enabled in power saving mode but 'shutdown after transfer' is enabled!")
 
     except Exception as ex:
         logger.exception("Error in function check_wittypi_schedule")
