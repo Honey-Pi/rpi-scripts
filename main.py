@@ -78,13 +78,13 @@ def gpstimesync(gpsSensor, blank=None): # TODO outsource to utilities bc not rel
 
 def start_ap():
     global isActive, GPIO_LED, settings
+    isActive = 1 # measurement shall start next time
+    superglobal.isMaintenanceActive=True
     start_led(GPIO_LED)
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
     t1.join(timeout=30)
-    isActive = 1 # measurement shall start next time
     logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
-    superglobal.isMaintenanceActive=True
     start_led(GPIO_LED)
     if settings['display']['enabled']:
         oled_init()
