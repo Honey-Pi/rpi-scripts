@@ -84,7 +84,7 @@ def start_ap():
     t1 = threading.Thread(target=client_to_ap_mode)
     t1.start()
     t1.join(timeout=30)
-    logger.info(">>> Connect yourself to HoneyPi-AccessPoint Wifi")
+    logger.info(">>> Starting HoneyPi-AccessPoint finished. Connect to HoneyPi-WiFi now.")
     workingOnButtonpressIsActive = False
     start_led(GPIO_LED)
     if settings['display']['enabled']:
@@ -142,9 +142,9 @@ def toggle_measurement():
 def button_pressed(channel):
     global GPIO_BTN, LED_STATE, GPIO_LED
     LED_STATE = get_led_state(GPIO_LED)
-    if GPIO.input(GPIO_BTN): # if port == 1
+    if GPIO.input(GPIO_BTN): 
         button_pressed_rising("button_pressed")
-    else: # if port != 1
+    else:
         button_pressed_falling("button_pressed")
 
 def button_pressed_rising(self):
