@@ -273,6 +273,16 @@ def start_measurement(measurement_stop):
                 else:
                     logger.debug("Last measurement was at " + str(superglobal.lastmeasurement.strftime('%Y-%m-%d %H:%M')))
                     logger.info("Time over for a new measurement. Time is now: " + str(now.strftime('%Y-%m-%d %H:%M')))
+
+                # Decide if Thread finished and new measurement can be run
+                startNewMeasurement = False
+                if measurementIsRunning.value == 0:
+                    startNewMeasurement = True
+                #if measurementIsRunning.value == 1 and time_measured-interval >= time_now-10*60: #untested
+                #    logger.warning("A previous measurement is still not finished! A measurement propaply cancelled somehow. But we keep measuring because the previous, canceled measurement was 10 minutes ago.")
+                #    startNewMeasurement = True
+
+                # update variables with new timestamps of this new meassurement
                 time_measured = time.time()
                 superglobal.lastmeasurement = now
                 superglobal.nextmeasurement = now + timedelta(seconds=1) * interval
@@ -280,13 +290,17 @@ def start_measurement(measurement_stop):
                 # TODO Add description what and why this is checked here. What means 0x7?
                 check_undervoltage('0x7')
 
-                if measurementIsRunning.value == 0:
+                if startNewMeasurement:
                     q = Queue()
                     p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
                     p.join(timeout=180)
                     if p.is_alive():
-                        logger.warning("Measurement is still not finished!")
+                        logger.warning("Measurement is still not finished. Waiting 5 seconds before killing process.")
+                        time.sleep(5)
+                        logger.debug("Killing unfinished measurement process.")
+                        p.terminate()
+                        measurementIsRunning.value = 0
 
                 else:
                     logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")
