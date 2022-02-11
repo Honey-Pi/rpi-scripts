@@ -547,7 +547,10 @@ def check_file(file, size=5, entries=25, skipFirst=0):
             logger.debug("File access rights are correct for '"+ file + "'")
         else:
             logger.info("File access rights were missing for '"+ file + "', applying permission changes...")
-            fix_fileaccess(file)
+            if os.path.exists(file):
+                fix_fileaccess(file)
+            else:
+                logger.warning("Canceled fixing file access rights for '"+ file + "' because file did not exist.")
         # If bigger than 5MB
         if os.path.getsize(file) > size * 1024 * 1024:
             readFile = open(file)
