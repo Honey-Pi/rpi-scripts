@@ -75,7 +75,7 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
                     connectionErrors.value +=1
                     logger.error("Failed internet connection. Count: " + str(connectionErrors.value) + "/" + str(MAX_RETRIES_IN_A_ROW))
                     if connectionErrors.value >= MAX_RETRIES_IN_A_ROW:
-                        if not debug:
+                        if not debug: #ToDo überprüfen auf aktiven Wartungsmodus 
                             logger.critical("Too many Connection Errors in a row => Rebooting Raspberry")
                             time.sleep(4)
                             reboot(settings)
