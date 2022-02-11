@@ -547,10 +547,7 @@ def check_file(file, size=5, entries=25, skipFirst=0):
             logger.debug("File access rights are correct for '"+ file + "'")
         else:
             logger.info("File access rights were missing for '"+ file + "', applying permission changes...")
-            if os.path.exists(file):
-                fix_fileaccess(file)
-            else:
-                logger.warning("Canceled fixing file access rights for '"+ file + "' because file did not exist.")
+            fix_fileaccess(file)
         # If bigger than 5MB
         if os.path.getsize(file) > size * 1024 * 1024:
             readFile = open(file)
@@ -686,7 +683,7 @@ def log_verify_schedule_data(schedulename, settings, count, script_duration, fou
         if found_on == 0:
             logger.critical(schedulename + ": Found no 'ON' line ")
         if settings['wittyPi'][schedulename]['shutdownAfterTransfer'] and found_on_wait == 0:
-            logger.critical(schedulename + ": Found no 'WAIT' in the 'ON' line, but schutdown after transfer' is enabled, you should add a 'WAIT' at the End of the 'ON' line")
+            logger.critical(schedulename + ": Found no 'WAIT' in the 'ON' line, but shutdown after transfer' is enabled, you should add a 'WAIT' at the End of the 'ON' line")
     except Exception as ex:
         logger.exception("Error in function log_verify_schedule_data")
 
@@ -715,9 +712,9 @@ def check_wittypi_schedule(settings, wittypi_status): # TODO move to a seperate 
                     else:
                         if not settings['wittyPi'][schedule]['shutdownAfterTransfer']:
                             if schedule == 'normal':
-                                logger.warning("WittyPi schedule is enabled in normal mode, Interval is set to 'single measurement' but 'schutdown after transfer' is not enabled!")
+                                logger.warning("WittyPi schedule is enabled in normal mode, Interval is set to 'single measurement' but 'shutdown after transfer' is not enabled!")
                             elif schedule == 'low' and settings['wittyPi']['voltagecheck_enabled']:
-                                logger.warning("WittyPi schedule is enabled in power saving mode, Interval is set to 'single measurement' but 'schutdown after transfer' is not enabled!")
+                                logger.warning("WittyPi schedule is enabled in power saving mode, Interval is set to 'single measurement' but 'shutdown after transfer' is not enabled!")
                 else:
                     if settings['wittyPi'][schedule]['interval']==1:
                         if schedule == 'normal':

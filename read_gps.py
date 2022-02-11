@@ -160,7 +160,7 @@ def measure_gps_time(gpsSensor):
         logger.debug("Start receiving GPS time, waiting "+ str(timeout) + " seconds for GPS fix!")
         UTCtime,localtime,timestamp = get_gps_timestamp(timeout)
     except Exception as ex:
-        logger.exception("Exception " + str(ex))
+        logger.exception("Exception in measure_gps_time")
     return UTCtime,localtime,timestamp
 
 def measure_gps(gpsSensor):
@@ -171,7 +171,7 @@ def measure_gps(gpsSensor):
         logger.debug("Start measureing GPS, waiting "+ str(timeout) + " seconds for GPS fix!")
         gps_values['latitude'], gps_values['longitude'], gps_values['elevation'] = get_gps_location(timeout)
     except Exception as ex:
-        logger.exception("Exception in measure_gps_time")
+        logger.exception("Exception in measure_gps")
     return gps_values
 
 
@@ -194,4 +194,4 @@ if __name__ == '__main__':
         logger.debug("exit")
         exit
     except Exception as ex:
-        logger.error("Unhandled Exception in "+ __name__ + repr(ex))
+        logger.error("Unhandled Exception in "+ __name__)
