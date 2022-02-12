@@ -129,7 +129,7 @@ def toggle_measurement():
                 logger.warning("Thread should not be active anymore")
             # start the measurement by clearing event's flag
             measurement_stop.clear() # reset flag
-            measurement_stop = threading.Event() # create event to stop measurement
+            measurement_stop = threading.Event() '''Required here? already in global definition!'''# create event to stop measurement 
             measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
             measurement.start() # start measurement
             stop_ap() # finally stop AP
@@ -288,9 +288,11 @@ def main():
                 time.sleep(60)
                 reboot(settings)
 
-        # blink with LED on startup
-        tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
-        tblink.start()
+        #create global variables 
+        if superglobal.isMaintenanceActive is None:
+            superglobal.isMaintenanceActive=False
+            logger.debug("Set initial state of isMaintenanceActive: '" + str(superglobal.isMaintenanceActive) + "'")
+        measurement_stop = threading.Event() '''Required here? already in global definition!'''# create event to stop measurement
 
         # Call wvdial for surfsticks
         connect_internet_modem(settings)
@@ -310,13 +312,17 @@ def main():
         # register button press event
         GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
 
-        # TODO add description what is done here and why
+        # blink with LED on startup
+        tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
+        tblink.start()
+
+        # Reading time from GPS if connected and configured
         if len(gpsSensors) >= 1:
             tgpstimesync.join(timeout=20)
             if tgpstimesync.is_alive():
                 logger.warning("Thread to syncronize time with GPS is still not finished!")
 
-        # TODO add description what is done here and why
+        # Reading time from NTP Servers if connected to network 
         if settings["offline"] != 3:
             ttimesync.join(timeout=20)
             if ttimesync.is_alive():
@@ -324,8 +330,6 @@ def main():
 
         # start as seperate background thread
         # because Taster pressing was not recognised
-        superglobal.isMaintenanceActive=False
-        measurement_stop = threading.Event() # create event to stop measurement
         measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
         measurement.start() # start measurement
 

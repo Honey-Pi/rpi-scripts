@@ -75,9 +75,17 @@ def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature,
                     connectionErrors.value +=1
                     logger.error("Failed internet connection. Count: " + str(connectionErrors.value) + "/" + str(MAX_RETRIES_IN_A_ROW))
                     if connectionErrors.value >= MAX_RETRIES_IN_A_ROW:
-                        if not debug: #ToDo überprüfen auf aktiven Wartungsmodus 
+                        if not debug:
                             logger.critical("Too many Connection Errors in a row => Rebooting Raspberry")
                             time.sleep(4)
+                            if superglobal.isMaintenanceActive is None:
+                                superglobal.isMaintenanceActive = False
+                                logger.warning("Set initial state of isMaintenanceActive in read and uplodd: '" + str(superglobal.isMaintenanceActive) + "'")
+                            logger.debug("Value of 'isMaintenanceActive' is: " + str(superglobal.isMaintenanceActive))
+                            while superglobal.isMaintenanceActive:
+                                logger.info("Too many Connection Errors in a row but rebooting delayed due to maintenance mode is active!")
+                                logger.debug("Value of 'isMaintenanceActive' is: " + str(superglobal.isMaintenanceActive))
+                                time.sleep(10)
                             reboot(settings)
                         else:
                             logger.critical("Too many Connection Errors in a row but did not reboot because console debug mode is enabled.")
@@ -313,6 +321,7 @@ def start_measurement(measurement_stop):
                     if shutdownAfterTransfer:
                         if superglobal.isMaintenanceActive is None:
                             superglobal.isMaintenanceActive = False
+                            logger.warning("Set initial state of isMaintenanceActive in read and uplodd: '" + str(superglobal.isMaintenanceActive) + "'")
                         logger.debug("Value of 'isMaintenanceActive' is: " + str(superglobal.isMaintenanceActive))
                         while superglobal.isMaintenanceActive:
                             logger.info("Shutting down was set but Maintenance mode is active, delaying shutdown!")
