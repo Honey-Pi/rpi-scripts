@@ -308,7 +308,7 @@ def start_measurement(measurement_stop):
                         timeouttime=timedelta(seconds=300)
                     else:
                         timeouttime=superglobal.nextmeasurement - now
-                    logger.debug("Remaining time for thread: " + str(timeouttime.total_seconds()) + " seconds")
+                    logger.debug("Remaining time for measure Process: " + str(timeouttime.total_seconds()) + " seconds")
                     # Wait at least [300 OR interval seconds] or wait until Process finished but continue with Process. If Process takes longer than timeout, continue but keep Process alive.
                     p.join(timeout=timeouttime.total_seconds())
 
