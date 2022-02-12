@@ -302,18 +302,22 @@ def start_measurement(measurement_stop):
                     q = Queue()
                     p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
                     p.start()
+
+                    # determine timeout value for Process.join()
                     if interval == 1:
                         timeouttime=timedelta(seconds=300)
                     else:
                         timeouttime=superglobal.nextmeasurement - now
                     logger.debug("Remaining time for thread: " + str(timeouttime.total_seconds()) + " seconds")
+                    # Wait at least [300 OR interval seconds] or wait until Process finished but continue with Process. If Process takes longer than timeout, continue but keep Process alive.
                     p.join(timeout=timeouttime.total_seconds())
+
+                    # kill unfinished Process (e.g. when new DHT lib breaks with print("Unable to set line 4 to input"))
                     if p.is_alive():
-                        logger.warning("Measurement is still not finished. Waiting 5 seconds before killing process.")
-                        time.sleep(5)
-                        logger.debug("Killing unfinished measurement process.")
+                        logger.warning("Measurement is still not finished. Killing unfinished measurement process.")
                         p.terminate()
                         measurementIsRunning.value = 0
+                        time.sleep(0.1)
 
                 else:
                     logger.warning("Forerun measurement is not finished yet. Consider increasing interval.")
