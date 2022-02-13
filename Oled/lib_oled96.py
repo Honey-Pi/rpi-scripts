@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Substantially derived from code by (c) 2015 Richard Hull The MIT License (MIT)
 # https://github.com/rm-hull/ssd1306:
