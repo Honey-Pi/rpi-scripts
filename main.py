@@ -66,7 +66,9 @@ def timesync(settings, wittypi_status): # TODO outsource to utilities bc not rel
     except ValueError as ex:
         if str(ex) == "could not convert string to float":
             logger.error('Time syncronisation did not return the time difference')
-    except Exception as ex:
+        else:
+            logger.exception("ValueError in timesync")
+    except:
         logger.exception("Exception in timesync")
     return False
 
@@ -129,7 +131,7 @@ def toggle_measurement():
                 logger.warning("Thread should not be active anymore")
             # start the measurement by clearing event's flag
             measurement_stop.clear() # reset flag
-            #measurement_stop = threading.Event() '''Required here? already in global definition!'''# create event to stop measurement 
+            #measurement_stop = threading.Event() '''Required here? already in global definition!'''# create event to stop measurement
             measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
             measurement.start() # start measurement
             stop_ap() # finally stop AP
@@ -288,7 +290,7 @@ def main():
                 time.sleep(60)
                 reboot(settings)
 
-        #create global variables 
+        #create global variables
         if superglobal.isMaintenanceActive is None:
             superglobal.isMaintenanceActive=False
             logger.debug("Set initial state of isMaintenanceActive: '" + str(superglobal.isMaintenanceActive) + "'")
@@ -322,7 +324,7 @@ def main():
             if tgpstimesync.is_alive():
                 logger.warning("Thread to syncronize time with GPS is still not finished!")
 
-        # Reading time from NTP Servers if connected to network 
+        # Reading time from NTP Servers if connected to network
         if settings["offline"] != 3:
             ttimesync.join(timeout=20)
             if ttimesync.is_alive():

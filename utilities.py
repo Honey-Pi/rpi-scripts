@@ -668,7 +668,7 @@ def set_wittypi_rtc(settings, wittypi_status): # TODO move to a seperate wittypi
                 logger.critical("Set RTC time to "+ timenow.strftime("%a %d %b %Y %H:%M:%S"))
             else:
                 logger.critical("Failed to set RTC time")
-    except Exception as ex:
+    except:
         logger.exception("Error in function set_wittypi_rtc")
 
 def log_verify_schedule_data(schedulename, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue): # TODO move to a seperate wittypi utilities
