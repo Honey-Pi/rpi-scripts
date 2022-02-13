@@ -67,7 +67,7 @@ def measure_dht(ts_sensor):
                 dht = adafruit_dht.DHT11(SENSOR_PIN, use_pulseio=True)
             else:
                 dht = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=True)
-                
+
             temperature = dht.temperature
             humidity = dht.humidity
             dht.exit()
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         #fields = measure_dht ({"dht_type" : 2302, "pin" : 5, 'ts_field_temperature': "temperature", 'ts_field_humidity': "humidity"})
         fields = measure_dht ({"dht_type" : 22, "pin" : 4, 'ts_field_temperature': "temperature", 'ts_field_humidity': "humidity"})
         if fields != {}:
-            print("Temp: {:.1f} F / {:.1f} °C    Humidity: {}% ".format(fields['temperature']* (9 / 5) + 32, fields['temperature'], fields['humidity']))
+            print("Temp: {:.1f} F / {:.1f} °C Humidity: {}% ".format(fields['temperature']* (9 / 5) + 32, fields['temperature'], fields['humidity']))
 
     except (KeyboardInterrupt, SystemExit):
        pass
