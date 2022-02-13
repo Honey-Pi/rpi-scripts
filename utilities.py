@@ -109,15 +109,17 @@ def get_cpu_temp():
         pass
     return None
 
+#@blockPrinting # TODO suppress print messages on systemstart
 def sync_time_ntp():
     try:
         os.system("sudo systemctl stop ntp")
-        ntptimediff = os.popen("sudo ntpd -q -g | grep 'ntpd:' | awk '/^ntpd:/{print $NF}'").read().strip()
+        ntptimediff = os.popen("sudo ntpd -q -g -D 0 | grep 'ntpd:' | awk '/^ntpd:/{print $NF}'").read().strip()
         os.system("sudo systemctl start ntp")
+        if not ntptimediff:
+            logger.warning("Could not extract ntpd timedifference in sync_time_ntp")
         return(ntptimediff)
-    except Exception as ex:
+    except:
         logger.exception("Exception in get_ntp_status")
-        pass
     return None
 
 def get_ntp_status():
