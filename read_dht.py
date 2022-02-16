@@ -53,10 +53,14 @@ def measure_dht(ts_sensor):
         logger.error(errorMessage)
         return fields
 
-    for proc in psutil.process_iter():
-        if proc.name() == 'libgpiod_pulsein' or proc.name() == 'libgpiod_pulsei':
-            proc.kill()
-            logger.debug("Killed process " + proc.name())
+    try:
+        for proc in psutil.process_iter():
+            proc_name = proc.name()
+            if proc_name == 'libgpiod_pulsein' or proc_name == 'libgpiod_pulsei':
+                proc.kill()
+                logger.debug("Killed process " + proc_name)
+    except:
+        logger.error("Exception occured while terminating libgpiod_pulsein. Likely the process was already killed.")
 
     while timer <= max_timer:
         try:
