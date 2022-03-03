@@ -177,7 +177,7 @@ def init_hx711(weight_sensor):
         except Exception as e:
             logger.error("init_hx711 missing param: " + str(e))
 
-        logger.debug('Init HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' started')
+        logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Init started')
         loops = 0
         while not errorEncountered and loops < 3:
             loops += 1
@@ -188,16 +188,16 @@ def init_hx711(weight_sensor):
                 hx.set_debug_mode(flag=debug)
                 errorEncountered = hx.reset() # Before we start, reset the hx711 (not necessary)
                 if not errorEncountered:
-                    logger.debug('Init HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
+                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Init finished')
                     return hx
             except Exception as e:
-                if str(e) == "no median for empty data":
-                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Could not read enough data from HX711 => Try again: ' + str(loops) + '/3')
+                if str(e) == "no median for empty data" or str(e) == "mean requires at least one data point":
+                    logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Could not read data from HX711 => Try again: ' + str(loops) + '/3')
                 else:
                     logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Initializing HX711 failed: ' + str(e))
             time.sleep(1)
 
-        logger.error('Returning empty HX711 for DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+        logger.error('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' initializing failed, Please check cabling and configuration! Returning empty HX711.')
         return None
     except Exception as e:
         logger.exception("Unhandled Exception in init_hx711")
@@ -238,13 +238,14 @@ def measure_weight(weight_sensor, hx=None):
 
         # init hx711
         if not hx:
+            logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' no initialized HX711 received, initializing now.')
             hx = init_hx711(weight_sensor)
 
         if hx:
             temp_reading = hx.get_raw_data_mean(6) # measure just for fun
 
         if not isinstance(temp_reading, (int, float)): # always check if you get correct value or only False
-            logger.debug('Initialized HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' again because of bad data.')
+            logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' bad data measured, initializing HX711 again.')
             if hx:
                 hx.reset()
             hx = init_hx711(weight_sensor)
@@ -306,8 +307,10 @@ def measure_weight(weight_sensor, hx=None):
         logger.debug('measure HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' finished')
 
     except Exception as e:
-        if str(e) == "no median for empty data":
-            logger.error('Could not read enough data from HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+        if str(e) == "no median for empty data" or str(e) == "mean requires at least one data point":
+            logger.error('Could not read data from HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel  + ' Please check cabling and configuration!')
+        elif str(e) == "'NoneType' object has no attribute 'power_up'":
+            logger.error('Could not access HX711 on DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ' Please check cabling and configuration!')
         else:
             logger.error('Reading HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
     finally:
