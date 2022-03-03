@@ -25,7 +25,8 @@ from read_hx711 import init_hx711
 from read_gps import init_gps
 
 from read_settings import get_settings, get_sensors
-from utilities import reboot, shutdown, start_single, stop_single, clean_fields, update_wittypi_schedule, getStateFromStorage, setStateToStorage, blink_led, check_undervoltage, thingspeak_datetime
+from utilities import reboot, shutdown, start_single, stop_single, clean_fields, getStateFromStorage, setStateToStorage, blink_led, check_undervoltage, thingspeak_datetime
+from wittypiutilities import update_wittypi_schedule
 from write_csv import write_csv
 from measurement import measure_all_sensors
 from thingspeak import transfer_all_channels_to_ts
