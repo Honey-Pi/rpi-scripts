@@ -261,7 +261,7 @@ def runpostupgradescript():
             logger.warning("Unfinished post_upgrade found in '" + runpostupgradescriptfile + "' Starting it again...")
             process = subprocess.Popen(runpostupgradescriptfile, shell=True, stdout=subprocess.PIPE)
             for line in process.stdout:
-                logger.info(line.decode("utf-8"))
+                logger.info(line.decode("utf-8").rstrip("\n"))
             process.wait()
         else:
             if os.path.isfile(runpostupgradescriptfile):
@@ -881,9 +881,9 @@ def set_wittypi_schedule(): # TODO move to a seperate wittypi utilities
                 logger.debug("Setting wittyPi schedule...")
                 process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi' und setzen der RTC Zeit und aufruf der runScript.sh [setzen von wittyPi Startup / Shutdown}
                 for line in process.stdout:
-                    logger.debug(line.decode("utf-8"))
+                    logger.debug(line.decode("utf-8").rstrip("\n"))
                 for line in process.stderr:
-                    logger.critical(line.decode("utf-8"))
+                    logger.critical(line.decode("utf-8").rstrip("\n"))
                 process.wait()
                 schedulefile_updated = os.path.isfile(wittyPiPath+wittypi_scheduleFileName) and os.stat(wittyPiPath+wittypi_scheduleFileName).st_size == os.stat(wittypi_scheduleFile).st_size
                 if schedulefile_updated:
