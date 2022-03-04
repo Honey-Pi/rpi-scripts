@@ -28,7 +28,8 @@ from read_bh1750 import measure_bh1750
 from read_max import measure_tc
 from read_gps import init_gps, measure_gps
 from read_settings import get_settings, get_sensors
-from utilities import logfile, start_single, stop_single, scriptsFolder, is_zero
+from utilities import start_single, stop_single, is_zero
+from constant import logfile, scriptsFolder
 
 import logging
 

@@ -20,7 +20,7 @@ gps = PA1010D()
 timeout=30
 waitforfix=True
 
-local_tz = dt.datetime.utcnow().astimezone().tzinfo
+from constant import local_tz
 utc_tz = pytz.timezone('UTC')
 
 def init_gps(gpsSensor):

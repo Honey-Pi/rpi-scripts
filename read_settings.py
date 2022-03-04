@@ -6,8 +6,7 @@ import io
 import json
 import os
 from pathlib import Path
-from utilities import settingsFile, logfile
-from wittypiutilities import wittypi_scheduleFile
+from constant import settingsFile, logfile, wittypi_scheduleFile
 import logging
 from pwd import getpwuid
 from grp import getgrgid

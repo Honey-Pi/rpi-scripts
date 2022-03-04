@@ -13,13 +13,11 @@ from datetime import datetime
 
 logger = logging.getLogger('HoneyPi.wittypiutilities')
 
-from wittypi.wittypi import local_tz, clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data
-from utilities import homeFolder, honeypiFolder, scriptsFolder, backendFolder, settingsFile, logfile, is_service_active, get_abs_timedifference, getStateFromStorage, local_tz
+from wittypi.wittypi import clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data
+from utilities import is_service_active, get_abs_timedifference, getStateFromStorage
+from constant import homeFolder, backendFolder, wittypi_scheduleFileName, wittypi_scheduleFile, local_tz
 
-wittypi_scheduleFileName = "/schedule.wpi"
-wittypi_scheduleFile = backendFolder + wittypi_scheduleFileName
-
-def set_wittypi_rtc(settings, wittypi_status): # TODO move to a seperate wittypi utilities
+def set_wittypi_rtc(settings, wittypi_status):
     try:
         if wittypi_status['is_rtc_connected']:
             timenow = datetime.now(local_tz)
@@ -30,7 +28,7 @@ def set_wittypi_rtc(settings, wittypi_status): # TODO move to a seperate wittypi
     except:
         logger.exception("Error in function set_wittypi_rtc")
 
-def log_verify_schedule_data(schedulename, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue): # TODO move to a seperate wittypi utilities
+def log_verify_schedule_data(schedulename, settings, count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue):
     try:
         if beginissue != "":
             logger.critical(schedulename + ": " + beginissue)
@@ -51,7 +49,7 @@ def log_verify_schedule_data(schedulename, settings, count, script_duration, fou
     except Exception as ex:
         logger.exception("Error in function log_verify_schedule_data")
 
-def check_wittypi_schedule(settings, wittypi_status): # TODO move to a seperate wittypi utilities
+def check_wittypi_schedule(settings, wittypi_status):
     try:
         for schedule in ['normal', 'low']:
             if schedule in settings['wittyPi']:
@@ -93,7 +91,7 @@ def check_wittypi_schedule(settings, wittypi_status): # TODO move to a seperate 
     except Exception as ex:
         logger.exception("Error in function check_wittypi_schedule")
 
-def check_wittypi_rtc(settings, wittypi_status): # TODO move to a seperate wittypi utilities
+def check_wittypi_rtc(settings, wittypi_status):
     try:
         if wittypi_status['is_rtc_connected']:
             if not wittypi_status['rtc_time_is_valid']:
@@ -115,7 +113,7 @@ def check_wittypi_rtc(settings, wittypi_status): # TODO move to a seperate witty
         logger.exception("Error in function check_wittypi_rtc")
 
 
-def check_wittypi(settings): # TODO move to a seperate wittypi utilities
+def check_wittypi(settings):
     wittypi_status = {}
     try:
         wittypi_status = get_wittypi_status(settings)
@@ -169,7 +167,7 @@ def check_wittypi(settings): # TODO move to a seperate wittypi utilities
         logger.exception("Error in function check_wittypi")
     return wittypi_status
 
-def get_wittypi_status(settings): # TODO move to a seperate wittypi utilities
+def get_wittypi_status(settings):
     try:
         wittyPi_status = {}
         wittyPi_status = getAll()
@@ -177,7 +175,7 @@ def get_wittypi_status(settings): # TODO move to a seperate wittypi utilities
     except Exception as ex:
         logger.exception("Error in function get_wittyPi_status")
 
-def pause_wittypi_schedule(): # TODO move to a seperate wittypi utilities
+def pause_wittypi_schedule():
     try:
         if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1: #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
             os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
@@ -186,7 +184,7 @@ def pause_wittypi_schedule(): # TODO move to a seperate wittypi utilities
     except Exception as ex:
         logger.exception("Error in function pause_wittypi_schedule")
 
-def continue_wittypi_schedule(): # TODO move to a seperate wittypi utilities
+def continue_wittypi_schedule():
     try:
         if os.path.isfile(wittypi_scheduleFile + ".bak") and os.path.isfile(wittypi_scheduleFile):
             if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
@@ -200,7 +198,7 @@ def continue_wittypi_schedule(): # TODO move to a seperate wittypi utilities
     except Exception as ex:
         logger.exception("Error in function continue_wittypi_schedule")
 
-def clear_wittypi_schedule(): # TODO move to a seperate wittypi utilities
+def clear_wittypi_schedule():
     try:
         startup_time_cleared = clear_startup_time()
         shutdown_time_cleared = clear_shutdown_time()
@@ -211,7 +209,7 @@ def clear_wittypi_schedule(): # TODO move to a seperate wittypi utilities
     except Exception as ex:
         logger.exception("Error in function clear_wittypi_schedule")
 
-def set_wittypi_schedule(): # TODO move to a seperate wittypi utilities
+def set_wittypi_schedule():
     try:
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1 #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
         wittyPiPath = ''
@@ -246,7 +244,7 @@ def set_wittypi_schedule(): # TODO move to a seperate wittypi utilities
         logger.exception("Error in function set_wittypi_schedule")
     return False
 
-def update_wittypi_schedule(schedule): # TODO move to a seperate wittypi utilities
+def update_wittypi_schedule(schedule):
     try:
         # write values to file
         outfile = open(wittypi_scheduleFile, "w")

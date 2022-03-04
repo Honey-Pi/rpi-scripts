@@ -19,16 +19,9 @@ import socket, struct, fcntl
 import subprocess
 import re
 
+from constant import scriptsFolder, settingsFile, local_tz
+
 logger = logging.getLogger('HoneyPi.utilities')
-
-homeFolder = '/home/pi'
-honeypiFolder = homeFolder + '/HoneyPi'
-scriptsFolder = honeypiFolder + '/rpi-scripts'
-backendFolder = '/var/www/html/backend'
-settingsFile = backendFolder + '/settings.json'
-logfile = scriptsFolder + '/error.log'
-
-from wittypi.wittypi import local_tz
 
 def is_service_active(servicename='honeypi.service'):
     try:
@@ -79,6 +72,9 @@ def getStateFromStorage(variable, default_value=False):
         pass
     return default_value
 
+from wittypiutilities import get_wittypi_status, check_wittypi_rtc, set_wittypi_schedule
+
+
 def setStateToStorage(variable, value):
     file = scriptsFolder + '/.' + variable
     try:
@@ -93,10 +89,6 @@ def setStateToStorage(variable, value):
         logger.exception("Error in function setStateToStorage")
         pass
     return value
-
-
-from wittypiutilities import get_wittypi_status, check_wittypi_rtc, set_wittypi_schedule
-
 
 def whoami():
     try:
