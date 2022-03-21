@@ -72,7 +72,7 @@ def getStateFromStorage(variable, default_value=False):
         pass
     return default_value
 
-from wittypiutilities import get_wittypi_status, check_wittypi_rtc, set_wittypi_schedule
+from wittypiutilities import get_wittypi_status, check_wittypi_rtc, set_wittypi_schedule, pause_wittypi_schedule
 
 
 def setStateToStorage(variable, value):
