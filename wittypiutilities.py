@@ -190,12 +190,12 @@ def continue_wittypi_schedule():
         if os.path.isfile(wittypi_scheduleFile + ".bak") and os.path.isfile(wittypi_scheduleFile):
             if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
                 # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
+                logger.debug("Continuing wittyPi schedule (someone saved a new schedule in maintenance). Removing " + wittypi_scheduleFile + ".bak")
                 os.remove(wittypi_scheduleFile + ".bak")
-                logger.debug("Continuing wittyPi schedule (someone saved a new schedule in maintenance).")
             else:
                 os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
-                set_wittypi_schedule()
                 logger.debug("Continuing wittyPi schedule...")
+                set_wittypi_schedule()
     except Exception as ex:
         logger.exception("Error in function continue_wittypi_schedule")
 
@@ -239,7 +239,7 @@ def set_wittypi_schedule():
                 else:
                     logger.critical("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " update failed!")"""
             else:
-                logger.debug("Pausing wittyPi schedule...")
+                logger.debug("Pausing wittyPi schedule by removing scheduled startup / shutdown...")
                 clear_wittypi_schedule() #Löschen von wittyPi Startup / Shutdown
             return True
         else:
