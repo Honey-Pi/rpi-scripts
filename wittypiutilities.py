@@ -224,6 +224,7 @@ def set_wittypi_schedule():
         if os.path.isfile(wittyPiPath + '/wittyPi.sh') and os.path.isfile(wittyPiPath + '/syncTime.sh') and os.path.isfile(wittyPiPath + '/runScript.sh'):
             if schedulefile_exists:
                 copy_wittypi_schedulefile(wittypi_scheduleFile, wittyPiPath + wittypi_scheduleFileName) #Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi'
+                logger.getChild('WittyPi.runScript')
                 runscript() #setzen von wittyPi Startup / Shutdown
                 """logger.debug("Setting wittyPi schedule...")
                 process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi' und aufruf der runScript.sh [setzen der RTC Zeit und setzen von wittyPi Startup / Shutdown]

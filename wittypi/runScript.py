@@ -25,7 +25,6 @@ import datetime as dt
 
 def runscript():
     try:
-        logging.basicConfig(level=logging.INFO)
         print("--------------- " + dt.datetime.now(local_tz).strftime("%a %d %b %Y %H:%M:%S") + "---------------")
         if is_rtc_connected:
             if is_schedule_file_in_use():
@@ -71,6 +70,7 @@ def runscript():
 
 if __name__ == '__main__':
     try:
+        logging.basicConfig(level=logging.INFO)
         runscript()
 
     except (KeyboardInterrupt, SystemExit):
