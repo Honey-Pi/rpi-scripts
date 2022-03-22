@@ -23,8 +23,9 @@ logger = logging.getLogger('WittyPi.runScript')
 from wittyPi import local_tz, is_rtc_connected, wittyPiPath, is_schedule_file_in_use, schedule_file_lines2schedule_file_data, get_schedule_file, process_schedule_data, stringtime2timetuple, calcTime, set_shutdown_time, clear_shutdown_time, set_startup_time, clear_startup_time
 import datetime as dt
 
-def runscript():
+def runscript(loggername='WittyPi.runScript'):
     try:
+        logger = logging.getLogger(loggername)
         print("--------------- " + dt.datetime.now(local_tz).strftime("%a %d %b %Y %H:%M:%S") + "---------------")
         if is_rtc_connected:
             if is_schedule_file_in_use():
