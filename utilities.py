@@ -404,8 +404,14 @@ def start_led(gpio=21):
 def toggle_blink_led(gpio=21, duration=0.25):
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
     state = bool(GPIO.input(gpio))
+    if is_zero():
+        os.system("sudo bash -c 'echo " + str(int(state)) + " > /sys/class/leds/led0/brightness'") # green LED
+    os.system("sudo bash -c 'echo " + str(int(not state)) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     GPIO.output(gpio, not state)
     time.sleep(duration)
+    if is_zero():
+        os.system("sudo bash -c 'echo " + str(int(not state)) + " > /sys/class/leds/led0/brightness'") # green LED
+    os.system("sudo bash -c 'echo " + str(int(state)) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
     GPIO.output(gpio, state)
 
 def blink_led(gpio=21, duration=0.25):
