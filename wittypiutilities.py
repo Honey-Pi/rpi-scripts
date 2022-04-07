@@ -31,22 +31,33 @@ def get_wittyPiPath():
         logger.exception("Error in function get_wittyPiPath")
     return wittyPiPath
 
-
 def remove_wittypi_internet_timesync():
+    already_done = False
     try:
         wittyPiPath = get_wittyPiPath()
         if os.path.isfile(wittyPiPath + "/syncTime.sh"):
-            os.system("sudo sed -i '40s/net_to_system/# net_to_system/' " + wittyPiPath + "/syncTime.sh")
-            os.system("sudo sed -i '41s/system_to_rtc/# system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
+            fp = open(wittyPiPath + "/syncTime.sh")
+            for i, line in enumerate(fp):
+                if i == 39 and line.strip().startswith("#"):
+                    already_done = True
+            if not already_done:
+                os.system("sudo sed -i '40s/net_to_system/# net_to_system/' " + wittyPiPath + "/syncTime.sh")
+                os.system("sudo sed -i '41s/system_to_rtc/# system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
     except Exception as ex:
         logger.exception("Error in function remove_wittypi_internet_timesync")
 
 def add_wittypi_internet_timesync():
+    already_done = False
     try:
         wittyPiPath = get_wittyPiPath()
         if os.path.isfile(wittyPiPath + "/syncTime.sh"):
-            os.system("sudo sed -i '40s/# net_to_system/net_to_system/' " + wittyPiPath + "/syncTime.sh")
-            os.system("sudo sed -i '41s/# system_to_rtc/system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
+            fp = open(wittyPiPath + "/syncTime.sh")
+            for i, line in enumerate(fp):
+                if i == 39 and line.strip().startswith("net_to_system"):
+                    already_done = True
+            if not already_done:
+                os.system("sudo sed -i '40s/# net_to_system/net_to_system/' " + wittyPiPath + "/syncTime.sh")
+                os.system("sudo sed -i '41s/# system_to_rtc/system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
     except Exception as ex:
         logger.exception("Error in function add_wittypi_internet_timesync")
 
