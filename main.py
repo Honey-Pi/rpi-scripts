@@ -65,7 +65,7 @@ def timesync(settings, wittypi_status): # TODO outsource to utilities bc not rel
             set_wittypi_rtc(settings, wittypi_status)
         else:
             logger.info('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's')
-            if not wittypi_status['rtc_time_is_valid']:
+            if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid']:
                 set_wittypi_rtc(settings, wittypi_status)
     except ValueError as ex:
         if str(ex) == "could not convert string to float":
@@ -266,7 +266,7 @@ def main():
 
         # check wittypi TODO add description what is done here and why
         wittypi_status = check_wittypi(settings)
-        if wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
+        if ('rtc_time_is_valid', 'rtc_time_local' in wittypi_status) and  wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
             #set systemtime from RTC
             logger.info('Writing RTC time ' + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
             rtc_to_system()
