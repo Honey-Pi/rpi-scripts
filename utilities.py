@@ -35,7 +35,7 @@ def is_service_active(servicename='honeypi.service'):
 def get_abs_timedifference(datetime1, datetime2):
     get_abs_timedelta_totalseconds = 0
     try:
-        datetime1 = datetime.now(local_tz)
+        #datetime1 = datetime.now(local_tz)
         if datetime2 >= datetime1:
             timedelta = datetime2 - datetime1
         else:
@@ -44,6 +44,19 @@ def get_abs_timedifference(datetime1, datetime2):
     except Exception as ex:
         logger.exception("Error in function get_abs_timedifference")
     return abs_timedelta_totalseconds
+
+def is_system_datetime_valid():
+    datetimevalid = False
+    try:
+        datetimenow = datetime.now(local_tz)
+        if datetimenow.year != 1969 and datetimenow.year != 1970:
+            datetimevalid = True
+        else:
+            logger.critical("System time (" + datetimenow.strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1969/1970).")
+
+    except Exception as ex:
+        logger.exception("Error in function validate_system_time")
+    return datetimevalid
 
 def getStateFromStorage(variable, default_value=False):
     file = scriptsFolder + '/.' + variable

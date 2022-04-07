@@ -13,9 +13,9 @@ import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
 from read_settings import get_settings, get_sensors
-from utilities import stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, fix_fileaccess, whoami
+from utilities import stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, fix_fileaccess, whoami, is_system_datetime_valid
 from constant import scriptsFolder, logfile
-from wittypiutilities import check_wittypi, set_wittypi_rtc, update_wittypi_schedule
+from wittypiutilities import check_wittypi, set_wittypi_rtc, update_wittypi_schedule, rtc_to_system
 
 from multiprocessing import Process, Queue, Value
 from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
@@ -261,6 +261,10 @@ def main():
 
         # check wittypi TODO add description what is done here and why
         wittypi_status = check_wittypi(settings)
+        if (not is_system_datetime_valid()) and wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
+            #set systemtime from RTC
+            logger.info('Writing RTC time ' + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
+            rtc_to_system()
 
         # TODO add description what is done here and why
         gpsSensors = get_sensors(settings, 99)

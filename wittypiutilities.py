@@ -13,7 +13,7 @@ from datetime import datetime
 
 logger = logging.getLogger('HoneyPi.wittypiutilities')
 
-from wittypi import clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data, runscript, system_to_rtc
+from wittypi import clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data, runscript, system_to_rtc, rtc_to_system
 #from wittypi.runScript import runscript
 from utilities import is_service_active, get_abs_timedifference, getStateFromStorage
 from constant import homeFolder, backendFolder, wittypi_scheduleFileName, wittypi_scheduleFile, local_tz
@@ -99,7 +99,7 @@ def check_wittypi_rtc(settings, wittypi_status):
                 logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
             else:
                 timenow = datetime.now(local_tz)
-                abs_timedelta_totalseconds = round(get_abs_timedifference(wittypi_status['rtc_time_local'], timenow))
+                abs_timedelta_totalseconds = round(get_abs_timedifference(timenow, wittypi_status['rtc_time_local']))
                 if abs_timedelta_totalseconds >= 300:
                     logger.critical("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
                 elif abs_timedelta_totalseconds >= 60:
