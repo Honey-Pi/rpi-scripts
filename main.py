@@ -266,7 +266,7 @@ def main():
 
         # check wittypi TODO add description what is done here and why
         wittypi_status = check_wittypi(settings)
-        if ('rtc_time_is_valid', 'rtc_time_local' in wittypi_status) and  wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
+        if ('rtc_time_is_valid' in wittypi_status) and ('rtc_time_local' in wittypi_status) and wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
             #set systemtime from RTC
             logger.info('Writing RTC time ' + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
             rtc_to_system()
