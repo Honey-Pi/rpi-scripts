@@ -35,16 +35,18 @@ def get_wittyPiPath():
 def remove_wittypi_internet_timesync():
     try:
         wittyPiPath = get_wittyPiPath()
-        os.system("sudo sed -i '40s/net_to_system/# net_to_system/' " + wittyPiPath + "/syncTime.sh")
-        os.system("sudo sed -i '41s/system_to_rtc/# system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
+        if os.path.isfile(wittyPiPath + "/syncTime.sh"):
+            os.system("sudo sed -i '40s/net_to_system/# net_to_system/' " + wittyPiPath + "/syncTime.sh")
+            os.system("sudo sed -i '41s/system_to_rtc/# system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
     except Exception as ex:
         logger.exception("Error in function remove_wittypi_internet_timesync")
 
 def add_wittypi_internet_timesync():
     try:
         wittyPiPath = get_wittyPiPath()
-        os.system("sudo sed -i '40s/# net_to_system/net_to_system/' " + wittyPiPath + "/syncTime.sh")
-        os.system("sudo sed -i '41s/# system_to_rtc/system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
+        if os.path.isfile(wittyPiPath + "/syncTime.sh"):
+            os.system("sudo sed -i '40s/# net_to_system/net_to_system/' " + wittyPiPath + "/syncTime.sh")
+            os.system("sudo sed -i '41s/# system_to_rtc/system_to_rtc/' " + wittyPiPath + "/syncTime.sh")
     except Exception as ex:
         logger.exception("Error in function add_wittypi_internet_timesync")
 
