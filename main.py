@@ -15,7 +15,7 @@ from read_and_upload_all import start_measurement
 from read_settings import get_settings, get_sensors
 from utilities import stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, fix_fileaccess, whoami, is_system_datetime_valid
 from constant import scriptsFolder, logfile
-from wittypiutilities import check_wittypi, set_wittypi_rtc, update_wittypi_schedule, rtc_to_system
+from wittypiutilities import check_wittypi, set_wittypi_rtc, update_wittypi_schedule, rtc_to_system, remove_wittypi_internet_timesync
 
 from multiprocessing import Process, Queue, Value
 from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
@@ -65,6 +65,8 @@ def timesync(settings, wittypi_status): # TODO outsource to utilities bc not rel
             set_wittypi_rtc(settings, wittypi_status)
         else:
             logger.info('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's')
+            if not wittypi_status['rtc_time_is_valid']:
+                set_wittypi_rtc(settings, wittypi_status)
     except ValueError as ex:
         if str(ex) == "could not convert string to float":
             logger.error('Time syncronisation did not return the time difference')
@@ -258,10 +260,13 @@ def main():
         if settings['display']['enabled']:
             tOLed = threading.Thread(target=oled, args=())
             tOLed.start()
+            
+        # remove commands to set RTC time to internet from wittypi syncTime.sh
+        remove_wittypi_internet_timesync()
 
         # check wittypi TODO add description what is done here and why
         wittypi_status = check_wittypi(settings)
-        if (not is_system_datetime_valid()) and wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
+        if wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
             #set systemtime from RTC
             logger.info('Writing RTC time ' + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
             rtc_to_system()
@@ -326,15 +331,29 @@ def main():
 
         # Reading time from GPS if connected and configured
         if len(gpsSensors) >= 1:
-            tgpstimesync.join(timeout=20)
+            tgpstimesync.join(timeout=25)
             if tgpstimesync.is_alive():
                 logger.warning("Thread to syncronize time with GPS is still not finished!")
 
         # Reading time from NTP Servers if connected to network
         if settings["offline"] != 3:
-            ttimesync.join(timeout=20)
+            ttimesync.join(timeout=25)
             if ttimesync.is_alive():
                 logger.warning("Thread to syncronize time with NTP Server is still not finished!")
+
+        if (not is_system_datetime_valid()):
+            if len(gpsSensors) >= 1 and tgpstimesync.is_alive():
+                logger.critical("Systemtime is still invalid! Waiting another 35 seconds for Thread to syncronize time with GPS")
+                tgpstimesync.join(timeout=35)
+                if tgpstimesync.is_alive():
+                    logger.warning("Thread to syncronize time with GPS is still not finished!")
+            elif settings["offline"] != 3 and ttimesync.is_alive():
+                logger.critical("Systemtime is still invalid! Waiting another 35 seconds for Thread to syncronize time with NTP Servers")
+                ttimesync.join(timeout=35)
+                if ttimesync.is_alive():
+                    logger.warning("Thread to syncronize time with NTP Server is still not finished!")
+            else:
+                logger.critical("All options to synchonize time failed and systemtime is still invalid")
 
         # start as seperate background thread
         # because Taster pressing was not recognised
