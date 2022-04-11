@@ -152,7 +152,7 @@ def check_wittypi_rtc(settings, wittypi_status):
             if wittypi_status['startup_time_local'] is not None:
                 logger.debug("HoneyPi next scheduled wakeup is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
             if wittypi_status['shutdown_time_local'] is not None:
-                logger.debug("HoneyPi next scheduled shutdown is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+                logger.debug("HoneyPi next scheduled shutdown is: "+ wittypi_status['shutdown_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
     except Exception as ex:
         logger.exception("Error in function check_wittypi_rtc")
 
@@ -160,12 +160,14 @@ def check_wittypi_rtc(settings, wittypi_status):
 def check_wittypi(settings):
     wittypi_status = {}
     try:
+        check_wittypi_scheduleFile_backup()
         wittypi_status = get_wittypi_status(settings)
         wittypi_status['service_active']=is_service_active('wittypi.service')
         if wittypi_status['is_rtc_connected'] and wittypi_status['is_mc_connected'] and not wittypi_status['service_active']:
             logger.warning("WittyPi 3 is connected WittyPi Software is not installed!")
         if wittypi_status['is_rtc_connected'] and not wittypi_status['is_mc_connected'] and not wittypi_status['service_active']:
             logger.warning("WittyPi 2 (or other RTC) is connected but WittyPi Software is not installed!")
+        
         if wittypi_status['service_active'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.warning("WittyPi service is active but WittyPi is disabled in HoneyPi settings!")
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
@@ -228,13 +230,28 @@ def pause_wittypi_schedule():
     except Exception as ex:
         logger.exception("Error in function pause_wittypi_schedule")
 
+def check_wittypi_scheduleFile_backup():
+    found_scheduleFile_backup = False
+    try:
+            if os.path.isfile(wittypi_scheduleFile + ".bak") and os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
+                # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
+                logger.debug("Found wittyPi schedule '" + wittypi_scheduleFile + "' and backup. Removing '" + wittypi_scheduleFile + ".bak'")
+                found_scheduleFile_backup = True
+                os.remove(wittypi_scheduleFile + ".bak")
+            elif os.path.isfile(wittypi_scheduleFile + ".bak") and not os.path.isfile(wittypi_scheduleFile):
+                os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
+                logger.debug("Found only wittyPi schedule backup. Renaming '" + wittypi_scheduleFile + ".bak' to '" + wittypi_scheduleFile + "' and set schedules!" )
+                found_scheduleFile_backup = True
+                set_wittypi_schedule()
+    except Exception as ex:
+        logger.exception("Error in function continue_wittypi_schedule")
+    return found_scheduleFile_backup
+
 def continue_wittypi_schedule():
     try:
         if os.path.isfile(wittypi_scheduleFile + ".bak") and os.path.isfile(wittypi_scheduleFile):
-            if os.stat(wittypi_scheduleFile).st_size > 1 and os.stat(wittypi_scheduleFile + ".bak").st_size != os.stat(wittypi_scheduleFile).st_size:
-                # if schedule is not empty and schedule changed in the meantime (=> someone saved a new schedule in maintenance)
-                logger.debug("Continuing wittyPi schedule (someone saved a new schedule in maintenance). Removing " + wittypi_scheduleFile + ".bak")
-                os.remove(wittypi_scheduleFile + ".bak")
+            if check_wittypi_scheduleFile_backup():
+                logger.debug("Continuing wittyPi schedule (someone saved a new schedule in maintenance).")
             else:
                 os.rename(wittypi_scheduleFile + ".bak", wittypi_scheduleFile)
                 logger.debug("Continuing wittyPi schedule...")
@@ -257,28 +274,28 @@ def set_wittypi_schedule():
     try:
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1 #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
         wittyPiPath = get_wittyPiPath()
-        if os.path.isfile(wittyPiPath + '/wittyPi.sh') and os.path.isfile(wittyPiPath + '/syncTime.sh') and os.path.isfile(wittyPiPath + '/runScript.sh'):
-            if schedulefile_exists:
-                copy_wittypi_schedulefile(wittypi_scheduleFile, wittyPiPath + wittypi_scheduleFileName) #Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi'
-                runscript(loggername='HoneyPi.WittyPi.runScript') #setzen von wittyPi Startup / Shutdown
-                """logger.debug("Setting wittyPi schedule...")
-                process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi' und aufruf der runScript.sh [setzen der RTC Zeit und setzen von wittyPi Startup / Shutdown]
-                for line in process.stdout:
-                    logger.debug(line.decode("utf-8").rstrip("\n"))
-                for line in process.stderr:
-                    logger.critical(line.decode("utf-8").rstrip("\n"))
-                process.wait()
-                schedulefile_updated = os.path.isfile(wittyPiPath+wittypi_scheduleFileName) and os.stat(wittyPiPath+wittypi_scheduleFileName).st_size == os.stat(wittypi_scheduleFile).st_size
-                if schedulefile_updated:
-                    logger.debug("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " with filesize "+ str(os.stat(wittyPiPath+wittypi_scheduleFileName).st_size) +" updated!")
-                else:
-                    logger.critical("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " update failed!")"""
+        #if os.path.isfile(wittyPiPath + '/wittyPi.sh') and os.path.isfile(wittyPiPath + '/syncTime.sh') and os.path.isfile(wittyPiPath + '/runScript.sh'):
+        if schedulefile_exists:
+            copy_wittypi_schedulefile(wittypi_scheduleFile, wittyPiPath + wittypi_scheduleFileName) #Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi'
+            runscript(loggername='HoneyPi.WittyPi.runScript') #setzen von wittyPi Startup / Shutdown
+            """logger.debug("Setting wittyPi schedule...")
+            process = subprocess.Popen("sudo sh " + backendFolder + "/shell-scripts/change_wittypi.sh 1", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE) # Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi' und aufruf der runScript.sh [setzen der RTC Zeit und setzen von wittyPi Startup / Shutdown]
+            for line in process.stdout:
+                logger.debug(line.decode("utf-8").rstrip("\n"))
+            for line in process.stderr:
+                logger.critical(line.decode("utf-8").rstrip("\n"))
+            process.wait()
+            schedulefile_updated = os.path.isfile(wittyPiPath+wittypi_scheduleFileName) and os.stat(wittyPiPath+wittypi_scheduleFileName).st_size == os.stat(wittypi_scheduleFile).st_size
+            if schedulefile_updated:
+                logger.debug("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " with filesize "+ str(os.stat(wittyPiPath+wittypi_scheduleFileName).st_size) +" updated!")
             else:
-                logger.debug("Pausing wittyPi schedule by removing scheduled startup / shutdown...")
-                clear_wittypi_schedule() #Löschen von wittyPi Startup / Shutdown
-            return True
+                logger.critical("WittyPi schedule " + wittyPiPath+wittypi_scheduleFileName + " update failed!")"""
         else:
-            logger.debug('WittyPi is not installed - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
+            logger.debug("Pausing wittyPi schedule by removing scheduled startup / shutdown...")
+            clear_wittypi_schedule() #Löschen von wittyPi Startup / Shutdown
+        return True
+        #else:
+        #    logger.debug('WittyPi is not installed - wittyPi.sh exists: ' + str(os.path.isfile(wittyPiPath + '/wittyPi.sh')) + ' syncTime.sh exists: ' + str(os.path.isfile(wittyPiPath + '/syncTime.sh')) + ' runScript.sh exists: ' +  str(os.path.isfile(wittyPiPath + '/runScript.sh')))
     except Exception as ex:
         logger.exception("Error in function set_wittypi_schedule")
     return False
