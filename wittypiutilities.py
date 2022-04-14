@@ -13,7 +13,7 @@ from datetime import datetime
 
 logger = logging.getLogger('HoneyPi.wittypiutilities')
 
-from wittypi import clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data, runscript, system_to_rtc, rtc_to_system
+from wittypi import clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data, runscript, system_to_rtc, rtc_to_system, set_power_cut_delay, set_dummy_load_duration, set_default_state, set_pulsing_interval, set_white_led_duration
 #from wittypi.runScript import runscript
 from utilities import is_service_active, get_abs_timedifference, getStateFromStorage
 from constant import homeFolder, backendFolder, wittypi_scheduleFileName, wittypi_scheduleFile, local_tz
