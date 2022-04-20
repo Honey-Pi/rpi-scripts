@@ -15,7 +15,7 @@ from read_and_upload_all import start_measurement
 from read_settings import get_settings, get_sensors
 from utilities import stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, fix_fileaccess, whoami, is_system_datetime_valid
 from constant import scriptsFolder, logfile
-from wittypiutilities import check_wittypi, set_wittypi_rtc, update_wittypi_schedule, rtc_to_system, remove_wittypi_internet_timesync, continue_wittypi_schedule
+from wittypiutilities import check_wittypi, set_wittypi_rtc, update_wittypi_schedule, rtc_to_system, remove_wittypi_internet_timesync, continue_wittypi_schedule, add_halt_pin_event
 
 from multiprocessing import Process, Queue, Value
 from OLed import oled_off, oled_start_honeypi,oled_diag_data,oled_interface_data, oled_init, main, oled_measurement_data, oled_maintenance_data, oled_view_channels
@@ -204,6 +204,11 @@ def button_pressed_falling(self):
             time_elapsed_s = float("{0:.2f}".format(time_elapsed/1000)) # ms to s
             logger.warning("Too short Button press, Too long Button press OR inteference occured. Button was pressed for: " + str(time_elapsed_s) + "s.")
 
+def halt_pin_event_detected(channel):
+    if GPIO.input(channel) == 0:
+        logger.info("Shutdown request detected by event raised from WittyPi (button pressed / Shutdown time) on channel " + str(channel))
+        shutdown(settings)
+
 def main():
     try:
         global workingOnButtonpressIsActive, measurement_stop, measurement, debug, GPIO_BTN, GPIO_LED, settings
@@ -271,6 +276,8 @@ def main():
             logger.info('Writing RTC time ' + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
             rtc_to_system()
             continue_wittypi_schedule()
+        if wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
+            add_halt_pin_event(halt_pin_event_detected)
 
 
         # TODO add description what is done here and why

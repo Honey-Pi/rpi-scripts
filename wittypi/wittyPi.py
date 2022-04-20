@@ -77,6 +77,34 @@ def send_sysup():
     except Exception as ex:
         logger.exception("Exception in send_sysup " + str(ex))
 
+def send_halt():
+    try:
+        GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+        GPIO.setwarnings(False)
+        # restore halt pin
+        GPIO.setup(HALT_PIN, GPIO.IN)
+        GPIO.output(HALT_PIN, GPIO.HIGH)
+    except RuntimeError as ex:
+        logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
+    except Exception as ex:
+        logger.exception("Exception in send_sysup " + str(ex))
+
+def add_halt_pin_event(halt_pin_event_detected_function):
+    try:
+        # setup Button
+        GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
+        GPIO.setup(HALT_PIN, GPIO.IN) # Set HALT_PIN to be an input pin
+        bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
+        # register button press event
+        GPIO.add_event_detect(HALT_PIN, GPIO.BOTH, callback=halt_pin_event_detected_function, bouncetime=bouncetime)
+    except RuntimeError as ex:
+        logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
+    except Exception as ex:
+        logger.exception("Exception in send_sysup " + str(ex))
+
+def halt_pin_event_detected():
+    if GPIO.input(HALT_PIN) == 0:
+        logger.critical("halt_pin_event_detected")
 
 def dec2hex(datalist):
     try:
@@ -663,6 +691,38 @@ def get_alarm_flags(RTC_ALARM_ADDRESS=0x0F):
             return byte_F
     except Exception as ex:
         logger.exception("Exception in clear_alarm_flags" + str(ex))
+
+
+def check_alarm_flags(byte_F):
+    #byte_F should be read from I2C_RTC_ADDRESS in register 0x0F)
+    alarm = 0
+    try:
+        if (byte_F&0x1) != 0:
+            # woke up by alarm 1 (startup)
+            logger.debug('System startup as scheduled.')
+            alarm = 1
+        elif (byte_F&0x2) != 0:
+            # woke up by alarm 2 (shutdown), turn it off immediately
+            logger.debug('Seems I was unexpectedly woken up by shutdown alarm, must go back to sleep...')
+            #do_shutdown $HALT_PIN $has_rtc
+            alarm = 2
+    except Exception as ex:
+        logger.exception("Exception in check_alarm_flags" + str(ex))
+    return alarm
+    
+def do_shutdown():
+    try:
+        # restore halt pin
+        send_halt()
+        if rtc_connected:
+            # clear alarm flags
+            clear_alarm_flags()
+            # only enable alarm 1 (startup)
+            with SMBus(1) as bus:
+                bus.write_byte_data(RTC_ADDRESS, 0x0E,0x05)
+            os.system("sudo shutdown -h now")
+    except Exception as ex:
+        logger.exception("Exception in do_shutdown" + str(ex))
 
 def get_power_cut_delay():
     try:

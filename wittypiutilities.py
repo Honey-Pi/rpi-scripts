@@ -13,7 +13,7 @@ from datetime import datetime
 
 logger = logging.getLogger('HoneyPi.wittypiutilities')
 
-from wittypi import clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data, runscript, system_to_rtc, rtc_to_system, set_power_cut_delay, set_dummy_load_duration, set_default_state, set_pulsing_interval, set_white_led_duration
+from wittypi import clear_startup_time, clear_shutdown_time, getAll, schedule_file_lines2schedule_file_data, verify_schedule_data, runscript, system_to_rtc, rtc_to_system, set_power_cut_delay, set_dummy_load_duration, set_default_state, set_pulsing_interval, set_white_led_duration, send_sysup, check_alarm_flags, clear_alarm_flags, do_shutdown, add_halt_pin_event
 #from wittypi.runScript import runscript
 from utilities import is_service_active, get_abs_timedifference, getStateFromStorage
 from constant import homeFolder, backendFolder, wittypi_scheduleFileName, wittypi_scheduleFile, local_tz
@@ -162,11 +162,28 @@ def check_wittypi(settings):
     try:
         wittypi_status = get_wittypi_status(settings)
         wittypi_status['service_active']=is_service_active('wittypi.service')
-        if wittypi_status['is_rtc_connected'] and wittypi_status['is_mc_connected'] and not wittypi_status['service_active']:
-            logger.warning("WittyPi 3 is connected WittyPi Software is not installed!")
-        if wittypi_status['is_rtc_connected'] and not wittypi_status['is_mc_connected'] and not wittypi_status['service_active']:
-            logger.warning("WittyPi 2 (or other RTC) is connected but WittyPi Software is not installed!")
-        
+        if wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
+            if wittypi_status['is_mc_connected']:
+                logger.debug("WittyPi 3 is connected but WittyPi Service is not running!")
+            else:
+                logger.debug("WittyPi 2 (or other RTC) but WittyPi Service is not running!")
+            #send sys_up signal to WittyPi on SYSUP (GPIO 17)
+            send_sysup()
+            #check alarmflags and clear 
+            if wittypi_status['alarm_flags'] is not None:
+                logger.debug("WittyPi (or other RTC) alarm flags '" + format(wittypi_status['alarm_flags'], '0>8b') + "'")
+                #ToDo handle alarm flags
+                alarm_type = check_alarm_flags(wittypi_status['alarm_flags'])
+                if alarm_type == 1:
+                    if wittypi_status['startup_time_local'] is not None:
+                        logger.debug("HoneyPi was woken up by Startup Alarm : " + wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+                    else:
+                        logger.info("HoneyPi was woken up by Startup Alarm from RTC!")
+                    logger.debug("Clearing WittyPi (or other RTC) alarm flags!")
+                    clear_alarm_flags()
+                elif alarm_type == 2:
+                    logger.warning("HoneyPi was woken up by Shutdown Alarm from RTC, should go to sleep!")
+                    do_shutdown()
         if wittypi_status['service_active'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.warning("WittyPi service is active but WittyPi is disabled in HoneyPi settings!")
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:

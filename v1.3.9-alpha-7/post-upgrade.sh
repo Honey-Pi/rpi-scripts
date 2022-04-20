@@ -83,28 +83,61 @@ apt-get -y update --allow-releaseinfo-change
 
 echo "Install required modules after v1.3.4...for for dht..."
 apt-get -y install libgpiod2
-pip3 install --upgrade adafruit-circuitpython-dht
+pip3 install adafruit-circuitpython-dht
 
 echo "Install required modules after v1.3.7 used for oled display..."
-pip3 install --upgrade Pillow smbus2
+pip3 install Pillow smbus2
 apt-get -y install libopenjp2-7 libtiff5
 
 echo "Install required modules after v1.3.7 used for ds18b20..."
-pip3 install --upgrade ds18b20
+pip3 install ds18b20
 
 echo "Install required modules after v1.3.7 used for rak811..."
-pip3 install --upgrade rak811
+pip3 install rak811
 
 echo "Install required modules after v1.3.7 used for WittyPi..."
-pip3 install --upgrade smbus2 pytz
+pip3 install smbus2 pytz
 
 echo "Install required modules after v1.3.7 used for PA1010D..."
-pip3 install --upgrade pynmea2 timezonefinder
+pip3 install pynmea2 timezonefinder
 #pip3 install --upgrade pa1010d
 
 echo "Install required modules after v1.3.7...for for dht..."
 apt-get -y install python3-psutil
 echo "Finished installing modules"
+
+echo "Install required modules after v1.3.9 used for rak811 & WittyPi..."
+if grep -q 'dtoverlay=pi3-miniuart-bt' /boot/config.txt; then
+  echo 'Seems setting Pi3/4 Bluetooth to use mini-UART is done already, skip this step.'
+else
+  echo 'dtoverlay=pi3-miniuart-bt' >> /boot/config.txt
+fi
+echo "Install required modules after v1.3.9 used for WittyPi..."
+echo '>>> Enable I2C'
+if grep -q 'i2c-bcm2708' /etc/modules; then
+  echo 'Seems i2c-bcm2708 module already exists, skip this step.'
+else
+  echo 'i2c-bcm2708' >> /etc/modules
+fi
+if grep -q 'i2c-dev' /etc/modules; then
+  echo 'Seems i2c-dev module already exists, skip this step.'
+else
+  echo 'i2c-dev' >> /etc/modules
+fi
+if grep -q 'dtparam=i2c1=on' /boot/config.txt; then
+  echo 'Seems i2c1 parameter already set, skip this step.'
+else
+  echo 'dtparam=i2c1=on' >> /boot/config.txt
+fi
+if grep -q 'dtparam=i2c_arm=on' /boot/config.txt; then
+  echo 'Seems i2c_arm parameter already set, skip this step.'
+else
+  echo 'dtparam=i2c_arm=on' >> /boot/config.txt
+fi
+
+
+
+
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
 sed -i '/(sleep 2;python3/c\#' /etc/rc.local # disable autostart in rc.local
