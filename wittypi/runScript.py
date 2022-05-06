@@ -60,8 +60,10 @@ def runscript(loggername='WittyPi.runScript'):
                 print("Schedule next startup at:  " + str_startup_time_local)
                 logger.debug("Schedule next startup at:  " + str_startup_time_local)
             else:
-                print('File "' + wittyPiPath + '/schedule.wpi" not found, skip running schedule script.')
-                logger.debug('File "' + wittyPiPath + '/schedule.wpi" not found, skip running schedule script.')
+                print('Schedule script not found, skip running schedule script and clear startup / shutdown time.')
+                logger.debug('Schedule script not found, skip running schedule script and clear startup / shutdown time.')
+                clear_shutdown_time()
+                clear_startup_time()
         else:
             print("no WittyPi RTC is connected")
             logger.debug("no WittyPi RTC is connected")
