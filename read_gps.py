@@ -122,6 +122,7 @@ def timesync_gps(gpsSensor):
     try:
         gps_values = {}
         UTCtime,localtime,timestamp = None, None, None
+        timeout = 10
         if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
             timeout = gpsSensor["timeout"]
         logger.debug("Start receiving GPS location and time, waiting "+ str(timeout) + " seconds for GPS fix!")
@@ -155,6 +156,7 @@ def timesync_gps(gpsSensor):
 def measure_gps_time(gpsSensor):
     UTCtime,localtime,timestamp = None, None, None
     try:
+        timeout = 10
         if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
             timeout = gpsSensor["timeout"]
         logger.debug("Start receiving GPS time, waiting "+ str(timeout) + " seconds for GPS fix!")
@@ -166,6 +168,7 @@ def measure_gps_time(gpsSensor):
 def measure_gps(gpsSensor):
     gps_values = {}
     try:
+        timeout = 10
         if 'timeout' in gpsSensor and gpsSensor["timeout"] is not None:
             timeout = gpsSensor["timeout"]
         logger.debug("Start measureing GPS, waiting "+ str(timeout) + " seconds for GPS fix!")
