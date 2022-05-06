@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-
 #original from https://github.com/marl2en/wittypi4python
 #updated version on https://github.com/elschnorro77/wittypi4python
 
