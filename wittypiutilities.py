@@ -184,6 +184,17 @@ def check_wittypi(settings):
                 elif alarm_type == 2:
                     logger.warning("HoneyPi was woken up by Shutdown Alarm from RTC, should go to sleep!")
                     do_shutdown()
+            #create WittyPi folder if not existing to be able to save schedule file.
+            if wittypi_status['wittyPiPath'] == "" or wittypi_status['wittyPiPath'] is None:
+                path = homeFolder + '/wittypi'
+                try:
+                    os.mkdir(path)
+                    os.system('sudo chown pi ' + path)
+                    os.system('sudo chgrp pi ' + path)
+                    os.system('sudo chmod ug+w ' + path)
+                    logger.info("Created directory for WittyPi schedule file '%s'" % path)
+                except OSError:
+                    logger.critical("Creation of the directory for WittyPi schedule file '%s' failed" % path)
         if wittypi_status['service_active'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.warning("WittyPi service is active but WittyPi is disabled in HoneyPi settings!")
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
