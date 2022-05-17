@@ -206,7 +206,7 @@ def measure_bme680(sensor, gas_baseline, ts_sensor, burn_in_time=30):
                             air_quality_score, gas_baseline = calc_air_quality(sensor, gas_baseline)
                             # round to 0 digits
                             fields[ts_sensor["ts_field_air_quality"]] = round(air_quality_score)
-                    logger.debug('BME680 temperature: {0:.2f} °C, humidity: {1:.2f} %RH, absolute humidity: {2:.2f} g/m³'.format(temperature,humidity,absoluteHumidity))
+                    logger.debug('BME680 temperature: {0:.2f} °C, humidity: {1:.2f} %RH, absolute humidity: {2:.2f} g/m³, air pressure: {3:.2f} millibars'.format(temperature,humidity,absoluteHumidity,air_pressure))
 
                     return fields, gas_baseline
                 # Waiting for heat_stable
