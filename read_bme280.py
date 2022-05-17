@@ -23,7 +23,7 @@ def measure_bme280(ts_sensor):
 
     try:
         logger.debug("Reading on  I2C Adress " + format(i2c_addr, "x"))
-        temperature,pressure,humidity = readBME280All(i2c_addr)
+        temperature,air_pressure,humidity = readBME280All(i2c_addr)
 
 
         # ThingSpeak fields
@@ -38,8 +38,11 @@ def measure_bme280(ts_sensor):
         if 'ts_field_absolutehumidity' in ts_sensor and isinstance(humidity, (int, float)) and isinstance(temperature, (int, float)):
             absoluteHumidity = computeAbsoluteHumidity(humidity, temperature)
             fields[ts_sensor["ts_field_absolutehumidity"]] = absoluteHumidity
-        if 'ts_field_air_pressure' in ts_sensor and isinstance(pressure, (int, float)):
-            fields[ts_sensor["ts_field_air_pressure"]] = round(pressure, 1)
+        if 'ts_field_air_pressure' in ts_sensor and isinstance(air_pressure, (int, float)):
+            fields[ts_sensor["ts_field_air_pressure"]] = round(air_pressure, 1)
+        if isinstance(temperature, (int, float)) and isinstance(humidity, (int, float)) and isinstance(absoluteHumidity, (int, float)) and isinstance(air_pressure, (int, float)):
+            logger.debug('BME280 temperature: {0:.2f} °C, humidity: {1:.2f} %RH, absolute humidity: {2:.2f} g/m³, air pressure: {3:.2f} millibars'.format(temperature,humidity,absoluteHumidity,air_pressure))
+
     except IOError as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.error("Could not access BME280 Sensor on I2C Adress " + format(i2c_addr, "x") + "!")
