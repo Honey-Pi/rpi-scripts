@@ -12,9 +12,10 @@ from logging.handlers import RotatingFileHandler
 import RPi.GPIO as GPIO
 
 from read_and_upload_all import start_measurement
+from maintenance import maintenance
 from read_settings import get_settings, get_sensors
 from utilities import stop_tv, stop_led, toggle_blink_led, start_led, stop_hdd_led, start_hdd_led, reboot, client_to_ap_mode, ap_to_client_mode, blink_led, miliseconds, shutdown, delete_settings, getStateFromStorage, setStateToStorage, connect_internet_modem, get_default_gateway_linux, get_interface_upstatus_linux, get_pi_model, get_rpiscripts_version, runpostupgradescript, check_undervoltage, sync_time_ntp, offlinedata_prepare, fix_fileaccess, whoami, is_system_datetime_valid
-from constant import scriptsFolder, logfile
+from constant import scriptsFolder, logfile, GPIO_BTN, GPIO_LED
 from wittypiutilities import check_wittypi, set_wittypi_rtc, update_wittypi_schedule, rtc_to_system, remove_wittypi_internet_timesync, continue_wittypi_schedule, add_halt_pin_event
 
 from multiprocessing import Process, Queue, Value
@@ -29,11 +30,11 @@ measurement = None
 settings = {}
 workingOnButtonpressIsActive = False # flag to know if measurement is active or not
 measurement_stop = threading.Event() # create event to stop measurement
+maintenance_stop = threading.Event() # create event to stop maintenance
 time_rising = 0 # will be set by button_pressed event if the button is rised
 # the following will be overwritten by settings.json:
 debug = 0
-GPIO_BTN = 16
-GPIO_LED = 21 # GPIO for led
+ # GPIO for led
 LED_STATE = 0
 
 def oled():
@@ -93,6 +94,10 @@ def start_ap():
     logger.info(">>> Starting HoneyPi-AccessPoint finished. Connect to HoneyPi-WiFi now.")
     workingOnButtonpressIsActive = False
     start_led(GPIO_LED)
+    #start_maintenance()
+    #pMaintenance = threading.Thread(target=maintenance, args=(maintenance_stop,))
+    #pMaintenance.start()
+
     if settings['display']['enabled']:
         oled_init()
         oled_maintenance_data(settings)
@@ -114,27 +119,38 @@ def get_led_state(self):
     return LED_STATE
 
 def close_script():
-    global measurement_stop
+    global measurement_stop, maintenance_stop
     measurement_stop.set()
+    maintenance_stop.set()
     print("Exit!")
     GPIO.cleanup()
     sys.exit()
 
 def toggle_measurement():
-    global workingOnButtonpressIsActive, measurement_stop, measurement, GPIO_LED
+    global workingOnButtonpressIsActive, measurement_stop, maintenance_stop, measurement, GPIO_LED
     if not workingOnButtonpressIsActive:
         workingOnButtonpressIsActive = True
         if not superglobal.isMaintenanceActive:
             logger.info(">>> Button was pressed: Stop measurement / start AccessPoint")
             # stop the measurement by setting event's flag
             measurement_stop.set()
+            maintenance_stop.clear()
             start_ap() # finally start AP
+            pMaintenance = threading.Thread(target=maintenance, args=(maintenance_stop, measurement_stop,))
+            pMaintenance.start()
+            pMaintenance.join(10)
+            while pMaintenance.is_alive and measurement_stop.is_set():
+                time.sleep(1)
+            if not measurement_stop.is_set():
+                measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
+                measurement.start() # start measurement
         elif superglobal.isMaintenanceActive:
             logger.info(">>> Button was pressed: Start measurement / stop AccessPoint")
             if measurement.is_alive():
                 logger.warning("Thread should not be active anymore")
             # start the measurement by clearing event's flag
             measurement_stop.clear() # reset flag
+            maintenance_stop.set()
             #measurement_stop = threading.Event() '''Required here? already in global definition!'''# create event to stop measurement
             measurement = threading.Thread(target=start_measurement, args=(measurement_stop,))
             measurement.start() # start measurement

@@ -14,6 +14,9 @@ settingsFile = backendFolder + '/settings.json'
 logfile = scriptsFolder + '/error.log'
 wittypi_scheduleFileName = "/schedule.wpi"
 wittypi_scheduleFile = backendFolder + wittypi_scheduleFileName
+timeToStopMaintenance = 4800
+GPIO_BTN = 16
+GPIO_LED = 21
 
 import datetime
 local_tz = datetime.datetime.utcnow().astimezone().tzinfo
