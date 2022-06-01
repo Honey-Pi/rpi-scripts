@@ -10,14 +10,14 @@ import time
 import json
 
 from read_settings import get_settings, get_sensors
-from utilities import ap_to_client_mode, stop_led
+from utilities import ap_to_client_mode, stop_led, start_single, stop_single
 from OLed import oled_off
 from constant import GPIO_LED, timeToStopMaintenance
 import superglobal
 
 import RPi.GPIO as GPIO
 
-from read_hx711 import measure_hx711
+from read_hx711 import measure_weight
 from constant import logfile, scriptsFolder
 
 import logging
@@ -30,11 +30,25 @@ superglobal = superglobal.SuperGlobal()
 def maintenance(maintenance_stop, measurement_stop):
     try:
         settings = get_settings()
-        #measurementIsRunning.value = 1 # set flag
+        weightSensors = get_sensors(settings, 2)
         timeMaintenanceStarted = datetime.now()
         datetime_now = timeMaintenanceStarted
-        logger.debug('Maintenance mode started at: ' + timeMaintenanceStarted.strftime('%Y-%m-%d %H:%M'))
-        #logger.debug('Now we measure the hx to determine start values')
+        logger.info('Maintenance mode started at: ' + timeMaintenanceStarted.strftime('%Y-%m-%d %H:%M'))
+        logger.debug('Now we measure the hx to determine start values')
+        weightbefore = []
+        weightafter = []
+        start_single()
+        for (i, weight_sensor) in enumerate(weightSensors):
+            weight=measure_weight(weight_sensor)
+            weightbefore.append(weight)
+            pin_dt = int(weight_sensor["pin_dt"])
+            pin_sck = int(weight_sensor["pin_sck"])
+            channel = weight_sensor["channel"]
+            reference_unit = float(weight_sensor["reference_unit"])
+            offset = int(weight_sensor["offset"])
+            logger.debug('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight: ' + str(weightbefore[i]) + 'g when maintenance mode was started')
+        stop_single()
+
         while not maintenance_stop.is_set():
             datetime_now = datetime.now()
             timeInMaintenance = datetime_now-timeMaintenanceStarted
@@ -44,8 +58,21 @@ def maintenance(maintenance_stop, measurement_stop):
                 maintenance_stop.set()
                 measurement_stop.clear()
             time.sleep(1)
-        #logger.debug('Now we measure the hx again to determine end values')
-        logger.debug('Maintenance mode ended at: ' + timeMaintenanceStarted.strftime('%Y-%m-%d %H:%M'))
+
+        logger.debug('Now we measure the hx again to determine end values')
+        start_single()
+        for (i, weight_sensor) in enumerate(weightSensors):
+            weight=measure_weight(weight_sensor)
+            weightafter.append(weight)
+            pin_dt = int(weight_sensor["pin_dt"])
+            pin_sck = int(weight_sensor["pin_sck"])
+            channel = weight_sensor["channel"]
+            reference_unit = float(weight_sensor["reference_unit"])
+            offset = int(weight_sensor["offset"])
+            logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weightbefore[i]) + 'g -  weight after: ' + str(weightafter[i]) + 'g , a difference of ' + str(int(weightafter[i]-weightbefore[i])) + 'g when maintenance mode was ended')
+        stop_single()
+
+        logger.info('Maintenance mode ended at: ' + timeMaintenanceStarted.strftime('%Y-%m-%d %H:%M'))
         t2 = threading.Thread(target=ap_to_client_mode)
         t2.start()
         t2.join(timeout=30)
