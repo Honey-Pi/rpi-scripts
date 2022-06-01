@@ -122,6 +122,7 @@ def close_script():
     global measurement_stop, maintenance_stop
     measurement_stop.set()
     maintenance_stop.set()
+    logger.info('HoneyPi exiting due to external event!')
     print("Exit!")
     GPIO.cleanup()
     sys.exit()

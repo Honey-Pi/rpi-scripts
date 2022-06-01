@@ -12,7 +12,7 @@ import json
 from read_settings import get_settings, get_sensors
 from utilities import ap_to_client_mode, stop_led, start_single, stop_single
 from OLed import oled_off
-from constant import GPIO_LED, timeToStopMaintenance
+from constant import GPIO_LED
 import superglobal
 
 import RPi.GPIO as GPIO
@@ -30,6 +30,10 @@ superglobal = superglobal.SuperGlobal()
 def maintenance(maintenance_stop, measurement_stop):
     try:
         settings = get_settings()
+        if 'led_pin' in settings:
+            GPIO_LED = settings["led_pin"]
+        timeToStopMaintenance = settings['timeToStopMaintenance']
+
         weightSensors = get_sensors(settings, 2)
         timeMaintenanceStarted = datetime.now()
         datetime_now = timeMaintenanceStarted

@@ -21,6 +21,7 @@ def get_defaults():
     settings["debuglevel"] = 20
     settings["debuglevel_logfile"] = 20
     settings["offline"] = 0
+    settings['timeToStopMaintenance'] = 28800
     router = {}
     router['enabled'] = False
     router['ssid'] = None
@@ -338,6 +339,19 @@ def validate_settings(settings):
     except:
         updateSettingsFile = True
         settings['wittyPi']['white_led_duration'] = get_defaults()['wittyPi']['white_led_duration']
+
+    # Migrate to version v1.3.9
+    try:
+        settings['timeToStopMaintenance'] 
+        if  settings['timeToStopMaintenance'] == None:
+            updateSettingsFile = True
+            settings['timeToStopMaintenance'] = get_defaults()['timeToStopMaintenance']
+        if not isinstance(settings['timeToStopMaintenance'], int):
+            updateSettingsFile = True
+            settings['timeToStopMaintenance'] = get_defaults()['timeToStopMaintenance']
+    except:
+            updateSettingsFile = True
+            settings['timeToStopMaintenance'] = get_defaults()['timeToStopMaintenance']
 
     if updateSettingsFile:
         logger.warning("Settings have been changed because of version migration.")
