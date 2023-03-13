@@ -35,8 +35,13 @@ utc_tz = pytz.timezone('UTC')
 from smbus2 import SMBus
 import RPi.GPIO as GPIO
 
+#WittyPi 3
 RTC_ADDRESS = 0x68
 I2C_MC_ADDRESS = 0x69
+
+''' #WittyPi 4
+RTC_ADDRESS = 0x08
+I2C_MC_ADDRESS=0x08'''
 
 I2C_ID=0
 I2C_VOLTAGE_IN_I=1
@@ -48,6 +53,7 @@ I2C_CURRENT_OUT_D=6
 I2C_POWER_MODE=7
 I2C_LV_SHUTDOWN=8
 
+#WittyPi 3
 I2C_CONF_ADDRESS=9
 I2C_CONF_DEFAULT_ON=10
 I2C_CONF_PULSE_INTERVAL=11
@@ -59,6 +65,73 @@ I2C_CONF_DUMMY_LOAD=16
 I2C_CONF_ADJ_VIN=17
 I2C_CONF_ADJ_VOUT=18
 I2C_CONF_ADJ_IOUT=19
+
+'''#WittyPi 4
+  readonly I2C_CONF_ADDRESS=16
+  readonly I2C_CONF_DEFAULT_ON=17
+  readonly I2C_CONF_PULSE_INTERVAL=18
+  readonly I2C_CONF_LOW_VOLTAGE=19
+  readonly I2C_CONF_BLINK_LED=20
+  readonly I2C_CONF_POWER_CUT_DELAY=21
+  readonly I2C_CONF_RECOVERY_VOLTAGE=22
+  readonly I2C_CONF_DUMMY_LOAD=23
+  readonly I2C_CONF_ADJ_VIN=24
+  readonly I2C_CONF_ADJ_VOUT=25
+  readonly I2C_CONF_ADJ_IOUT=26
+  readonly I2C_ALARM1_TRIGGERED=9
+  readonly I2C_ALARM2_TRIGGERED=10
+  readonly I2C_ACTION_REASON=11
+  readonly I2C_FW_REVISION=12 '''
+
+#WittyPi 3
+I2C_RTC_SECONDS=0
+I2C_RTC_MINUTES=1
+I2C_RTC_HOURS=2
+I2C_RTC_DAYS=4
+I2C_RTC_WEEKDAYS=3
+I2C_RTC_MONTHS=5
+I2C_RTC_YEARS=6
+
+I2C_CONF_SECOND_ALARM1=7
+I2C_CONF_MINUTE_ALARM1=8
+I2C_CONF_HOUR_ALARM1=9
+I2C_CONF_DAY_ALARM1=10
+#I2C_CONF_WEEKDAY_ALARM1=31
+
+#I2C_CONF_SECOND_ALARM2=11
+I2C_CONF_MINUTE_ALARM2=11
+I2C_CONF_HOUR_ALARM2=12
+I2C_CONF_DAY_ALARM2=13
+#I2C_CONF_WEEKDAY_ALARM2=36
+
+I2C_RTC_CTRL1=16
+I2C_RTC_CTRL2=17
+
+
+''' #WittyPi 4
+I2C_CONF_SECOND_ALARM1=27
+I2C_CONF_MINUTE_ALARM1=28
+I2C_CONF_HOUR_ALARM1=29
+I2C_CONF_DAY_ALARM1=30
+I2C_CONF_WEEKDAY_ALARM1=31
+
+I2C_CONF_SECOND_ALARM2=32
+I2C_CONF_MINUTE_ALARM2=33
+I2C_CONF_HOUR_ALARM2=34
+I2C_CONF_DAY_ALARM2=35
+I2C_CONF_WEEKDAY_ALARM2=36
+
+I2C_RTC_CTRL1=54
+I2C_RTC_CTRL2=55
+  
+I2C_RTC_SECONDS=58
+I2C_RTC_MINUTES=59
+I2C_RTC_HOURS=60
+I2C_RTC_DAYS=61
+I2C_RTC_WEEKDAYS=62
+I2C_RTC_MONTHS=63
+I2C_RTC_YEARS=64 '''
+
 
 HALT_PIN=4    # halt by GPIO-4 (BCM naming)
 SYSUP_PIN=17  # output SYS_UP signal on GPIO-17 (BCM naming)
@@ -88,7 +161,7 @@ def send_halt():
         logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
     except Exception as ex:
         logger.exception("Exception in send_sysup " + str(ex))
-
+        
 def add_halt_pin_event(halt_pin_event_detected_function):
     try:
         # setup Button
@@ -101,7 +174,7 @@ def add_halt_pin_event(halt_pin_event_detected_function):
         logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
     except Exception as ex:
         logger.exception("Exception in send_sysup " + str(ex))
-
+        
 def halt_pin_event_detected():
     if GPIO.input(HALT_PIN) == 0:
         logger.critical("halt_pin_event_detected")
@@ -214,7 +287,7 @@ def get_rtc_timestamp():
     try:
         if rtc_connected:
             with SMBus(1) as bus:
-                data = [0, 1, 2, 3, 4, 5, 6]
+                data = [I2C_RTC_SECONDS, I2C_RTC_MINUTES, I2C_RTC_HOURS, I2C_RTC_WEEKDAYS, I2C_RTC_DAYS, I2C_RTC_MONTHS, I2C_RTC_YEARS]
                 for ele in data:
                     b = bus.read_byte_data(RTC_ADDRESS, ele)
                     out.append(b)
@@ -248,7 +321,7 @@ def get_startup_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??]
         if rtc_connected:
             out = []
             with SMBus(1) as bus:
-                for ele in [7,8,9,10]:
+                for ele in [I2C_CONF_SECOND_ALARM1 ,I2C_CONF_MINUTE_ALARM1 ,I2C_CONF_HOUR_ALARM1 ,I2C_CONF_DAY_ALARM1 ]:
                     b = bus.read_byte_data(RTC_ADDRESS, ele)
                     out.append(b)
             res = dec2hex(out) # sec, min, hour, day
@@ -376,7 +449,7 @@ def get_shutdown_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??
         if rtc_connected:
             out = []
             with SMBus(1) as bus:
-                for ele in [11,12,13]: #[0x0B, 0x0C, 0x0D]
+                for ele in [I2C_CONF_MINUTE_ALARM2,I2C_CONF_HOUR_ALARM2,I2C_CONF_DAY_ALARM2]: #[0x0B, 0x0C, 0x0D]
                     b = bus.read_byte_data(RTC_ADDRESS, ele)
                     out.append(b)
             res = dec2hex(out) # sec, min, hour, day
@@ -451,13 +524,13 @@ def system_to_rtc():
             month=sys_ts.strftime("%m")
             year=sys_ts.strftime("%y")
             with SMBus(1) as bus:
-                bus.write_byte_data(RTC_ADDRESS, 0x00, dec2bcd(second))
-                bus.write_byte_data(RTC_ADDRESS, 0x01, dec2bcd(minute))
-                bus.write_byte_data(RTC_ADDRESS, 0x02, dec2bcd(hour))
-                bus.write_byte_data(RTC_ADDRESS, 0x03, dec2bcd(day))
-                bus.write_byte_data(RTC_ADDRESS, 0x04, dec2bcd(date))
-                bus.write_byte_data(RTC_ADDRESS, 0x05, dec2bcd(month))
-                bus.write_byte_data(RTC_ADDRESS, 0x06, dec2bcd(year))
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_SECONDS, dec2bcd(second))
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_MINUTES, dec2bcd(minute))
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_HOURS, dec2bcd(hour))
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_WEEKDAYS, dec2bcd(day))
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_DAYS, dec2bcd(date))
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_MONTHS, dec2bcd(month))
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_YEARS, dec2bcd(year))
             return True
     except Exception as ex:
         logger.exception("Exception in system_to_rtc" + str(ex))
@@ -485,10 +558,11 @@ def set_shutdown_time(stringtime='?? 20:00'):
             minute,hour,day = stringtime2timetuple(stringtime)
             if (day is not None ) and (hour is not None) and (minute is not None):
                 with SMBus(1) as bus:
-                    bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)
-                    bus.write_byte_data(RTC_ADDRESS, 11,dec2bcd(minute))
-                    bus.write_byte_data(RTC_ADDRESS, 12,dec2bcd(hour))
-                    bus.write_byte_data(RTC_ADDRESS, 13,dec2bcd(day))
+                    bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None) #WittyPi Mini and 3 only
+                    #bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM2 ,dec2bcd(minute)) #WittyPi 4 only
+                    bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM2 ,dec2bcd(minute))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_CONF_HOUR_ALARM2 ,dec2bcd(hour))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_CONF_DAY_ALARM2 ,dec2bcd(day))
                 return True
             else:
                 logger.debug("invalid Time")
@@ -502,11 +576,11 @@ def set_startup_time(stringtime='?? 20:00:00'):
             second,minute,hour,day = stringtime2timetuple(stringtime)
             if (day is not None ) and (hour is not None) and (minute is not None) and (second is not None):
                 with SMBus(1) as bus:
-                    bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)
-                    bus.write_byte_data(RTC_ADDRESS, 7,dec2bcd(second))
-                    bus.write_byte_data(RTC_ADDRESS, 8,dec2bcd(minute))
-                    bus.write_byte_data(RTC_ADDRESS, 9,dec2bcd(hour))
-                    bus.write_byte_data(RTC_ADDRESS, 10,dec2bcd(day))
+                    bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)#WittyPi Mini and 3 only
+                    bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM1 ,dec2bcd(second))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM1 ,dec2bcd(minute))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_CONF_HOUR_ALARM1 ,dec2bcd(hour))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_CONF_DAY_ALARM1 ,dec2bcd(day))
                 return True
             else:
                 logger.debug("invalid Time")
@@ -518,10 +592,10 @@ def clear_startup_time():
     try:
         if rtc_connected:
             with SMBus(1) as bus:
-                bus.write_byte_data(RTC_ADDRESS, 7,0) # write_byte_data(i2c_addr, register, value, force=None)
-                bus.write_byte_data(RTC_ADDRESS, 8,0) # write_byte_data(i2c_addr, register, value, force=None)
-                bus.write_byte_data(RTC_ADDRESS, 9,0) # write_byte_data(i2c_addr, register, value, force=None)
-                bus.write_byte_data(RTC_ADDRESS, 10,0) # write_byte_data(i2c_addr, register, value, force=None)
+                bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
+                bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
+                bus.write_byte_data(RTC_ADDRESS, I2C_CONF_HOUR_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
+                bus.write_byte_data(RTC_ADDRESS, I2C_CONF_DAY_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
             return True
     except Exception as ex:
         logger.exception("Exception in clear_startup_time" + str(ex))
@@ -531,9 +605,10 @@ def clear_shutdown_time():
     try:
         if rtc_connected:
             with SMBus(1) as bus:
-                bus.write_byte_data(RTC_ADDRESS, 11,0) # write_byte_data(i2c_addr, register, value, force=None)
-                bus.write_byte_data(RTC_ADDRESS, 12,0) # write_byte_data(i2c_addr, register, value, force=None)
-                bus.write_byte_data(RTC_ADDRESS, 13,0) # write_byte_data(i2c_addr, register, value, force=None)
+                #bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None) #WittyPi 4 only
+                bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None)
+                bus.write_byte_data(RTC_ADDRESS, I2C_CONF_HOUR_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None)
+                bus.write_byte_data(RTC_ADDRESS, I2C_CONF_DAY_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None)
             return True
     except Exception as ex:
         logger.exception("Exception in clear_shutdown_time" + str(ex))
@@ -656,8 +731,8 @@ def get_temperature():
                 ctrl2 = 7|0x20 #39 bitwise or
                 bus.write_byte_data(RTC_ADDRESS, 14,ctrl2)
                 time.sleep(0.2)
-                t1 = bus.read_byte_data(RTC_ADDRESS, 0x11)
-                t2 = bus.read_byte_data(RTC_ADDRESS, 0x12)
+                t1 = bus.read_byte_data(RTC_ADDRESS, 17)
+                t2 = bus.read_byte_data(RTC_ADDRESS, 18)
                 c = ''
                 sign = t1&0x80
                 if sign < 0: c+='-'
@@ -673,16 +748,16 @@ def clear_alarm_flags(byte_F=0x0):
         if rtc_connected:
             if byte_F==0x0:
                 with SMBus(1) as bus:
-                    byte_F=bus.read_byte_data(RTC_ADDRESS, 0x0F)
+                    byte_F=bus.read_byte_data(RTC_ADDRESS, I2C_RTC_CTRL2)
             #print(format(byte_F, '0>8b')) #((byte_F)))
             byte_F=(byte_F&0xFC)
             #print(format(byte_F, '0>8b')) #((byte_F)))
             with SMBus(1) as bus:
-                bus.write_byte_data(RTC_ADDRESS, 0x0F, byte_F)
+                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_CTRL2, byte_F)
     except Exception as ex:
         logger.exception("Exception in clear_alarm_flags" + str(ex))
 
-def get_alarm_flags(RTC_ALARM_ADDRESS=0x0F):
+def get_alarm_flags(RTC_ALARM_ADDRESS=I2C_RTC_CTRL2):
     try:
         if rtc_connected:
             with SMBus(1) as bus:
@@ -691,7 +766,6 @@ def get_alarm_flags(RTC_ALARM_ADDRESS=0x0F):
             return byte_F
     except Exception as ex:
         logger.exception("Exception in clear_alarm_flags" + str(ex))
-
 
 def check_alarm_flags(byte_F):
     #byte_F should be read from I2C_RTC_ADDRESS in register 0x0F)
