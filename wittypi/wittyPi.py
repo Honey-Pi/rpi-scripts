@@ -39,9 +39,6 @@ import RPi.GPIO as GPIO
 RTC_ADDRESS = 0x68
 I2C_MC_ADDRESS = 0x69
 
-''' #WittyPi 4
-RTC_ADDRESS = 0x08
-I2C_MC_ADDRESS=0x08'''
 
 I2C_ID=0
 I2C_VOLTAGE_IN_I=1
@@ -65,23 +62,6 @@ I2C_CONF_DUMMY_LOAD=16
 I2C_CONF_ADJ_VIN=17
 I2C_CONF_ADJ_VOUT=18
 I2C_CONF_ADJ_IOUT=19
-
-'''#WittyPi 4
-  readonly I2C_CONF_ADDRESS=16
-  readonly I2C_CONF_DEFAULT_ON=17
-  readonly I2C_CONF_PULSE_INTERVAL=18
-  readonly I2C_CONF_LOW_VOLTAGE=19
-  readonly I2C_CONF_BLINK_LED=20
-  readonly I2C_CONF_POWER_CUT_DELAY=21
-  readonly I2C_CONF_RECOVERY_VOLTAGE=22
-  readonly I2C_CONF_DUMMY_LOAD=23
-  readonly I2C_CONF_ADJ_VIN=24
-  readonly I2C_CONF_ADJ_VOUT=25
-  readonly I2C_CONF_ADJ_IOUT=26
-  readonly I2C_ALARM1_TRIGGERED=9
-  readonly I2C_ALARM2_TRIGGERED=10
-  readonly I2C_ACTION_REASON=11
-  readonly I2C_FW_REVISION=12 '''
 
 #WittyPi 3
 I2C_RTC_SECONDS=0
@@ -107,35 +87,59 @@ I2C_CONF_DAY_ALARM2=13
 I2C_RTC_CTRL1=14
 I2C_RTC_CTRL2=15
 
-
-''' #WittyPi 4
-I2C_CONF_SECOND_ALARM1=27
-I2C_CONF_MINUTE_ALARM1=28
-I2C_CONF_HOUR_ALARM1=29
-I2C_CONF_DAY_ALARM1=30
-I2C_CONF_WEEKDAY_ALARM1=31
-
-I2C_CONF_SECOND_ALARM2=32
-I2C_CONF_MINUTE_ALARM2=33
-I2C_CONF_HOUR_ALARM2=34
-I2C_CONF_DAY_ALARM2=35
-I2C_CONF_WEEKDAY_ALARM2=36
-
-I2C_RTC_CTRL1=54
-I2C_RTC_CTRL2=55
-  
-I2C_RTC_SECONDS=58
-I2C_RTC_MINUTES=59
-I2C_RTC_HOURS=60
-I2C_RTC_DAYS=61
-I2C_RTC_WEEKDAYS=62
-I2C_RTC_MONTHS=63
-I2C_RTC_YEARS=64 '''
-
-
 HALT_PIN=4    # halt by GPIO-4 (BCM naming)
 SYSUP_PIN=17  # output SYS_UP signal on GPIO-17 (BCM naming)
 
+# Check if a WittyP Pi 4 is connected via I2C
+try:
+    with SMBus(1) as bus: # does not work on Raspberry 1 as SMBus(0) is needed on Raspberry 1
+        bus.read_byte(0x08) # Check I2C address from Witty Pi 4
+
+    # No exception?
+    # Then, define Witty Pi 4 constants and overwrite WittyPi 3 variables
+    RTC_ADDRESS = 0x08
+    I2C_MC_ADDRESS=0x08
+
+    I2C_CONF_ADDRESS=16
+    I2C_CONF_DEFAULT_ON=17
+    I2C_CONF_PULSE_INTERVAL=18
+    I2C_CONF_LOW_VOLTAGE=19
+    I2C_CONF_BLINK_LED=20
+    I2C_CONF_POWER_CUT_DELAY=21
+    I2C_CONF_RECOVERY_VOLTAGE=22
+    I2C_CONF_DUMMY_LOAD=23
+    I2C_CONF_ADJ_VIN=24
+    I2C_CONF_ADJ_VOUT=25
+    I2C_CONF_ADJ_IOUT=26
+    I2C_ALARM1_TRIGGERED=9
+    I2C_ALARM2_TRIGGERED=10
+    I2C_ACTION_REASON=11
+    I2C_FW_REVISION=12
+
+    I2C_CONF_SECOND_ALARM1=27
+    I2C_CONF_MINUTE_ALARM1=28
+    I2C_CONF_HOUR_ALARM1=29
+    I2C_CONF_DAY_ALARM1=30
+    I2C_CONF_WEEKDAY_ALARM1=31
+
+    I2C_CONF_SECOND_ALARM2=32
+    I2C_CONF_MINUTE_ALARM2=33
+    I2C_CONF_HOUR_ALARM2=34
+    I2C_CONF_DAY_ALARM2=35
+    I2C_CONF_WEEKDAY_ALARM2=36
+
+    I2C_RTC_CTRL1=54
+    I2C_RTC_CTRL2=55
+
+    I2C_RTC_SECONDS=58
+    I2C_RTC_MINUTES=59
+    I2C_RTC_HOURS=60
+    I2C_RTC_DAYS=61
+    I2C_RTC_WEEKDAYS=62
+    I2C_RTC_MONTHS=63
+    I2C_RTC_YEARS=64
+except: # exception if read_byte fails
+    pass
 
 def send_sysup():
     try:
@@ -161,7 +165,7 @@ def send_halt():
         logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
     except Exception as ex:
         logger.exception("Exception in send_sysup " + str(ex))
-        
+
 def add_halt_pin_event(halt_pin_event_detected_function):
     try:
         # setup Button
@@ -174,7 +178,7 @@ def add_halt_pin_event(halt_pin_event_detected_function):
         logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
     except Exception as ex:
         logger.exception("Exception in send_sysup " + str(ex))
-        
+
 def halt_pin_event_detected():
     if GPIO.input(HALT_PIN) == 0:
         logger.critical("halt_pin_event_detected")
@@ -783,7 +787,7 @@ def check_alarm_flags(byte_F):
     except Exception as ex:
         logger.exception("Exception in check_alarm_flags" + str(ex))
     return alarm
-    
+
 def do_shutdown():
     try:
         # restore halt pin

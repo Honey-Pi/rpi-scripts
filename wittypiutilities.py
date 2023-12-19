@@ -23,10 +23,10 @@ def get_wittyPiPath():
     try:
         if os.path.exists(homeFolder + '/wittyPi'):
             wittyPiPath = homeFolder + '/wittyPi'
-            logger.debug("wittyPi 2 or wittyPi Mini installation detected in: " + wittyPiPath)
+            logger.debug("WittyPi 2 or WittyPi Mini installation detected in: " + wittyPiPath)
         elif os.path.exists(homeFolder + '/wittypi'):
             wittyPiPath = homeFolder + '/wittypi'
-            logger.debug("wittypi 3 or 3 Mini installation detected in: " + wittyPiPath)
+            logger.debug("WittyPi 3 (Mini) or Witty Pi 4 (Mini) installation detected in: " + wittyPiPath)
     except Exception as ex:
         logger.exception("Error in function get_wittyPiPath")
     return wittyPiPath
@@ -169,7 +169,7 @@ def check_wittypi(settings):
                 logger.debug("WittyPi 2 (or other RTC) but WittyPi Service is not running!")
             #send sys_up signal to WittyPi on SYSUP (GPIO 17)
             send_sysup()
-            #check alarmflags and clear 
+            #check alarmflags and clear
             if wittypi_status['alarm_flags'] is not None:
                 logger.debug("WittyPi (or other RTC) alarm flags '" + format(wittypi_status['alarm_flags'], '0>8b') + "'")
                 #ToDo handle alarm flags
