@@ -6,6 +6,7 @@
 #   sudo pip3 install adafruit-circuitpython-dht
 #   sudo apt-get install libgpiod2
 
+from utilities import blockPrinting
 import psutil # for process killing (sudo apt-get install python3-psutil)
 import logging
 logger = logging.getLogger('HoneyPi.read_dht')
@@ -20,6 +21,7 @@ try:
 except ImportError as ex:
     logger.error("ImportError while importing digitalio " + str(ex))
 
+@blockPrinting
 def measure_dht(ts_sensor):
     fields = {}
     timer = 1
@@ -78,16 +80,16 @@ def measure_dht(ts_sensor):
             break # break while if no Exception occured
         except RuntimeError as error:
             # Errors happen fairly often, DHT's are hard to read, just keep going
-            errorMessage = "Failed reading DHT ("+str(timer)+"/"+str(max_timer)+"): " + error.args[0]
-            logger.debug(errorMessage)
+            logger.debug("Failed reading DHT ("+str(timer)+"/"+str(max_timer)+"): " + error.args[0])
             time.sleep(1)
             timer = timer + 1
             pass
         except:
-            logger.exception("Unhandled Exception in measure_dht")
+            # Errors happen fairly often, DHT's are hard to read, just keep going
+            logger.debug("Failed reading DHT ("+str(timer)+"/"+str(max_timer)+"): Unhandled Exception")
             time.sleep(1)
             timer = timer + 1
-            pass
+
 
         try:
             if dht is not None:
