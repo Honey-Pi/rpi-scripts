@@ -82,12 +82,12 @@ fi
 apt-get -y update --allow-releaseinfo-change
 
 echo "Install required modules after v1.3.4...for for dht..."
-apt-get -y install libgpiod2
+apt-get -y install --no-install-recommends libgpiod2
 pip3 install adafruit-circuitpython-dht
 
 echo "Install required modules after v1.3.7 used for oled display..."
 pip3 install Pillow smbus2
-apt-get -y install libopenjp2-7 libtiff5
+apt-get -y install --no-install-recommends libopenjp2-7 libtiff5
 
 echo "Install required modules after v1.3.7 used for ds18b20..."
 pip3 install ds18b20
@@ -136,7 +136,11 @@ else
 fi
 
 
-
+# required since version v1.4
+echo '>>> Uninstall old numpy pip package - v1.4'
+pip3 uninstall numpy
+echo '>>> Install new NumPy package (from debian) - v1.4'
+apt-get -y install --no-install-recommends python3-numpy
 
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
