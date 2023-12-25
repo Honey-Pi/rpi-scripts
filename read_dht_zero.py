@@ -14,7 +14,7 @@ logger = logging.getLogger('HoneyPi.read_dht_zero')
 try:
     import Adafruit_DHT
 except ImportError as ex:
-    logger.error("ImportError while importing Adafruit_DHT " + str(ex))
+    logger.error("read_dht_zero.py ImportError while importing Adafruit_DHT " + str(ex))
 
 os.environ['PYTHON_EGG_CACHE'] = '/usr/local/pylons/python-eggs'
 

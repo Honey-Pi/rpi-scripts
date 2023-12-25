@@ -374,14 +374,34 @@ def toggle_led(gpio, state):
    else:
        start_led(gpio)
 
+def turn_led(onoff, led, trigger=False):
+    # ACT = led0 # green LED
+    # PWR = led1 # red LED
+    if onoff == 1:
+        trigger_echo = "mmc0"
+    else:
+        trigger_echo = "none"
+    if led == "led0":
+        newname = "ACT"
+    else:
+        newname = "PWR"
+    if os.path.exists("/sys/class/leds/"+led+"/brightness"):
+        os.system("sudo bash -c 'echo " + str(onoff) + " > /sys/class/leds/"+led+"/brightness'")
+        if trigger == True:
+            os.system("sudo bash -c 'echo "+trigger_echo+" > /sys/class/leds/"+led+"/trigger'")
+    else:
+        os.system("sudo bash -c 'echo " + str(onoff) + " > /sys/class/leds/"+newname+"/brightness'")
+        if trigger == True:
+            os.system("sudo bash -c 'echo "+trigger_echo+" > /sys/class/leds/"+newname+"/trigger'")
+
+
 def stop_hdd_led():
     # Turn Raspi-LED off
     off = 0
     if is_zero():
         off = 1
     else:
-        os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led0/brightness'") # green LED
-        os.system("sudo bash -c 'echo none > /sys/class/leds/led0/trigger'") # green LED
+        turn_led(off, "led0", True)
 
 def start_hdd_led():
     # Turn Raspi-LED on
@@ -389,16 +409,16 @@ def start_hdd_led():
     if is_zero():
         on = 0
     else:
-        os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led0/brightness'") # green LED
-        os.system("sudo bash -c 'echo mmc0 > /sys/class/leds/led0/trigger'") # green LED
+        turn_led(on, "led0", True)
 
 def stop_led(gpio=21):
     # Turn Raspi-LED off
     off = 0
     if is_zero():
         off = 1
-        os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo " + str(off) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
+        turn_led(off, "led0")
+    turn_led(off, "led1")
+
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
     GPIO.output(gpio, GPIO.LOW)
@@ -408,8 +428,8 @@ def start_led(gpio=21):
     on = 1
     if is_zero():
         on = 0
-        os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo " + str(on) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
+        turn_led(on, "led0")
+    turn_led(on, "led1")
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
     GPIO.output(gpio, GPIO.HIGH)
@@ -418,13 +438,13 @@ def toggle_blink_led(gpio=21, duration=0.25):
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
     state = bool(GPIO.input(gpio))
     if is_zero():
-        os.system("sudo bash -c 'echo " + str(int(state)) + " > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo " + str(int(not state)) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
+        turn_led(int(state), "led0")
+    turn_led(int(not state), "led1")
     GPIO.output(gpio, not state)
     time.sleep(duration)
     if is_zero():
-        os.system("sudo bash -c 'echo " + str(int(not state)) + " > /sys/class/leds/led0/brightness'") # green LED
-    os.system("sudo bash -c 'echo " + str(int(state)) + " > /sys/class/leds/led1/brightness' 2>/dev/null") # red LED
+        turn_led(int(not state), "led0")
+    turn_led(int(state), "led1")
     GPIO.output(gpio, state)
 
 def blink_led(gpio=21, duration=0.25):
@@ -539,7 +559,7 @@ def reboot(settings):
         old_startup_time = None
     if 'shutdown_time_local' in wittypi_status:
         old_shutdown_time = wittypi_status['shutdown_time_local']
-    else: 
+    else:
         old_shutdown_time = None
     set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
     wittypi_status = get_wittypi_status(settings)
@@ -561,7 +581,7 @@ def shutdown(settings):
         old_startup_time = None
     if 'shutdown_time_local' in wittypi_status:
         old_shutdown_time = wittypi_status['shutdown_time_local']
-    else: 
+    else:
         old_shutdown_time = None
     set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
     wittypi_status = get_wittypi_status(settings)
@@ -751,4 +771,3 @@ def write_modeswitch_rule(id):
 
     except Exception as ex:
         logger.exception("Error in function write_modeswitch_rule")
-

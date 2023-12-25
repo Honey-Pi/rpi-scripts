@@ -15,7 +15,7 @@ import time
 try:
     import adafruit_dht
 except ImportError as ex:
-    logger.error("ImportError while importing adafruit_dht " + str(ex))
+    logger.error("read_dht.py ImportError while importing adafruit_dht " + str(ex))
 try:
     import digitalio
 except ImportError as ex:
