@@ -59,3 +59,7 @@ systemctl restart dhcpcd
 
 sleep 2 && echo 'Starting AP: Restarting dhcpcd 2'
 systemctl restart dhcpcd
+
+# Additional stuff
+echo "Disabling Power Save Mode for AP"
+iw uap0 set power_save off
