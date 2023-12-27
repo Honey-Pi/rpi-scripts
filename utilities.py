@@ -23,6 +23,21 @@ from constant import scriptsFolder, settingsFile, local_tz
 
 logger = logging.getLogger('HoneyPi.utilities')
 
+# decorater used to block function printing to the console
+def blockPrinting(func):
+    def func_wrapper(*args, **kwargs):
+        # block all printing to the console
+        sys.stdout = open(os.devnull, 'w')
+        # call the method in question
+        value = func(*args, **kwargs)
+        # enable all printing to the console
+        sys.stdout = sys.__stdout__
+        # pass the return value of the method back
+        return value
+
+    return func_wrapper
+
+    
 def is_service_active(servicename='honeypi.service'):
     try:
         status = os.system('systemctl is-active --quiet ' + servicename)
@@ -180,7 +195,7 @@ def get_cpu_temp():
         pass
     return None
 
-#@blockPrinting # TODO suppress print messages on systemstart
+@blockPrinting # suppress print messages on systemstart
 def sync_time_ntp():
     try:
         os.system("sudo systemctl stop ntp")
@@ -745,20 +760,6 @@ def clean_fields(ts_fields, countChannels, debug):
         if fieldNumberNew <= 8 and fieldNumberNew > 0 :
             ts_fields_cleaned['field' + str(fieldNumberNew)]=ts_fields['field' + str(fieldNumber)]
     return ts_fields_cleaned
-
-# decorater used to block function printing to the console
-def blockPrinting(func):
-    def func_wrapper(*args, **kwargs):
-        # block all printing to the console
-        sys.stdout = open(os.devnull, 'w')
-        # call the method in question
-        value = func(*args, **kwargs)
-        # enable all printing to the console
-        sys.stdout = sys.__stdout__
-        # pass the return value of the method back
-        return value
-
-    return func_wrapper
 
 def write_modeswitch_rule(id):
     try:
