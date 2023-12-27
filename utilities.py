@@ -184,7 +184,7 @@ def get_cpu_temp():
 def sync_time_ntp():
     try:
         os.system("sudo systemctl stop ntp")
-        ntptimediff = os.popen("sudo ntpd -q -g -D 0 | grep 'ntpd:' | awk '/^ntpd:/{print $NF}'").read().strip()
+        ntptimediff = os.popen("sudo ntpd -q -g -D 4 | grep 'ntpd:' | awk '/^ntpd:/{print $NF}'").read().strip()
         os.system("sudo systemctl start ntp")
         if not ntptimediff:
             logger.warning("Could not extract ntpd timedifference in sync_time_ntp")
