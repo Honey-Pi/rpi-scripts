@@ -37,7 +37,7 @@ def blockPrinting(func):
 
     return func_wrapper
 
-    
+
 def is_service_active(servicename='honeypi.service'):
     try:
         status = os.system('systemctl is-active --quiet ' + servicename)
@@ -413,17 +413,13 @@ def turn_led(onoff, led, trigger=False):
 def stop_hdd_led():
     # Turn Raspi-LED off
     off = 0
-    if is_zero():
-        off = 1
-    else:
+    if not is_zero():
         turn_led(off, "led0", True)
 
 def start_hdd_led():
     # Turn Raspi-LED on
     on = 1
-    if is_zero():
-        on = 0
-    else:
+    if not is_zero():
         turn_led(on, "led0", True)
 
 def stop_led(gpio=21):
@@ -432,7 +428,8 @@ def stop_led(gpio=21):
     if is_zero():
         off = 1
         turn_led(off, "led0")
-    turn_led(off, "led1")
+    else:
+        turn_led(off, "led1")
 
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
@@ -444,7 +441,9 @@ def start_led(gpio=21):
     if is_zero():
         on = 0
         turn_led(on, "led0")
-    turn_led(on, "led1")
+    else:
+        turn_led(on, "led1")
+
     # Setup GPIO LED
     GPIO.setmode(GPIO.BCM) # Counting the GPIO PINS on the board
     GPIO.output(gpio, GPIO.HIGH)
@@ -454,12 +453,14 @@ def toggle_blink_led(gpio=21, duration=0.25):
     state = bool(GPIO.input(gpio))
     if is_zero():
         turn_led(int(state), "led0")
-    turn_led(int(not state), "led1")
+    else:
+        turn_led(int(not state), "led1")
     GPIO.output(gpio, not state)
     time.sleep(duration)
     if is_zero():
         turn_led(int(not state), "led0")
-    turn_led(int(state), "led1")
+    else:
+        turn_led(int(state), "led1")
     GPIO.output(gpio, state)
 
 def blink_led(gpio=21, duration=0.25):
