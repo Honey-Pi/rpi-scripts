@@ -602,18 +602,18 @@ def shutdown(settings):
     set_wittypi_schedule() # run wittypi runScript.sh to sync latest schedule
     wittypi_status = get_wittypi_status(settings)
     if (('startup_time_local' in wittypi_status) and (old_startup_time != wittypi_status['startup_time_local'])) or (('shutdown_time_local' in wittypi_status) and (old_shutdown_time != wittypi_status['shutdown_time_local'])):
-        logger.info("Startup / shutdown time on wittypi updated during shutdown!")
+        logger.info("Startup / shutdown time on wittypi was updated during shutdown!")
     os.system("sudo systemctl stop hostapd.service")
     os.system("sudo systemctl disable hostapd.service")
     os.system("sudo systemctl stop dnsmasq.service")
     os.system("sudo systemctl disable dnsmasq.service")
     if settings['wittyPi']['enabled']:
         if ('startup_time_local' in wittypi_status) and not wittypi_status['startup_time_local'] is None:
-            logger.info('HoneyPi shutting down, next startup schedule is ' + wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+            logger.info('HoneyPi is shutting down now, next Witty Pi startup schedule is ' + wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
         else:
-            logger.critical('HoneyPi shutting down but no startup is scheduled!')
+            logger.critical('HoneyPi shutting down but no Wittypi startup is scheduled!')
     else:
-        logger.info('HoneyPi shutting down...')
+        logger.info('HoneyPi is shutting down...')
     os.system("sudo shutdown -h 0")
 
 def decrease_nice():

@@ -139,7 +139,10 @@ def check_wittypi_rtc(settings, wittypi_status):
     try:
         if wittypi_status['is_rtc_connected']:
             if not wittypi_status['rtc_time_is_valid']:
-                logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
+                if wittypi_status['rtc_time_local']:
+                    logger.critical("RTC time (" + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") +") has not been set before (stays in year 1999/2000).")
+                else:
+                    logger.critical("Not able to read RTC time")
             else:
                 timenow = datetime.now(local_tz)
                 abs_timedelta_totalseconds = round(get_abs_timedifference(timenow, wittypi_status['rtc_time_local']))
@@ -353,7 +356,7 @@ if __name__ == '__main__':
     try:
         logging.basicConfig(level=logging.DEBUG)
         source = wittypi_scheduleFile
-        target = homeFolder + '/wittypi' + wittypi_scheduleFileName
+        target = get_wittyPiPath() + wittypi_scheduleFileName
         copy_wittypi_schedulefile()
     except (KeyboardInterrupt, SystemExit):
         sys.exit()
