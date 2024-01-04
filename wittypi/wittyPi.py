@@ -20,7 +20,6 @@ from logging.handlers import RotatingFileHandler
 logger = logging.getLogger('WittyPi')
 
 
-
 import datetime as dt
 import calendar
 import time
@@ -93,6 +92,7 @@ SYSUP_PIN=17  # output SYS_UP signal on GPIO-17 (BCM naming)
 # Check if a WittyP Pi 4 is connected via I2C
 try:
     with SMBus(1) as bus: # does not work on Raspberry 1 as SMBus(0) is needed on Raspberry 1
+        time.sleep(1) # short delay
         bus.read_byte(0x08) # Check I2C address from Witty Pi 4
 
     # No exception?
@@ -152,7 +152,7 @@ def send_sysup():
     except RuntimeError as ex:
         logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
     except Exception as ex:
-        logger.exception("Exception in send_sysup " + str(ex))
+        logger.exception("Exception in send_sysup ")
 
 def send_halt():
     try:
@@ -164,7 +164,7 @@ def send_halt():
     except RuntimeError as ex:
         logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
     except Exception as ex:
-        logger.exception("Exception in send_sysup " + str(ex))
+        logger.exception("Exception in send_sysup ")
 
 def add_halt_pin_event(halt_pin_event_detected_function):
     try:
@@ -177,7 +177,7 @@ def add_halt_pin_event(halt_pin_event_detected_function):
     except RuntimeError as ex:
         logger.critical("RuntimeError occuered on GPIO access! "+ str(ex))
     except Exception as ex:
-        logger.exception("Exception in send_sysup " + str(ex))
+        logger.exception("Exception in send_sysup ")
 
 def halt_pin_event_detected():
     if GPIO.input(HALT_PIN) == 0:
@@ -191,7 +191,7 @@ def dec2hex(datalist):
             res.append(hexInt)
         return res
     except Exception as ex:
-        logger.exception("Exception in dec2hex " + str(ex))
+        logger.exception("Exception in dec2hex ")
 
 def dec2bcd(dec):
     try:
@@ -201,12 +201,13 @@ def dec2bcd(dec):
         result = (t << 4) + o;
         return result
     except Exception as ex:
-        logger.exception("Exception in dec2bcd " + str(ex))
+        logger.exception("Exception in dec2bcd ")
 
 def is_rtc_connected():
     try:
         out=[]
         with SMBus(1) as bus:
+            time.sleep(2) # short delay
             b = bus.read_byte(RTC_ADDRESS)
             out.append(b)
         logger.debug("RTC is connected")
@@ -221,6 +222,7 @@ def is_rtc_connected():
             try:
                 out=[]
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     b = bus.read_byte(RTC_ADDRESS)
                     out.append(b)
                 logger.debug("RTC is connected")
@@ -230,14 +232,15 @@ def is_rtc_connected():
                     logger.debug("RTC is not connected")
                     return False
         else:
-            logger.exception("IOError in is_rtc_connected " + str(ex))
+            logger.exception("IOError in is_rtc_connected ")
     except Exception as ex:
-        logger.exception("Exception in is_rtc_connected " + str(ex))
+        logger.exception("Exception in is_rtc_connected ")
 
 def is_mc_connected():
     try:
         out=[]
         with SMBus(1) as bus:
+            time.sleep(1) # short delay
             b = bus.read_byte(I2C_MC_ADDRESS)
             out.append(b)
         logger.debug("MC is connected")
@@ -247,7 +250,7 @@ def is_mc_connected():
             logger.debug("MC is not connected")
             return False
     except Exception as ex:
-        logger.exception("Exception in is_mc_connected" + str(ex))
+        logger.exception("Exception in is_mc_connected")
 
 def get_wittypi_folder():
     wittyPiPath = None
@@ -261,7 +264,7 @@ def get_wittypi_folder():
         else:
             logger.debug("No WittyPi installation detected!")
     except Exception as ex:
-        logger.exception("Exception in get_wittypi_folder" + str(ex))
+        logger.exception("Exception in get_wittypi_folder")
     return wittyPiPath
 
 
@@ -276,12 +279,13 @@ def get_firmwareversion():
         out=[]
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 b = bus.read_byte_data(I2C_MC_ADDRESS, I2C_ID)
                 out.append(b)
             firmwareversion =  dec2hex(out)[0]
         logger.debug("MC firmwareversion: "+ str(firmwareversion))
     except Exception as ex:
-        logger.exception("Exception in get_firmwareversion"  + str(ex))
+        logger.exception("Exception in get_firmwareversion" )
     return firmwareversion
 
 
@@ -291,6 +295,7 @@ def get_rtc_timestamp():
     try:
         if rtc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 data = [I2C_RTC_SECONDS, I2C_RTC_MINUTES, I2C_RTC_HOURS, I2C_RTC_WEEKDAYS, I2C_RTC_DAYS, I2C_RTC_MONTHS, I2C_RTC_YEARS]
                 for ele in data:
                     b = bus.read_byte_data(RTC_ADDRESS, ele)
@@ -302,7 +307,7 @@ def get_rtc_timestamp():
             timestamp = int(time.mktime(UTCtime.timetuple()))
             logger.debug("RTC time is " + str(localtime.strftime("%a %d %b %Y %H:%M:%S")) + " " + str(local_tz))
     except Exception as ex:
-        logger.exception("Exception in get_rtc_timestamp" + str(ex))
+        logger.exception("Exception in get_rtc_timestamp")
     return UTCtime,localtime,timestamp
 
 
@@ -312,11 +317,12 @@ def get_input_voltage():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 i = bus.read_byte_data(I2C_MC_ADDRESS, I2C_VOLTAGE_IN_I)
                 d = bus.read_byte_data(I2C_MC_ADDRESS, I2C_VOLTAGE_IN_D)
             res = i + float(d)/100.
     except Exception as ex:
-        logger.exception("Exception in get_input_voltage" + str(ex))
+        logger.exception("Exception in get_input_voltage")
     return res
 
 def get_startup_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??]
@@ -325,12 +331,13 @@ def get_startup_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??]
         if rtc_connected:
             out = []
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 for ele in [I2C_CONF_SECOND_ALARM1 ,I2C_CONF_MINUTE_ALARM1 ,I2C_CONF_HOUR_ALARM1 ,I2C_CONF_DAY_ALARM1 ]:
                     b = bus.read_byte_data(RTC_ADDRESS, ele)
                     out.append(b)
             res = dec2hex(out) # sec, min, hour, day
     except Exception as ex:
-        logger.exception("Exception in get_startup_time" + str(ex))
+        logger.exception("Exception in get_startup_time")
     return calcTime(res)
 
 def add_one_month(orig_date):
@@ -347,7 +354,7 @@ def add_one_month(orig_date):
         new_day = min(orig_date.day, last_day_of_month)
         new_date = orig_date.replace(year=new_year, month=new_month, day=new_day)
     except Exception as ex:
-        logger.exception("Exception in add_one_month" + str(ex))
+        logger.exception("Exception in add_one_month")
     return new_date
 
 def calcTime(res=[0, 0, 0]):
@@ -383,7 +390,7 @@ def calcTime(res=[0, 0, 0]):
                 logger.debug('For '+ oldmonth + ' the day ' + str(day) + ' does not exist, added a month')
                 pass
             except Exception as ex:
-                logger.exception("Another Exception in calcTime" + str(ex))
+                logger.exception("Another Exception in calcTime")
 
             if (day == 80) and (hour != 80): # day not defined, start every day
                 time_utc = dt.datetime(nowUTC.year,nowUTC.month,nowUTC.day,hour,minute,second) #.astimezone(utc_tz)
@@ -416,7 +423,7 @@ def calcTime(res=[0, 0, 0]):
         if len(strtime) == 4: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':' + strtime[-4]
         else: str_time = strtime[-1] + ' ' + strtime[-2] + ':' + strtime[-3] + ':00'
     except Exception as ex:
-        logger.exception("Exception in calcTime" + str(ex))
+        logger.exception("Exception in calcTime")
     return time_utc,time_local,str_time,timedelta
 
 def calcTimeOld(res):
@@ -453,12 +460,13 @@ def get_shutdown_time(): # [?? 07:00:00], ignore: [?? ??:??:00] and [?? ??:??:??
         if rtc_connected:
             out = []
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 for ele in [I2C_CONF_MINUTE_ALARM2,I2C_CONF_HOUR_ALARM2,I2C_CONF_DAY_ALARM2]: #[0x0B, 0x0C, 0x0D]
                     b = bus.read_byte_data(RTC_ADDRESS, ele)
                     out.append(b)
             res = dec2hex(out) # sec, min, hour, day
     except Exception as ex:
-        logger.exception("Exception in get_shutdown_time" + str(ex))
+        logger.exception("Exception in get_shutdown_time")
     return calcTime(res)
 
 def datetime2stringtime(dt):
@@ -466,7 +474,7 @@ def datetime2stringtime(dt):
     try:
         result = dt.strftime("%d %H:%M:%S")
     except Exception as ex:
-        logger.exception("Exception in datetime2stringtime" + str(ex))
+        logger.exception("Exception in datetime2stringtime")
     return result
 
 
@@ -513,31 +521,34 @@ def stringtime2timetuple(stringtime='?? 20:00:00'):
                 logger.debug('day: ' + str(day) + ' hour: ' + str(hour) + 'minute: ' + str(minute))
                 return (minute,hour,day)
     except Exception as ex:
-        logger.exception("Exception in stringtime2timetuple" + str(ex))
+        logger.exception("Exception in stringtime2timetuple")
     return None
 
 def system_to_rtc():
-    try:
-        if rtc_connected:
-            sys_ts=dt.datetime.now(utc_tz)
-            second=sys_ts.strftime("%S")
-            minute=sys_ts.strftime("%M")
-            hour=sys_ts.strftime("%H")
-            day=sys_ts.strftime("%u")
-            date=sys_ts.strftime("%d")
-            month=sys_ts.strftime("%m")
-            year=sys_ts.strftime("%y")
-            with SMBus(1) as bus:
-                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_SECONDS, dec2bcd(second))
-                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_MINUTES, dec2bcd(minute))
-                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_HOURS, dec2bcd(hour))
-                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_WEEKDAYS, dec2bcd(day))
-                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_DAYS, dec2bcd(date))
-                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_MONTHS, dec2bcd(month))
-                bus.write_byte_data(RTC_ADDRESS, I2C_RTC_YEARS, dec2bcd(year))
-            return True
-    except Exception as ex:
-        logger.exception("Exception in system_to_rtc" + str(ex))
+    for x in range(0, 5):  # try 5 times
+        try:
+            if rtc_connected:
+                sys_ts=dt.datetime.now(utc_tz)
+                second=sys_ts.strftime("%S")
+                minute=sys_ts.strftime("%M")
+                hour=sys_ts.strftime("%H")
+                day=sys_ts.strftime("%u")
+                date=sys_ts.strftime("%d")
+                month=sys_ts.strftime("%m")
+                year=sys_ts.strftime("%y")
+                with SMBus(1) as bus:
+                    time.sleep(1) # short delay after SMBus(1) might help connection tinemout issues
+                    bus.write_byte_data(RTC_ADDRESS, I2C_RTC_SECONDS, dec2bcd(second))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_RTC_MINUTES, dec2bcd(minute))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_RTC_HOURS, dec2bcd(hour))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_RTC_WEEKDAYS, dec2bcd(day))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_RTC_DAYS, dec2bcd(date))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_RTC_MONTHS, dec2bcd(month))
+                    bus.write_byte_data(RTC_ADDRESS, I2C_RTC_YEARS, dec2bcd(year))
+                return True
+        except Exception as ex:
+            logger.exception("Exception in system_to_rtc")
+            time.sleep(1)  # wait for 1 seconds before trying to fetch the data again
     return False
 
 def rtc_to_system():
@@ -553,7 +564,7 @@ def rtc_to_system():
                     else:
                         logger.error('Failure writing RTC time to system...')
     except Exception as ex:
-        logger.exception("Exception in system_to_rtc" + str(ex))
+        logger.exception("Exception in system_to_rtc")
     return False
 
 def set_shutdown_time(stringtime='?? 20:00'):
@@ -562,6 +573,7 @@ def set_shutdown_time(stringtime='?? 20:00'):
             minute,hour,day = stringtime2timetuple(stringtime)
             if (day is not None ) and (hour is not None) and (minute is not None):
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None) #WittyPi Mini and 3 only
                     #bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM2 ,dec2bcd(minute)) #WittyPi 4 only
                     bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM2 ,dec2bcd(minute))
@@ -571,7 +583,7 @@ def set_shutdown_time(stringtime='?? 20:00'):
             else:
                 logger.debug("invalid Time")
     except Exception as ex:
-        logger.exception("Exception in set_shutdown_time" + str(ex))
+        logger.exception("Exception in set_shutdown_time")
     return False
 
 def set_startup_time(stringtime='?? 20:00:00'):
@@ -580,6 +592,7 @@ def set_startup_time(stringtime='?? 20:00:00'):
             second,minute,hour,day = stringtime2timetuple(stringtime)
             if (day is not None ) and (hour is not None) and (minute is not None) and (second is not None):
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     bus.write_byte_data(RTC_ADDRESS, 14,7) # write_byte_data(i2c_addr, register, value, force=None)#WittyPi Mini and 3 only
                     bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM1 ,dec2bcd(second))
                     bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM1 ,dec2bcd(minute))
@@ -589,85 +602,92 @@ def set_startup_time(stringtime='?? 20:00:00'):
             else:
                 logger.debug("invalid Time")
     except Exception as ex:
-        logger.exception("Exception in set_startup_time" + str(ex))
+        logger.exception("Exception in set_startup_time")
     return False
 
 def clear_startup_time():
     try:
         if rtc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
                 bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
                 bus.write_byte_data(RTC_ADDRESS, I2C_CONF_HOUR_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
                 bus.write_byte_data(RTC_ADDRESS, I2C_CONF_DAY_ALARM1 ,0) # write_byte_data(i2c_addr, register, value, force=None)
             return True
     except Exception as ex:
-        logger.exception("Exception in clear_startup_time" + str(ex))
+        logger.exception("Exception in clear_startup_time")
     return False
 
 def clear_shutdown_time():
     try:
         if rtc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 #bus.write_byte_data(RTC_ADDRESS, I2C_CONF_SECOND_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None) #WittyPi 4 only
                 bus.write_byte_data(RTC_ADDRESS, I2C_CONF_MINUTE_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None)
                 bus.write_byte_data(RTC_ADDRESS, I2C_CONF_HOUR_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None)
                 bus.write_byte_data(RTC_ADDRESS, I2C_CONF_DAY_ALARM2,0) # write_byte_data(i2c_addr, register, value, force=None)
             return True
     except Exception as ex:
-        logger.exception("Exception in clear_shutdown_time" + str(ex))
+        logger.exception("Exception in clear_shutdown_time")
     return False
 
 def get_power_mode():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 b = bus.read_byte_data(I2C_MC_ADDRESS, I2C_POWER_MODE)
             return b # int 0 or 1
     except Exception as ex:
-        logger.exception("Exception in get_power_mode" + str(ex))
+        logger.exception("Exception in get_power_mode")
 
 def get_output_voltage():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 i = bus.read_byte_data(I2C_MC_ADDRESS, I2C_VOLTAGE_OUT_I)
                 d = bus.read_byte_data(I2C_MC_ADDRESS, I2C_VOLTAGE_OUT_D)
             return float(i) + float(d)/100.
     except Exception as ex:
-        logger.exception("Exception in get_output_voltage" + str(ex))
+        logger.exception("Exception in get_output_voltage")
 
 def get_output_current():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 i = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CURRENT_OUT_I)
                 d = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CURRENT_OUT_D)
             return float(i) + float(d)/100.
     except Exception as ex:
-        logger.exception("Exception in get_output_current" + str(ex))
+        logger.exception("Exception in get_output_current")
 
 def get_low_voltage_threshold():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 i = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_LOW_VOLTAGE)
             if i == 255: thresh = 'disabled'
             else: thresh = float(i)/10.
             return thresh
     except Exception as ex:
-        logger.exception("Exception in get_low_voltage_threshold" + str(ex))
+        logger.exception("Exception in get_low_voltage_threshold")
 
 def get_recovery_voltage_threshold():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 i = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_RECOVERY_VOLTAGE)
             if i == 255: thresh = 'disabled'
             else: thresh = float(i)/10.
             return thresh
     except Exception as ex:
-        logger.exception("Exception in get_recovery_voltage_threshold" + str(ex))
+        logger.exception("Exception in get_recovery_voltage_threshold")
 
 def set_low_voltage_threshold(volt='11.5'):
     try:
@@ -678,6 +698,7 @@ def set_low_voltage_threshold(volt='11.5'):
                 else: print(' setting threshold to ',volt)
                 try:
                     with SMBus(1) as bus:
+                        time.sleep(1) # short delay
                         bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_LOW_VOLTAGE,volt)
                     return True
                 except Exception as e:
@@ -687,7 +708,7 @@ def set_low_voltage_threshold(volt='11.5'):
                     print('wrong input for voltage threshold',volt)
                     return False
     except Exception as ex:
-        logger.exception("Exception in set_low_voltage_threshold" + str(ex))
+        logger.exception("Exception in set_low_voltage_threshold")
 
 def set_recovery_voltage_threshold(volt='12.8'):
     try:
@@ -699,38 +720,42 @@ def set_recovery_voltage_threshold(volt='12.8'):
                 else:
                     print(' setting threshold to ',volt)
                     with SMBus(1) as bus:
+                        time.sleep(1) # short delay
                         bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_RECOVERY_VOLTAGE,volt)
                     return True
             else:
                 logger.error('wrong input for voltage threshold ' + str(volt))
     except Exception as ex:
-        logger.exception("Exception in set_low_voltage_threshold " + str(ex))
+        logger.exception("Exception in set_low_voltage_threshold ")
     return False
 
 def clear_low_voltage_threshold():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_LOW_VOLTAGE, 0xFF)
             return True
     except Exception as ex:
-        logger.exception("Exception in clear_low_voltage_threshold " + str(ex))
+        logger.exception("Exception in clear_low_voltage_threshold ")
     return False
 
 def clear_recovery_voltage_threshold():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_RECOVERY_VOLTAGE, 0xFF)
             return True
     except Exception as ex:
-        logger.exception("Exception in clear_recovery_voltage_threshold " + str(ex))
+        logger.exception("Exception in clear_recovery_voltage_threshold ")
     return False
 
 def get_temperature():
     try:
         if rtc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 ctrl = bus.read_byte_data(RTC_ADDRESS, 14)
                 ctrl2 = 7|0x20 #39 bitwise or
                 bus.write_byte_data(RTC_ADDRESS, 14,ctrl2)
@@ -745,31 +770,34 @@ def get_temperature():
                 c += str(((t2&0xC0)>>6)*25 )
             return float(c)
     except Exception as ex:
-        logger.exception("Exception in get_temperature" + str(ex))
+        logger.exception("Exception in get_temperature")
 
 def clear_alarm_flags(byte_F=0x0):
     try:
         if rtc_connected:
             if byte_F==0x0:
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     byte_F=bus.read_byte_data(RTC_ADDRESS, I2C_RTC_CTRL2)
             #print(format(byte_F, '0>8b')) #((byte_F)))
             byte_F=(byte_F&0xFC)
             #print(format(byte_F, '0>8b')) #((byte_F)))
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 bus.write_byte_data(RTC_ADDRESS, I2C_RTC_CTRL2, byte_F)
     except Exception as ex:
-        logger.exception("Exception in clear_alarm_flags" + str(ex))
+        logger.exception("Exception in clear_alarm_flags")
 
 def get_alarm_flags(RTC_ALARM_ADDRESS=I2C_RTC_CTRL2):
     try:
         if rtc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 byte_F=bus.read_byte_data(RTC_ADDRESS, RTC_ALARM_ADDRESS)
             #print(format(byte_F, '0>8b')) #((byte_F)))
             return byte_F
     except Exception as ex:
-        logger.exception("Exception in clear_alarm_flags" + str(ex))
+        logger.exception("Exception in clear_alarm_flags")
 
 def check_alarm_flags(byte_F):
     #byte_F should be read from I2C_RTC_ADDRESS in register 0x0F)
@@ -785,7 +813,7 @@ def check_alarm_flags(byte_F):
             #do_shutdown $HALT_PIN $has_rtc
             alarm = 2
     except Exception as ex:
-        logger.exception("Exception in check_alarm_flags" + str(ex))
+        logger.exception("Exception in check_alarm_flags")
     return alarm
 
 def do_shutdown():
@@ -797,20 +825,22 @@ def do_shutdown():
             clear_alarm_flags()
             # only enable alarm 1 (startup)
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 bus.write_byte_data(RTC_ADDRESS, 0x0E,0x05)
             os.system("sudo shutdown -h now")
     except Exception as ex:
-        logger.exception("Exception in do_shutdown" + str(ex))
+        logger.exception("Exception in do_shutdown")
 
 def get_power_cut_delay():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 pcd = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_POWER_CUT_DELAY)
             pcd=pcd/10
             return pcd
     except Exception as ex:
-        logger.exception("Exception in get_power_cut_delay" + str(ex))
+        logger.exception("Exception in get_power_cut_delay")
 
 def set_power_cut_delay(delay=8):
     try:
@@ -821,36 +851,39 @@ def set_power_cut_delay(delay=8):
             if delay >= 0 and delay <= maxVal:
                 d=delay*10
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_POWER_CUT_DELAY, d)
                 logger.debug("Power cut delay set to ", delay , " seconds!")
                 return True
             else:
                 logger.error('wrong input for power cut delay threshold ' + str(delay) + 'Please input from 0.0 to ' + str(maxVal) + ' ...')
     except Exception as ex:
-        logger.exception("Exception in set_power_cut_delay" + str(ex))
+        logger.exception("Exception in set_power_cut_delay")
     return False
 
 def get_dummy_load_duration():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 dummy_load_duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD)
             return dummy_load_duration #[0]
     except Exception as ex:
-        logger.exception("Exception in get_dummy_load_duration" + str(ex))
+        logger.exception("Exception in get_dummy_load_duration")
 
 def set_dummy_load_duration(duration=0):
     try:
         if mc_connected:
             if duration >=- 0 and duration <= 254:
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_DUMMY_LOAD, duration)
                 logger.debug("Dummy load duration set to " + str(duration) + " !")
                 return True
             else:
                 logger.error('wrong input for dummy load duration ' + str(duration) + ' Please input from 0 to 254')
     except Exception as ex:
-        logger.exception("Exception in set_dummy_load_duration" + str(ex))
+        logger.exception("Exception in set_dummy_load_duration")
     return False
 
 def set_pulsing_interval(interval):
@@ -869,11 +902,12 @@ def set_pulsing_interval(interval):
                 logger.error('wrong input for pulsing invterval' +str(interval) + ' Please input 1,2,4 or 8 seconds')
             if pi is not None:
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_PULSE_INTERVAL, pi)
                 logger.debug("Pulsing interval set to " + str(interval) + "seconds")
                 return True
     except Exception as ex:
-        logger.exception("Exception in set_pulsing_interval" + str(ex))
+        logger.exception("Exception in set_pulsing_interval")
     return False
 
 def get_pulsing_interval():
@@ -881,6 +915,7 @@ def get_pulsing_interval():
         if mc_connected:
             interval = None
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 pi = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_PULSE_INTERVAL)
             if pi == 0x09:
                 interval=8
@@ -892,29 +927,31 @@ def get_pulsing_interval():
                 interval=4
             return interval
     except Exception as ex:
-        logger.exception("Exception in get_pulsing_interval" + str(ex))
+        logger.exception("Exception in get_pulsing_interval")
 
 def set_white_led_duration(duration):
     try:
         if mc_connected:
             if duration >=- 0 and duration <= 254:
                     with SMBus(1) as bus:
+                        time.sleep(1) # short delay
                         bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_BLINK_LED, duration)
                         logger.debug("White LED duration set to "+ str(duration) + " !")
             else:
                 logger.error('wrong input for white LED duration ' + str(duration) + ' Please input from 0 to 254')
     except Exception as ex:
-        logger.exception("Exception in set_white_led_duration" + str(ex))
+        logger.exception("Exception in set_white_led_duration")
     return False
 
 def get_white_led_duration():
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 duration = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_BLINK_LED)
             return duration
     except Exception as ex:
-        logger.exception("Exception in get_white_led_duration" + str(ex))
+        logger.exception("Exception in get_white_led_duration")
 
 def set_default_state(state):
     try:
@@ -926,6 +963,7 @@ def set_default_state(state):
                 elif int(state)==0:
                     hexstate = 0x00
                 with SMBus(1) as bus:
+                    time.sleep(1) # short delay
                     bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_DEFAULT_ON, hexstate)
                 if hexstate == 0x01:
                     logger.debug('Default state when powered set to "ON"!')
@@ -935,13 +973,14 @@ def set_default_state(state):
             else:
                 logger.error('wrong input for default state. Please use 1 for "Default ON" or 0 for "Default OFF"')
     except Exception as ex:
-        logger.exception("Exception in set_default_state" + str(ex))
+        logger.exception("Exception in set_default_state")
     return False
 
 def get_default_state(): #1=ON, 0=OFF
     try:
         if mc_connected:
             with SMBus(1) as bus:
+                time.sleep(1) # short delay
                 hexstate = bus.read_byte_data(I2C_MC_ADDRESS, I2C_CONF_DEFAULT_ON)
             if hexstate == 0x01:
                 state=1
@@ -949,7 +988,7 @@ def get_default_state(): #1=ON, 0=OFF
                 state=0
             return state
     except Exception as ex:
-        logger.exception("Exception in get_default_state" + str(ex))
+        logger.exception("Exception in get_default_state")
 
 def rtc_time_is_valid(rtc_time_utc):
     try:
@@ -961,7 +1000,7 @@ def rtc_time_is_valid(rtc_time_utc):
             logger.debug('RTC time ' + rtc_time_utc.strftime("%a %d %b %Y %H:%M:%S")+ ' ' + str(utc_tz) + ' is a valid time.')
             return True
     except Exception as ex:
-        logger.exception("Exception in rtc_time_is_valid" + str(ex))
+        logger.exception("Exception in rtc_time_is_valid")
 
 def is_schedule_file_in_use(schedule_file = str(wittyPiPath) + '/schedule.wpi'):
 
@@ -984,7 +1023,7 @@ def extract_timestamp(datetimestr):
             logger.debug('invalid timestamp!')
 
     except Exception as ex:
-        logger.exception("Exception in extract_timestamp" + str(ex))
+        logger.exception("Exception in extract_timestamp")
     return timestamp
 
 def get_local_date_time(timestr, wildcard=True):
@@ -1029,7 +1068,7 @@ def get_local_date_time(timestr, wildcard=True):
             logger.debug('For '+ oldmonth + ' the day ' + str(date) + ' does not exist, added a month')
             pass
         except Exception as ex:
-            logger.exception("Another Exception in calcTime" + str(ex))
+            logger.exception("Another Exception in calcTime")
         result_datetime = dt.datetime(int(result_year), int(result_month), int(date), int(hour), int(minute), int(second), 0 ,utc_tz)
         result = datetime2stringtime(result_datetime)
         #IFS=' ' read -r date timestr <<< "$result"
@@ -1049,7 +1088,7 @@ def get_local_date_time(timestr, wildcard=True):
                 second='??'
         result = date + ' ' + hour + ' ' + minute + ' ' + second
     except Exception as ex:
-        logger.exception("Exception in get_local_date_time" + str(ex))
+        logger.exception("Exception in get_local_date_time")
     return result
 
 
@@ -1067,7 +1106,7 @@ def schedule_script_interrupted():
             if startup_time_local > cur_timestamp  and shutdown_time_local < cur_timestamp:
                 return True
     except Exception as ex:
-        logger.exception("Exception in schedule_script_interrupted" + str(ex))
+        logger.exception("Exception in schedule_script_interrupted")
     return False
 
 
@@ -1081,7 +1120,7 @@ def get_schedule_file(schedule_file = str(wittyPiPath) + '/schedule.wpi'):
         else:
             logger.info ("File " + schedule_file + "not found, skip reading schedule script.")
     except Exception as ex:
-        logger.exception("Exception in get_schedule_file" + str(ex))
+        logger.exception("Exception in get_schedule_file")
     return schedule_file_lines
 
 def schedule_file_lines2schedule_file_data(schedule_file_lines):
@@ -1112,7 +1151,7 @@ def schedule_file_lines2schedule_file_data(schedule_file_lines):
         else:
             logger.debug('Succesfully read Begin: ' + begin.strftime("%a %d %b %Y %H:%M:%S") + ' End: ' + end.strftime("%a %d %b %Y %H:%M:%S") + ' States: ' + str(count))
     except Exception as ex:
-        logger.exception("Exception in get_schedule_file" + str(ex))
+        logger.exception("Exception in get_schedule_file")
     schedule_file_data['begin'] = begin
     schedule_file_data['end'] = end
     schedule_file_data['states'] = states
@@ -1140,7 +1179,7 @@ def extract_duration(state):
                 duration=duration+int(element)*1
         #print(duration)
     except Exception as ex:
-        logger.exception("Exception in extract_duration" + str(ex))
+        logger.exception("Exception in extract_duration")
     return duration
 
 def verify_schedule_data(schedule_file_data):
@@ -1227,7 +1266,7 @@ def verify_schedule_data(schedule_file_data):
         logger.debug('script_duration: ' + str(script_duration))
         logger.debug('found_irregular_order : ' + str(found_irregular_order))
     except Exception as ex:
-        logger.exception("Exception in verify_schedule_data" + str(ex))
+        logger.exception("Exception in verify_schedule_data")
     return count, script_duration, found_off, found_on, found_irregular, found_irregular_order, found_off_wait, found_on_wait, beginissue, endissue
 
 def process_schedule_data(schedule_file_data):
@@ -1352,7 +1391,7 @@ def process_schedule_data(schedule_file_data):
                             skip=skip-skip%script_duration
                             check_time=check_time+skip
     except Exception as ex:
-        logger.exception("Exception in process_schedule_data" + str(ex))
+        logger.exception("Exception in process_schedule_data")
     return res_shutdown_time_utc, res_shutdown_time_local, res_shutdown_str_time, res_startup_time_utc, res_startup_time_local, res_startup_str_time
 
 
