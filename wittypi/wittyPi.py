@@ -845,15 +845,15 @@ def get_power_cut_delay():
 def set_power_cut_delay(delay=8):
     try:
         if mc_connected:
-            maxVal=8.0;
+            maxVal=8
             if get_firmwareversion() >= 35:
-                maxVal='25.0'
+                maxVal=25
             if delay >= 0 and delay <= maxVal:
                 d=delay*10
                 with SMBus(1) as bus:
                     time.sleep(1) # short delay
                     bus.write_byte_data(I2C_MC_ADDRESS, I2C_CONF_POWER_CUT_DELAY, d)
-                logger.debug("Power cut delay set to ", delay , " seconds!")
+                logger.debug("Power cut delay set to " + str(delay) + " seconds!")
                 return True
             else:
                 logger.error('wrong input for power cut delay threshold ' + str(delay) + 'Please input from 0.0 to ' + str(maxVal) + ' ...')
