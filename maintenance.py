@@ -84,11 +84,14 @@ def maintenance(maintenance_stop, measurement_stop):
             oldoffset2 = offset2
             if (weight_sensor["reference_unit"] == weightSensorsatStartMaintenance[i]["reference_unit"] and weight_sensor["offset"] == weightSensorsatStartMaintenance[i]["offset"]):
                 offset2 = offset2 + int(round((weightafter[i]-weightbefore[i])/10,0)*10)
-                logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weightbefore[i]) + 'g -  weight after: ' + str(weightafter[i]) + 'g , a difference of ' + str(int(weightafter[i]-weightbefore[i])) + 'g when maintenance mode was ended, updateing offset2 from ' + str(oldoffset2) +' to: ' + str(offset2))
-                #write offset2 to settings
+                if (weight_sensor["offset2"] == weightSensorsatStartMaintenance[i]["offset2"]):
+                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weightbefore[i]) + 'g -  weight after: ' + str(weightafter[i]) + 'g , a difference of ' + str(int(weightafter[i]-weightbefore[i])) + 'g when maintenance mode was ended, updateing offset2 from ' + str(oldoffset2) +' to: ' + str(offset2))
+                    #write offset2 to settings
+                else:
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weightbefore[i]) + 'g -  weight after: ' + str(weightafter[i]) + 'g , a difference of ' + str(int(weightafter[i]-weightbefore[i])) + 'g when maintenance mode was ended, not updateing offset2 to: ' + str(offset2) + ' but keeping old value: ' + str(oldoffset2) )
             else:
                 logger.warning('Calibration during maintenance for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ', not calculation a new offset')
-                logger.debug(str(weight_sensor["reference_unit"]) + ', ' + str(weightSensorsatStartMaintenance[i]["reference_unit"]) + ', ' + str(weight_sensor["offset"]) + ', ' + str(weightSensorsatStartMaintenance[i]["offset"]))
+                logger.warning('reference_unit changed to: ' + str(weight_sensor["reference_unit"]) + ' from: ' + str(weightSensorsatStartMaintenance[i]["reference_unit"]) + ', offset changed to: ' + str(weight_sensor["offset"]) + ' from: ' + str(weightSensorsatStartMaintenance[i]["offset"]))
                 #eventuell aus weightSensorsatStartMaintenance[i] die differenz berechnen
         stop_single()
 
