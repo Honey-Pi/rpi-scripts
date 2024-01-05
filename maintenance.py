@@ -35,6 +35,7 @@ def maintenance(maintenance_stop, measurement_stop):
         timeToStopMaintenance = settings['timeToStopMaintenance']
 
         weightSensors = get_sensors(settings, 2)
+        weightSensorsatStartMaintenance = weightSensors
         timeMaintenanceStarted = datetime.now()
         datetime_now = timeMaintenanceStarted
         logger.info('Maintenance mode started at: ' + timeMaintenanceStarted.strftime('%Y-%m-%d %H:%M'))
@@ -73,7 +74,12 @@ def maintenance(maintenance_stop, measurement_stop):
             channel = weight_sensor["channel"]
             reference_unit = float(weight_sensor["reference_unit"])
             offset = int(weight_sensor["offset"])
+            #if (weight_sensor["reference_unit"] == weightSensorsatStartMaintenance[i]["reference_unit"] and weight_sensor["offset"] == weightSensorsatStartMaintenance[i]["offset"]):
             logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weightbefore[i]) + 'g -  weight after: ' + str(weightafter[i]) + 'g , a difference of ' + str(int(weightafter[i]-weightbefore[i])) + 'g when maintenance mode was ended')
+            #Neues offset berechnen : weight_sensor["offset2"]+(weightafter[i]-weightbefore[i])
+            #else:
+            #logger.warning('Calibration during maintenance for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel)
+            #eventuell aus weightSensorsatStartMaintenance[i] die differenz berechnen
         stop_single()
 
         logger.info('Maintenance mode ended at: ' + timeMaintenanceStarted.strftime('%Y-%m-%d %H:%M'))
