@@ -21,7 +21,7 @@ def get_defaults():
     settings["debuglevel"] = 20
     settings["debuglevel_logfile"] = 20
     settings["offline"] = 0
-    settings['timeToStopMaintenance'] = 28800
+    settings['timeToStopMaintenance'] = 28800 # seconds
     router = {}
     router['enabled'] = False
     router['ssid'] = None
@@ -342,7 +342,7 @@ def validate_settings(settings):
 
     # Migrate to version v1.3.9
     try:
-        settings['timeToStopMaintenance'] 
+        settings['timeToStopMaintenance']
         if  settings['timeToStopMaintenance'] == None:
             updateSettingsFile = True
             settings['timeToStopMaintenance'] = get_defaults()['timeToStopMaintenance']

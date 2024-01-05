@@ -220,7 +220,7 @@ def check_wittypi(settings):
         if settings['wittyPi']['enabled']:
             if wittypi_status['is_mc_connected']:
                 if settings['wittyPi']['dummyload'] is not None and (wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']):
-                    logger.warning("WittyPi dummy load duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['dummyload']) + "seconds")
+                    logger.warning("WittyPi dummy load duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['dummyload']) + " seconds")
                     set_dummy_load_duration(settings['wittyPi']['dummyload'])
                 if settings['wittyPi']['dummyload'] is not None and (wittypi_status['default_state'] != settings['wittyPi']['dummyload']):
                     logger.warning("WittyPi default state defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['default_state']))
