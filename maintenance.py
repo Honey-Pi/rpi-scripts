@@ -95,19 +95,19 @@ def maintenance(maintenance_stop, measurement_stop):
                         if "offset2" in sensor and type(sensor["offset2"]) == int:
                             offset2 = sensor["offset2"]
                         weightdifference = weight-(int(weight_sensor["weightbefore"]))
-                        newoffset2 = offset2 + int(round(weightdifference/10,0)*10)
+                        newoffset2 = startoffset2 + int(round(weightdifference/10,0)*10)
                         if weight_sensor["reference_unit"] == sensor["reference_unit"] and weight_sensor["offset"] == sensor["offset"]:
                             if (offset2 == startoffset2):
                                 if (offset2 == newoffset2):
-                                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, no significant weight change not updating offset2')
+                                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, no significant weight change, not updating offset2')
                                 else:
-                                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, updateing offset2 from ' + str(startoffset2) +' to: ' + str(newoffset2))
+                                    logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, updateing offset2 from ' + str(startoffset2) +'g  to: ' + str(newoffset2) + 'g')
                                     sensor["offset2"]=newoffset2
                                     sensors[i] = sensor
                                     settings["sensors"] = sensors
                                     write_settings(settings)
                             else:
-                                logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, not updateing offset2 to: ' + str(newoffset2) + ' but keeping new value: ' + str(offset2) + 'that was changed in Maintenance mode from: '+ str(startoffset2))
+                                logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, not updateing offset2 to: ' + str(newoffset2) + 'g but keeping new value: ' + str(offset2) + 'g that was changed in maintenance mode from: '+ str(startoffset2))
                         else:
                             logger.warning('reference_unit changed from' + str(weight_sensor["reference_unit"]) + ' to: ' + str(sensor["reference_unit"]) + ', offset changed from: ' + str(weight_sensor["offset"]) + ' to: ' + str(sensor["offset"]))
                             logger.warning('Calibration during maintenance for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ', not calculation a new offset')
