@@ -9,7 +9,7 @@ from datetime import datetime
 import time
 import json
 
-from read_settings import get_settings, get_sensors
+from read_settings import get_settings, get_sensors, write_settings
 from utilities import ap_to_client_mode, stop_led, start_single, stop_single
 from OLed import oled_off
 from constant import GPIO_LED
@@ -102,7 +102,10 @@ def maintenance(maintenance_stop, measurement_stop):
                                     logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, no significant weight change not updating offset2')
                                 else:
                                     logger.info('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, updateing offset2 from ' + str(startoffset2) +' to: ' + str(newoffset2))
-                                #write offset2 to settings
+                                    sensor["offset2"]=newoffset2
+                                    sensors[i] = sensor
+                                    settings["sensors"] = sensors
+                                    write_settings(settings)
                             else:
                                 logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(weightdifference) + 'g when maintenance mode was ended, not updateing offset2 to: ' + str(newoffset2) + ' but keeping new value: ' + str(offset2) + 'that was changed in Maintenance mode from: '+ str(startoffset2))
                         else:
