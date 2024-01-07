@@ -345,8 +345,13 @@ def measure_hx711(weight_sensor, ts_fields, hx=None):
         if 'ts_field' in weight_sensor and type(weight) in (float, int):
             fields[weight_sensor["ts_field"]] = float("{0:.3f}".format(weight/1000)) # float only 3 decimals
 
-        if 'ts_field_offset2' in weight_sensor and 'offset2' in weight_sensor:
+        if 'ts_field_offset2' in weight_sensor and 'offset2' in weight_sensor and type(weight_sensor["offset2"]) in (float, int):
                     fields[weight_sensor["ts_field_offset2"]] = float("{0:.3f}".format(weight_sensor["offset2"]/1000))
+
+        if 'ts_field_corrected' in weight_sensor and type(weight) in (float, int) and  'offset2' in weight_sensor and type(weight_sensor["offset2"]) in (float, int):
+            weight_corrected = weight - weight_sensor["offset2"]  
+            fields[weight_sensor["ts_field_corrected"]] = float("{0:.3f}".format(weight_corrected/1000))
+
     except Exception as e:
         logger.error('Measure HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ': failed: ' + str(e))
 
