@@ -109,14 +109,14 @@ def maintenance(maintenance_stop, measurement_stop):
                             else:
                                 logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(float("{0:.1f}".format(weightdifference))) + 'g when maintenance mode was ended, not updateing offset2 to: ' + str(newoffset2) + 'g but keeping new value: ' + str(offset2) + 'g that was changed in maintenance mode from: '+ str(startoffset2))
                         else:
-                            logger.warning('reference_unit changed from' + str(weight_sensor["reference_unit"]) + ' to: ' + str(sensor["reference_unit"]) + ', offset changed from: ' + str(weight_sensor["offset"]) + ' to: ' + str(sensor["offset"]))
-                            logger.warning('Calibration during maintenance for HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + ', not calculation a new offset')
+                            logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'calibration during maintenance, reference_unit changed from' + str(weight_sensor["reference_unit"]) + ' to: ' + str(sensor["reference_unit"]) + ', offset changed from: ' + str(weight_sensor["offset"]) + ' to: ' + str(sensor["offset"]))
+                            logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel +  ' weight before: ' + str(weight_sensor["weightbefore"]) + 'g -  weight after: ' + str(weight) + 'g , a difference of ' + str(float("{0:.1f}".format(weightdifference))) + 'g when maintenance mode was ended, due to calibration during maintenance not saving a new offset')
                             #eventuell aus weight_sensor die differenz berechnen
                         break
                     else:
                         logger.debug("Another sensor")
                         continue
-                    logger.warning('Sensor HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'did not exist at start of Maintenance!')
+                    logger.warning('HX711 DT: ' + str(pin_dt) + ' SCK: ' + str(pin_sck) + ' Channel: ' + channel + 'Sensor did not exist at start of Maintenance!')
         stop_single()
 
         logger.info('Maintenance mode ended at: ' + timeMaintenanceStarted.strftime('%Y-%m-%d %H:%M'))
