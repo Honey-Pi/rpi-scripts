@@ -614,7 +614,7 @@ def shutdown(settings):
             logger.critical('HoneyPi shutting down but no Wittypi startup is scheduled!')
     else:
         logger.info('HoneyPi is shutting down...')
-    os.system("sudo shutdown -h 0")
+    os.system("sudo shutdown -h now")
 
 def decrease_nice():
     pid = os.getpid()
