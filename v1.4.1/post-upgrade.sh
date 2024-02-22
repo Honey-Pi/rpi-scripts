@@ -138,7 +138,7 @@ fi
 
 # required since version v1.4
 echo '>>> Uninstall old numpy pip package - v1.4'
-pip3 uninstall numpy
+pip3 uninstall --yes numpy
 echo '>>> Install new NumPy package (from debian) - v1.4'
 apt-get -y install --no-install-recommends python3-numpy
 
