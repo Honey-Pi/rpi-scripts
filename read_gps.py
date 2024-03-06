@@ -2,7 +2,7 @@
 # This file is part of HoneyPi [honey-pi.de] which is released under Creative Commons License Attribution-NonCommercial-ShareAlike 3.0 Unported (CC BY-NC-SA 3.0).
 # See file LICENSE or go to http://creativecommons.org/licenses/by-nc-sa/3.0/ for full license details.
 
-#https://www.haraldkreuzer.net/aktuelles/mit-gps-modul-die-uhrzeit-fuer-raspberry-pi-3-a-plus-setzen-ganz-ohne-netzwerk
+# source: https://www.haraldkreuzer.net/aktuelles/mit-gps-modul-die-uhrzeit-fuer-raspberry-pi-3-a-plus-setzen-ganz-ohne-netzwerk
 
 import datetime as dt
 import pytz
@@ -127,7 +127,7 @@ def timesync_gps(gpsSensor):
             timeout = gpsSensor["timeout"]
         logger.debug("Start receiving GPS location and time, waiting "+ str(timeout) + " seconds for GPS fix!")
         latitude, longitude, altitude = get_gps_location(timeout)
-        set_timezonefromcoordinates(latitude, longitude)
+        #set_timezonefromcoordinates(latitude, longitude)
         UTCtime,localtime,timestamp = get_gps_timestamp(timeout)
         if UTCtime is not None and localtime is not None:
             nowUTC = dt.datetime.now(utc_tz)

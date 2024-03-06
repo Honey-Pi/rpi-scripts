@@ -50,7 +50,6 @@ def is_service_active(servicename='honeypi.service'):
 def get_abs_timedifference(datetime1, datetime2):
     get_abs_timedelta_totalseconds = 0
     try:
-        #datetime1 = datetime.now(local_tz)
         if datetime2 >= datetime1:
             timedelta = datetime2 - datetime1
         else:
@@ -540,11 +539,11 @@ def connect_internet_modem(settings):
             # if modem mode is Hi.Link mode
             logger.debug('Surfstick is configured to be used in HiLink mode.')
             logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
-            logger.debug("Check Interface status - wwan0 is up: " +  str(get_interface_upstatus_linux('wwan0')) + " usb0 is up: " +  str(get_interface_upstatus_linux('usb0')) + " wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')) + " eth0 is up: " +  str(get_interface_upstatus_linux('eth0')) + " eth1 is up: " +  str(get_interface_upstatus_linux('eth1')))
+            logger.debug("Interface status:  wwan0 is up: " +  str(get_interface_upstatus_linux('wwan0')) + " usb0 is up: " +  str(get_interface_upstatus_linux('usb0')) + " wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')) + " eth0 is up: " +  str(get_interface_upstatus_linux('eth0')) + " eth1 is up: " +  str(get_interface_upstatus_linux('eth1')))
         elif modem_mode == 0:
             logger.debug('Use of surfstick is configured as disabled.')
             logger.debug("Default gateway used for Internet connection is: " +  str(get_default_gateway_linux()))
-            logger.debug("Check Interface status - eth0 is up: " +  str(get_interface_upstatus_linux('eth0')) + " wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
+            logger.debug("Interface status: eth0 is up: " +  str(get_interface_upstatus_linux('eth0')) + " wlan0 is up: " +  str(get_interface_upstatus_linux('wlan0')))
         else:
             logger.warning('Undefined state for surfstick mode.')
     except Exception as ex:
@@ -614,7 +613,7 @@ def shutdown(settings):
             logger.critical('HoneyPi shutting down but no Wittypi startup is scheduled!')
     else:
         logger.info('HoneyPi is shutting down...')
-    os.system("sudo shutdown -h 0")
+    os.system("sudo shutdown -h now")
 
 def decrease_nice():
     pid = os.getpid()
@@ -643,7 +642,8 @@ def start_single(file_path=".isActive"):
             time.sleep(1)
             logger.info("Measurement waits for a process to finish. Another measurement job is running at the moment.")
         # create file to stop other HX711 readings
-        f = open(file, "x")
+        if not os.path.exists(file):
+            f = open(file, "x")
     except Exception as ex:
         logger.exception("Exception in start_single")
         pass

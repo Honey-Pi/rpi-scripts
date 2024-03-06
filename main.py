@@ -58,16 +58,21 @@ def oled():
 def timesync(settings, wittypi_status): # TODO outsource to utilities bc not related to main
     try:
         ntptimediff_str = sync_time_ntp()
-        ntptimediff_str = str(round(float(ntptimediff_str.replace("s","")),2))
         ntptimediff_s = 0
-        ntptimediff_s = abs(int(float(ntptimediff_str)))
-        if ntptimediff_s >= 60:
-            logger.critical('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's (more than 60 seconds)')
-            set_wittypi_rtc(settings, wittypi_status)
-        else:
-            logger.info('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's')
-            if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid']:
+        if ntptimediff_str:
+            ntptimediff_str = str(round(float(ntptimediff_str.replace("s","")),2))
+            ntptimediff_s = abs(int(float(ntptimediff_str)))
+
+            if ntptimediff_s >= 60:
+                logger.critical('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's (more than 60 seconds)')
                 set_wittypi_rtc(settings, wittypi_status)
+            else:
+                logger.info('Time syncronized to NTP - difference was: ' + ntptimediff_str + 's')
+                if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid']:
+                    set_wittypi_rtc(settings, wittypi_status)
+        else:
+            logger.error('Time synchronising NTP - not able to sync')
+
     except ValueError as ex:
         if str(ex) == "could not convert string to float":
             logger.error('Time syncronisation did not return the time difference')
@@ -75,6 +80,7 @@ def timesync(settings, wittypi_status): # TODO outsource to utilities bc not rel
             logger.exception("ValueError in timesync")
     except:
         logger.exception("Exception in timesync")
+        
     return False
 
 def gpstimesync(gpsSensor, blank=None): # TODO outsource to utilities bc not related to main
@@ -282,7 +288,7 @@ def main():
         if settings['display']['enabled']:
             tOLed = threading.Thread(target=oled, args=())
             tOLed.start()
-            
+
         # remove commands to set RTC time to internet from wittypi syncTime.sh
         remove_wittypi_internet_timesync()
 

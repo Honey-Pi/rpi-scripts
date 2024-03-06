@@ -2,8 +2,12 @@
 # -*- coding: UTF-8 -*-
 
 
-#original from https://github.com/marl2en/wittypi4python
-#updated version on https://github.com/elschnorro77/wittypi4python
+# original from https://github.com/marl2en/wittypi4python
+# updated version on https://github.com/elschnorro77/wittypi4python
+
+# Prerequisite
+# pip3 install smbus2
+# pip3 install pytz
 
 """
 library for WittyPi 3 mini
@@ -12,8 +16,6 @@ Version 3.50
 
 name = "wittypi"
 __version__ = '0.1.0'
-# pip3 install smbus2
-# pip3 install pytz
 
 import logging
 from logging.handlers import RotatingFileHandler
@@ -212,7 +214,7 @@ def is_rtc_connected():
             out.append(b)
         logger.debug("RTC is connected")
         return True
-    except IOError as ex:
+    except BaseException as ex:
         if str(ex) == "[Errno 121] Remote I/O error":
             logger.debug("RTC is not connected")
             return False
@@ -227,14 +229,15 @@ def is_rtc_connected():
                     out.append(b)
                 logger.debug("RTC is connected")
                 return True
-            except IOError as ex:
+            except BaseException as ex:
                 if str(ex) == "[Errno 121] Remote I/O error":
                     logger.debug("RTC is not connected")
                     return False
         else:
-            logger.exception("IOError in is_rtc_connected ")
+            logger.error("Exception in is_rtc_connected")
+            logger.debug("RTC is not connected")
     except Exception as ex:
-        logger.exception("Exception in is_rtc_connected ")
+        logger.exception("Exception in is_rtc_connected")
 
 def is_mc_connected():
     try:

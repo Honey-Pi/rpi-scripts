@@ -23,10 +23,10 @@ def get_wittyPiPath():
     try:
         if os.path.exists(homeFolder + '/wittyPi'):
             wittyPiPath = homeFolder + '/wittyPi'
-            logger.debug("WittyPi 2 or WittyPi Mini installation detected in: " + wittyPiPath)
+            logger.debug("WittyPi 2 or WittyPi Mini installation (or at least an schedule.wpi file) detected in: " + wittyPiPath)
         elif os.path.exists(homeFolder + '/wittypi'):
             wittyPiPath = homeFolder + '/wittypi'
-            logger.debug("WittyPi 3 (Mini) or Witty Pi 4 (Mini) installation detected in: " + wittyPiPath)
+            logger.debug("WittyPi 3 (Mini) or Witty Pi 4 (Mini) installation (or at least an schedule.wpi file) detected in: " + wittyPiPath)
     except Exception as ex:
         logger.exception("Error in function get_wittyPiPath")
     return wittyPiPath

@@ -169,7 +169,10 @@ def measure_all_sensors(debug, filtered_temperature, ds18b20Sensors, bme680Senso
             ts_fields_content = ""
             for key, value in ts_fields.items():
                 ts_fields_content = ts_fields_content + key + ": " + str(value) + " "
-            logger.debug(ts_fields_content)
+            if ts_fields_content:
+                logger.debug(ts_fields_content)
+            else:
+                logger.debug("No ts_fields defined, therefore no data to send. ")
         return ts_fields, bme680Inits
     except Exception as ex:
         logger.exception("Unhandled Exception in measure_all_sensors")
