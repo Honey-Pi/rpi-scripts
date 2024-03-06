@@ -99,11 +99,10 @@ echo "Install required modules after v1.3.7 used for WittyPi..."
 pip3 install smbus2 pytz
 
 echo "Install required modules after v1.3.7 used for PA1010D..."
-pip3 install pynmea2 timezonefinder
-#pip3 install --upgrade pa1010d
+pip3 install pynmea2
 
 echo "Install required modules after v1.3.7...for for dht..."
-apt-get -y install python3-psutil
+apt-get -y install --no-install-recommends python3-psutil
 echo "Finished installing modules"
 
 echo "Install required modules after v1.3.9 used for rak811 & WittyPi..."
@@ -135,13 +134,15 @@ else
   echo 'dtparam=i2c_arm=on' >> /boot/config.txt
 fi
 
-
 # required since version v1.4
 echo '>>> Uninstall old numpy pip package - v1.4'
 pip3 uninstall --yes numpy
-echo '>>> Install new NumPy package (from debian) - v1.4'
-apt-get -y install --no-install-recommends python3-numpy
-
+echo '>>> Uninstall NumPy package (from debian) - v1.4'
+apt-get -y remove python3-numpy
+echo '>>> Install pip3 timezonefinder and numpy - v1.3.7 - PA1010D (gps)'
+apt-get -y install --no-install-recommends libopenblas-dev
+pip3 install timezonefinder==6.1.8 --no-deps # required since version v1.3.7 - PA1010D (gps)
+pip3 install numpy # Required for ds18b20 and as a dependency for timezonefinder
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
 sed -i '/(sleep 2;python3/c\#' /etc/rc.local # disable autostart in rc.local
