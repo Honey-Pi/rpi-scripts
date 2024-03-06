@@ -79,6 +79,17 @@ else
    service lighttpd force-reload
 fi
 
+# changes with v1.4.3
+if cmp -s /etc/ntpsec/ntp.conf /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/ntp.conf
+then
+   echo "The lighttpd.conf default conf file is already the correct file..."
+else
+   echo "The lighttpd.conf default conf file is different..."
+   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/ntp.conf /etc/ntpsec/ntp.conf
+   mkdir /var/log/ntpsec/
+   chown -R ntpsec:ntpsec /var/log/ntpsec/
+fi
+
 apt-get -y update --allow-releaseinfo-change
 
 echo "Install required modules after v1.3.4...for for dht..."
