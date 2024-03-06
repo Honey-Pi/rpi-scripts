@@ -153,6 +153,7 @@ apt-get -y remove python3-numpy
 echo '>>> Install pip3 timezonefinder and numpy - v1.3.7 - PA1010D (gps)'
 apt-get -y install --no-install-recommends libopenblas-dev
 pip3 install timezonefinder==6.1.8 --no-deps # required since version v1.3.7 - PA1010D (gps)
+pip3 install h3 # Required as a dependency for timezonefinder
 pip3 install numpy # Required for ds18b20 and as a dependency for timezonefinder
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
