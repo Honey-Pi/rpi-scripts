@@ -9,7 +9,8 @@ import pwd
 import grp
 import logging
 from datetime import datetime
-
+import sys
+import argparse
 
 logger = logging.getLogger('HoneyPi.wittypiutilities')
 
@@ -148,14 +149,18 @@ def check_wittypi_rtc(settings, wittypi_status):
                 abs_timedelta_totalseconds = round(get_abs_timedifference(timenow, wittypi_status['rtc_time_local']))
                 if abs_timedelta_totalseconds >= 300:
                     logger.critical("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
+                    wittypi_status['time_out_of_snyc'] = True
                 elif abs_timedelta_totalseconds >= 60:
                     logger.warning("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
+                    wittypi_status['time_out_of_snyc'] = False
                 else:
                     logger.debug("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
+                    wittypi_status['time_out_of_snyc'] = False
             if wittypi_status['startup_time_local'] is not None:
                 logger.debug("HoneyPi next scheduled wakeup is: "+ wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
             if wittypi_status['shutdown_time_local'] is not None:
                 logger.debug("HoneyPi next scheduled shutdown is: "+ wittypi_status['shutdown_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+            return wittypi_status
     except Exception as ex:
         logger.exception("Error in function check_wittypi_rtc")
 
@@ -216,7 +221,7 @@ def check_wittypi(settings):
                 logger.debug("WittyPi recovery voltage threshold is set to '" + str(wittypi_status['recovery_voltage_threshold']) + " Volt', HoneyPi low voltage threshold  is set to '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
             else:
                 logger.debug("WittyPi recovery voltage threshold is set to " + str(wittypi_status['recovery_voltage_threshold']) + " Volt" )
-        check_wittypi_rtc(settings, wittypi_status) # TODO this will be called each time from main even if wittypi is disabled/ not connected - sure? Call it seperately after check_wittypi got called if required
+        wittypi_status = check_wittypi_rtc(settings, wittypi_status) # TODO this will be called each time from main even if wittypi is disabled/ not connected - sure? Call it seperately after check_wittypi got called if required
         if settings['wittyPi']['enabled']:
             if wittypi_status['is_mc_connected']:
                 if settings['wittyPi']['dummyload'] is not None and (wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']):
@@ -304,10 +309,11 @@ def set_wittypi_schedule():
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1 #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
         wittyPiPath = get_wittyPiPath()
         if schedulefile_exists:
+            logger.debug("Found schedule file in " + wittypi_scheduleFile)
             copy_wittypi_schedulefile(wittypi_scheduleFile, wittyPiPath + wittypi_scheduleFileName) #Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi'
             runscript(loggername='HoneyPi.WittyPi.runScript') #setzen von wittyPi Startup / Shutdown
         else:
-            logger.debug("Pausing wittyPi schedule by removing scheduled startup / shutdown...")
+            logger.debug("No schedule file in " + wittypi_scheduleFile + " found, pausing wittyPi schedule by removing scheduled startup / shutdown...")
             clear_wittypi_schedule() #Löschen von wittyPi Startup / Shutdown
         return True
     except Exception as ex:
@@ -354,10 +360,77 @@ def copy_wittypi_schedulefile(source, target):
 
 if __name__ == '__main__':
     try:
+        from constant import scriptsFolder, logfile, settingsFile, local_tz
+        from read_settings import get_settings
+        from main import timesync
+        import threading
+        from logging.handlers import RotatingFileHandler
+        logger = logging.getLogger('HoneyPi.wittypiutilities.fromWebIf')
+        logger.setLevel(logging.DEBUG)
+        try:
+            fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
+        except PermissionError:
+            #set file access
+            #fix_fileaccess(scriptsFolder + '/err*.*')
+            fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
+
+        #fh.setLevel(logging.getLevelName(debuglevel_logfile))
+        # create console handler with a higher log level
+        ch = logging.StreamHandler()
+        #ch.setLevel(logging.getLevelName(debuglevel))
+        # create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(name)s | %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # add the handlers to the logger
+        logger.addHandler(fh)
+        logger.addHandler(ch)
+
+        settings = get_settings()
         logging.basicConfig(level=logging.DEBUG)
         source = wittypi_scheduleFile
         target = get_wittyPiPath() + wittypi_scheduleFileName
-        copy_wittypi_schedulefile()
+        print(sys.argv)
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("argument", help="Use an integer value as argument.", type=int)
+        args = parser.parse_args()
+        print(args.argument)
+        if args.argument == 0:
+            clear_wittypi_schedule()
+        elif args.argument == 1:
+            wittypi_status = check_wittypi(settings)
+            if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
+                logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
+                ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
+                ttimesync.start()
+                ttimesync.join(timeout=45)
+                if ttimesync.is_alive():
+                    logger.warning("Thread to syncronize time with NTP Server is still not finished!")
+                set_wittypi_rtc(settings, wittypi_status)
+            continue_wittypi_schedule()
+        elif args.argument == 2:
+            wittypi_status = check_wittypi(settings)
+            logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
+            if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
+                ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
+                ttimesync.start()
+                ttimesync.join(timeout=45)
+                if ttimesync.is_alive():
+                    logger.warning("Thread to syncronize time with NTP Server is still not finished!")
+                set_wittypi_rtc(settings, wittypi_status)
+        elif args.argument == 3:
+            wittypi_status = check_wittypi(settings)
+            logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
+            if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
+                ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
+                ttimesync.start()
+                ttimesync.join(timeout=45)
+                if ttimesync.is_alive():
+                    logger.warning("Thread to syncronize time with NTP Server is still not finished!")
+                set_wittypi_rtc(settings, wittypi_status)
+        else:
+            print ('Unsupported')
     except (KeyboardInterrupt, SystemExit):
         sys.exit()
     except Exception as ex:
