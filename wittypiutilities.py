@@ -393,7 +393,12 @@ if __name__ == '__main__':
         logger.addHandler(ch)
 
         settings = get_settings()
-        logging.basicConfig(level=logging.DEBUG)
+        debuglevel=int(settings["debuglevel"])
+        debuglevel_logfile=int(settings["debuglevel_logfile"])
+
+        logger.setLevel(logging.DEBUG)
+        fh.setLevel(logging.getLevelName(debuglevel_logfile))
+        ch.setLevel(logging.getLevelName(debuglevel))
         source = wittypi_scheduleFile
         target = get_wittyPiPath() + wittypi_scheduleFileName
         print(sys.argv)

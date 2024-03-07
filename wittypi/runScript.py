@@ -44,7 +44,7 @@ def runscript(loggername='WittyPi.runScript'):
                     str_shutdown_time_local = "Never"
                     clear_shutdown_time()
                 print("Schedule next shutdown at: " + str_shutdown_time_local)
-                logger.debug("Schedule next shutdown at: " + str_shutdown_time_local)
+                logger.info("Schedule next shutdown at: " + str_shutdown_time_local)
                 if startup_time_local is not None: 
                     str_startup_time_local = startup_time_local.strftime("%a %d %b %Y %H:%M:%S") + " " +  str(local_tz)
                     set_startup_time(startup_str_time)
@@ -57,7 +57,7 @@ def runscript(loggername='WittyPi.runScript'):
                     str_startup_time_local = "Never"
                     clear_startup_time()
                 print("Schedule next startup at:  " + str_startup_time_local)
-                logger.debug("Schedule next startup at:  " + str_startup_time_local)
+                logger.info("Schedule next startup at:  " + str_startup_time_local)
             else:
                 print('Schedule script not found, skip running schedule script and clear startup / shutdown time.')
                 logger.debug('Schedule script not found, skip running schedule script and clear startup / shutdown time.')
