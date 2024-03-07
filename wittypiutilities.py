@@ -172,9 +172,9 @@ def check_wittypi(settings):
         wittypi_status['service_active']=is_service_active('wittypi.service')
         if wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
             if wittypi_status['is_mc_connected']:
-                logger.debug("WittyPi 3 is connected but WittyPi Service is not running!")
+                logger.debug("WittyPi 3 is connected and WittyPi Service is not running!")
             else:
-                logger.debug("WittyPi 2 (or other RTC) but WittyPi Service is not running!")
+                logger.debug("WittyPi 2 (or other RTC) and WittyPi Service is not running!")
             #send sys_up signal to WittyPi on SYSUP (GPIO 17)
             send_sysup()
             #check alarmflags and clear
@@ -204,9 +204,11 @@ def check_wittypi(settings):
                 except OSError:
                     logger.critical("Creation of the directory for WittyPi schedule file '%s' failed" % path)
         if wittypi_status['service_active'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
-            logger.warning("WittyPi service is active but WittyPi is disabled in HoneyPi settings!")
+            logger.critical("WittyPi service is active but WittyPi is disabled in HoneyPi settings!")
+        if wittypi_status['service_active'] and settings['wittyPi']['enabled']:
+            logger.warning("WittyPi service is active and WittyPi is enabled in HoneyPi settings! WittyPi service is not required and could cause issues.")
         if settings['wittyPi']['enabled'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
-            logger.warning("WittyPi is enabled in HoneyPi settings but WittyPi service is not active!")
+            logger.debug("WittyPi is enabled in HoneyPi settings and WittyPi service is not active!")
         if wittypi_status['is_mc_connected'] and str(wittypi_status['low_voltage_threshold']) != 'disabled':
             if settings['wittyPi']['voltagecheck_enabled'] and (wittypi_status['low_voltage_threshold'] >= settings['wittyPi']['low']['voltage']):
                 logger.critical("WittyPi low voltage threshold '" + str(wittypi_status['low_voltage_threshold']) + " Volt' is set to a higher value than HoneyPi low voltage threshold '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
@@ -227,7 +229,7 @@ def check_wittypi(settings):
                 if settings['wittyPi']['dummyload'] is not None and (wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']):
                     logger.warning("WittyPi dummy load duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['dummyload']) + " seconds")
                     set_dummy_load_duration(settings['wittyPi']['dummyload'])
-                if settings['wittyPi']['dummyload'] is not None and (wittypi_status['default_state'] != settings['wittyPi']['dummyload']):
+                if settings['wittyPi']['default_state'] is not None and (wittypi_status['default_state'] != settings['wittyPi']['default_state']):
                     logger.warning("WittyPi default state defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['default_state']))
                     set_default_state(settings['wittyPi']['default_state'])
                 if settings['wittyPi']['power_cut_delay'] is not None and (wittypi_status['power_cut_delay'] != settings['wittyPi']['power_cut_delay']):
