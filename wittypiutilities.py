@@ -404,7 +404,7 @@ if __name__ == '__main__':
         print(sys.argv)
 
         parser = argparse.ArgumentParser()
-        parser.add_argument("argument", help="Use an integer value as argument.", type=int)
+        parser.add_argument("argument", help="Use an integer value as argument.\r\n 0 - clear schedule\r\n 1 - set schedule\r\n 2 - load settings and set RTC time\r\n 3 - load settings and set RTC time;", type=int)
         args = parser.parse_args()
         print(args.argument)
         if args.argument == 0:
