@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-VERSION="v1.4.3"
+VERSION="v1.5"
 
 echo '>>> Running post-upgrade script...'
 
@@ -148,13 +148,11 @@ fi
 # required since version v1.4
 echo '>>> Uninstall old numpy pip package - v1.4'
 pip3 uninstall --yes numpy
-echo '>>> Uninstall NumPy package (from debian) - v1.4'
 apt-get -y remove python3-numpy
 echo '>>> Install pip3 timezonefinder and numpy - v1.3.7 - PA1010D (gps)'
 apt-get -y install --no-install-recommends libopenblas-dev
-pip3 install timezonefinder==6.1.8 --no-deps # required since version v1.3.7 - PA1010D (gps)
-pip3 install h3 # Required as a dependency for timezonefinder
-pip3 install numpy # Required for ds18b20 and as a dependency for timezonefinder
+pip3 install timezonefinder==6.1.8 # required since version v1.3.7 - PA1010D (gps)
+pip3 install numpy # Required for ds18b20
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
 sed -i '/(sleep 2;python3/c\#' /etc/rc.local # disable autostart in rc.local
