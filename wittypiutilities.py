@@ -258,8 +258,9 @@ def get_wittypi_status(settings):
     except Exception as ex:
         logger.exception("Error in function get_wittyPi_status")
 
-def pause_wittypi_schedule():
+def pause_wittypi_schedule(loggername='HoneyPi.wittypiutilities'):
     try:
+        logger = logging.getLogger(loggername)
         if os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1: #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
             os.rename(wittypi_scheduleFile, wittypi_scheduleFile + ".bak")
             update_wittypi_schedule("")
@@ -288,15 +289,17 @@ def check_wittypi_scheduleFile_backup():
         logger.exception("Error in function check_wittypi_scheduleFile_backup")
     return found_scheduleFile_backup
 
-def continue_wittypi_schedule():
+def continue_wittypi_schedule(loggername='HoneyPi.wittypiutilities'):
     try:
+        logger = logging.getLogger(loggername)
         check_wittypi_scheduleFile_backup()
-        set_wittypi_schedule()
+        set_wittypi_schedule(loggername)
     except Exception as ex:
         logger.exception("Error in function continue_wittypi_schedule")
 
-def clear_wittypi_schedule():
+def clear_wittypi_schedule(loggername='HoneyPi.wittypiutilities'):
     try:
+        logger = logging.getLogger(loggername)
         startup_time_cleared = clear_startup_time()
         shutdown_time_cleared = clear_shutdown_time()
         if startup_time_cleared and shutdown_time_cleared:
@@ -306,17 +309,18 @@ def clear_wittypi_schedule():
     except Exception as ex:
         logger.exception("Error in function clear_wittypi_schedule")
 
-def set_wittypi_schedule():
+def set_wittypi_schedule(loggername='HoneyPi.wittypiutilities'):
     try:
+        logger = logging.getLogger(loggername)
         schedulefile_exists = os.path.isfile(wittypi_scheduleFile) and os.stat(wittypi_scheduleFile).st_size > 1 #existiert '/var/www/html/backend/schedule.wpi' und ist größer wie 1 Bit
         wittyPiPath = get_wittyPiPath()
         if schedulefile_exists:
             logger.debug("Found schedule file in " + wittypi_scheduleFile)
             copy_wittypi_schedulefile(wittypi_scheduleFile, wittyPiPath + wittypi_scheduleFileName) #Kopieren von '/var/www/html/backend/schedule.wpi' nach 'home/pi/wittipi/schedule.wpi'
-            runscript(loggername='HoneyPi.WittyPi.runScript') #setzen von wittyPi Startup / Shutdown
+            runscript(loggername) #setzen von wittyPi Startup / Shutdown
         else:
             logger.debug("No schedule file in " + wittypi_scheduleFile + " found, pausing wittyPi schedule by removing scheduled startup / shutdown...")
-            clear_wittypi_schedule() #Löschen von wittyPi Startup / Shutdown
+            clear_wittypi_schedule(loggername) #Löschen von wittyPi Startup / Shutdown
         return True
     except Exception as ex:
         logger.exception("Error in function set_wittypi_schedule")
@@ -399,7 +403,7 @@ if __name__ == '__main__':
         args = parser.parse_args()
         print(args.argument)
         if args.argument == 0:
-            clear_wittypi_schedule()
+            clear_wittypi_schedule(loggername='HoneyPi.wittypiutilities.fromWebIf')
         elif args.argument == 1:
             wittypi_status = check_wittypi(settings)
             if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
@@ -410,7 +414,7 @@ if __name__ == '__main__':
                 if ttimesync.is_alive():
                     logger.warning("Thread to syncronize time with NTP Server is still not finished!")
                 set_wittypi_rtc(settings, wittypi_status)
-            continue_wittypi_schedule()
+            continue_wittypi_schedule(loggername='HoneyPi.wittypiutilities.fromWebIf')
         elif args.argument == 2:
             wittypi_status = check_wittypi(settings)
             if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
