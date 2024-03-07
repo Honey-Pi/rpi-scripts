@@ -411,8 +411,8 @@ if __name__ == '__main__':
             continue_wittypi_schedule()
         elif args.argument == 2:
             wittypi_status = check_wittypi(settings)
-            logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
             if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
+                logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
                 ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
                 ttimesync.start()
                 ttimesync.join(timeout=45)
@@ -421,8 +421,8 @@ if __name__ == '__main__':
                 set_wittypi_rtc(settings, wittypi_status)
         elif args.argument == 3:
             wittypi_status = check_wittypi(settings)
-            logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
             if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
+                logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
                 ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
                 ttimesync.start()
                 ttimesync.join(timeout=45)
