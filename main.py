@@ -55,8 +55,9 @@ def oled():
         oled_off()
     return
 
-def timesync(settings, wittypi_status): # TODO outsource to utilities bc not related to main
+def timesync(settings, wittypi_status, loggername='HoneyPi.main'): # TODO outsource to utilities bc not related to main
     try:
+        logger = logging.getLogger(loggername)
         ntptimediff_str = sync_time_ntp()
         ntptimediff_s = 0
         if ntptimediff_str:
@@ -292,7 +293,7 @@ def main():
         # remove commands to set RTC time to internet from wittypi syncTime.sh
         remove_wittypi_internet_timesync()
 
-        # check wittypi TODO add description what is done here and why
+        # check if wittypi or other RTC is connected and if RTC time is valid
         wittypi_status = check_wittypi(settings)
         if ('rtc_time_is_valid' in wittypi_status) and ('rtc_time_local' in wittypi_status) and wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
             #set systemtime from RTC
@@ -300,10 +301,11 @@ def main():
             rtc_to_system()
             continue_wittypi_schedule()
         if wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
+            #add event to shutdown Pi from WittyPi button
             add_halt_pin_event(halt_pin_event_detected)
 
 
-        # TODO add description what is done here and why
+        # check if GPS is configured and start background thread to sync time to GPS if required.
         gpsSensors = get_sensors(settings, 99)
         for (sensorIndex, gpsSensor) in enumerate(gpsSensors):
             init_gps(gpsSensor)
@@ -311,7 +313,7 @@ def main():
             tgpstimesync.start()
             break
 
-        # TODO add description what is done here and why
+        # check if Internet is configured and start background thread to sync time to NTP Servers if required.
         if settings["offline"] != 3:
             ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
             ttimesync.start()

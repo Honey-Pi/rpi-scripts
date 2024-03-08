@@ -371,7 +371,8 @@ if __name__ == '__main__':
         from main import timesync
         import threading
         from logging.handlers import RotatingFileHandler
-        logger = logging.getLogger('HoneyPi.wittypiutilities.fromWebIf')
+        loggername='HoneyPi.wittypiutilities.fromWebIf'
+        logger = logging.getLogger(loggername)
         logger.setLevel(logging.DEBUG)
         try:
             fh = RotatingFileHandler(logfile, maxBytes=5*1024*1024, backupCount=60)
@@ -401,26 +402,23 @@ if __name__ == '__main__':
         ch.setLevel(logging.getLevelName(debuglevel))
         source = wittypi_scheduleFile
         target = get_wittyPiPath() + wittypi_scheduleFileName
-        print(sys.argv)
-
         parser = argparse.ArgumentParser()
         parser.add_argument("argument", help="Use an integer value as argument.\r\n 0 - clear schedule\r\n 1 - set schedule\r\n 2 - load settings and set RTC time\r\n 3 - load settings and set RTC time;", type=int)
         args = parser.parse_args()
-        print(args.argument)
         if args.argument == 0:
-            clear_wittypi_schedule(loggername='HoneyPi.wittypiutilities.fromWebIf')
+            logger.info('Clearing WittyPi schedule.')
+            clear_wittypi_schedule(loggername)
         elif args.argument == 1:
+            logger.info('Synchronizing time and setting WittyPi schedule.')
             wittypi_status = check_wittypi(settings)
-            if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
-                logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
-                ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status))
-                ttimesync.start()
-                ttimesync.join(timeout=45)
-                if ttimesync.is_alive():
-                    logger.warning("Thread to syncronize time with NTP Server is still not finished!")
-                set_wittypi_rtc(settings, wittypi_status)
-            continue_wittypi_schedule(loggername='HoneyPi.wittypiutilities.fromWebIf')
+            ttimesync = threading.Thread(target=timesync, args=(settings, wittypi_status, loggername))
+            ttimesync.start()
+            ttimesync.join(timeout=45)
+            if ttimesync.is_alive():
+                logger.warning("Thread to syncronize time with NTP Server is still not finished!")
+            continue_wittypi_schedule(loggername)
         elif args.argument == 2:
+            logger.info('Updating WittyPi settings and synchronizing time if required.')
             wittypi_status = check_wittypi(settings)
             if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
                 logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
@@ -429,8 +427,8 @@ if __name__ == '__main__':
                 ttimesync.join(timeout=45)
                 if ttimesync.is_alive():
                     logger.warning("Thread to syncronize time with NTP Server is still not finished!")
-                set_wittypi_rtc(settings, wittypi_status)
         elif args.argument == 3:
+            logger.info('Updating WittyPi settings and synchronizing time if required.')
             wittypi_status = check_wittypi(settings)
             if ('rtc_time_is_valid' in wittypi_status) and not wittypi_status['rtc_time_is_valid'] or 'time_out_of_snyc' in wittypi_status and wittypi_status['time_out_of_snyc']:
                 logger.debug('rtc_time_is_valid: ' + str(wittypi_status['rtc_time_is_valid']) + ' time_out_of_snyc: ' + str(wittypi_status['time_out_of_snyc']))
@@ -439,7 +437,6 @@ if __name__ == '__main__':
                 ttimesync.join(timeout=45)
                 if ttimesync.is_alive():
                     logger.warning("Thread to syncronize time with NTP Server is still not finished!")
-                set_wittypi_rtc(settings, wittypi_status)
         else:
             print ('Unsupported')
     except (KeyboardInterrupt, SystemExit):
