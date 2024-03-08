@@ -236,6 +236,7 @@ def is_rtc_connected():
         else:
             logger.error("Exception in is_rtc_connected")
             logger.debug("RTC is not connected")
+            return False
     except Exception as ex:
         logger.exception("Exception in is_rtc_connected")
 
