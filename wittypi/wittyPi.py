@@ -1421,6 +1421,8 @@ def getAll():
         wittypi['shutdown_timedelta'] = shutdown_timedelta
         wittypi['temperature'] = get_temperature()
         wittypi['alarm_flags'] = get_alarm_flags()
+    else:
+        wittypi['is_rtc_connected'] = False
     wittypi['is_mc_connected'] = is_mc_connected()
     if wittypi['is_mc_connected']:
         wittypi['is_mc_connected'] = True
@@ -1435,6 +1437,8 @@ def getAll():
         wittypi['white_led_duration'] = get_white_led_duration()
         wittypi['low_voltage_threshold'] = get_low_voltage_threshold()
         wittypi['recovery_voltage_threshold'] = get_recovery_voltage_threshold()
+    else:
+        wittypi['is_mc_connected'] = False
     wittypi['wittyPiPath'] = get_wittypi_folder()
     wittypi['is_schedule_file_in_use'] = is_schedule_file_in_use()
     if wittypi['is_schedule_file_in_use']:
