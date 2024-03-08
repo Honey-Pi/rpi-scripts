@@ -170,7 +170,7 @@ def check_wittypi(settings):
     try:
         wittypi_status = get_wittypi_status(settings)
         wittypi_status['service_active']=is_service_active('wittypi.service')
-        if wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
+        if 'is_rtc_connected' in wittypi_status and wittypi_status['is_rtc_connected'] is not None and wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
             if wittypi_status['is_mc_connected']:
                 logger.debug("WittyPi 3 is connected and WittyPi Service is not running!")
             else:
@@ -192,6 +192,7 @@ def check_wittypi(settings):
                 elif alarm_type == 2:
                     logger.warning("HoneyPi was woken up by Shutdown Alarm from RTC, should go to sleep!")
                     do_shutdown()
+            wittypi_status = check_wittypi_rtc(settings, wittypi_status)
             #create WittyPi folder if not existing to be able to save schedule file.
             if wittypi_status['wittyPiPath'] == "" or wittypi_status['wittyPiPath'] is None:
                 path = homeFolder + '/wittypi'
@@ -203,6 +204,8 @@ def check_wittypi(settings):
                     logger.info("Created directory for WittyPi schedule file '%s'" % path)
                 except OSError:
                     logger.critical("Creation of the directory for WittyPi schedule file '%s' failed" % path)
+        if 'is_rtc_connected' in wittypi_status and wittypi_status['is_rtc_connected'] is not None and wittypi_status['is_rtc_connected'] == False and settings['wittyPi']['enabled']:
+            logger.critical("No WittyPi present but enabled in HoneyPi settings!")
         if wittypi_status['service_active'] and wittypi_status['service_active'] != settings['wittyPi']['enabled']:
             logger.critical("WittyPi service is active but WittyPi is disabled in HoneyPi settings!")
         if wittypi_status['service_active'] and settings['wittyPi']['enabled']:
@@ -223,9 +226,8 @@ def check_wittypi(settings):
                 logger.debug("WittyPi recovery voltage threshold is set to '" + str(wittypi_status['recovery_voltage_threshold']) + " Volt', HoneyPi low voltage threshold  is set to '" + str(settings['wittyPi']['low']['voltage']) + " Volt'")
             else:
                 logger.debug("WittyPi recovery voltage threshold is set to " + str(wittypi_status['recovery_voltage_threshold']) + " Volt" )
-        wittypi_status = check_wittypi_rtc(settings, wittypi_status) # TODO this will be called each time from main even if wittypi is disabled/ not connected - sure? Call it seperately after check_wittypi got called if required
         if settings['wittyPi']['enabled']:
-            if wittypi_status['is_mc_connected']:
+            if 'is_mc_connected' in wittypi_status and wittypi_status['is_mc_connected'] is not None and wittypi_status['is_mc_connected']:
                 if settings['wittyPi']['dummyload'] is not None and (wittypi_status['dummy_load_duration'] != settings['wittyPi']['dummyload']):
                     logger.warning("WittyPi dummy load duration defered from settings, updating setting on WittyPi to " + str(settings['wittyPi']['dummyload']) + " seconds")
                     set_dummy_load_duration(settings['wittyPi']['dummyload'])
