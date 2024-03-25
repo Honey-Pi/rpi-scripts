@@ -274,6 +274,17 @@ def main():
         else:
             debug = False # flag to enable debug mode (HDMI output enabled and no rebooting)
 
+        # check if wittypi or other RTC is connected and if RTC time is valid
+        wittypi_status = check_wittypi(settings, False)
+        if ('rtc_time_is_valid' in wittypi_status) and ('rtc_time_local' in wittypi_status) and wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
+            #set systemtime from RTC
+            logger.info('Writing RTC time ' + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
+            rtc_to_system()
+            continue_wittypi_schedule()
+        if wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
+            #add event to shutdown Pi from WittyPi button
+            add_halt_pin_event(halt_pin_event_detected)
+
         if debuglevel > 20:
             # stop HDMI power (save energy)
             logger.info('HoneyPi '+ get_rpiscripts_version() + ' Started on ' + get_pi_model() + ' as User ' + whoami() + ', Debuglevel: "' + logging.getLevelName(debuglevel) + '", Debuglevel logfile: "' + logging.getLevelName(debuglevel_logfile)+'"')
@@ -285,25 +296,8 @@ def main():
 
         q = Queue() # TODO check is this used anywhere?
 
-        # TODO add description what is done here and why
-        if settings['display']['enabled']:
-            tOLed = threading.Thread(target=oled, args=())
-            tOLed.start()
-
         # remove commands to set RTC time to internet from wittypi syncTime.sh
         remove_wittypi_internet_timesync()
-
-        # check if wittypi or other RTC is connected and if RTC time is valid
-        wittypi_status = check_wittypi(settings)
-        if ('rtc_time_is_valid' in wittypi_status) and ('rtc_time_local' in wittypi_status) and wittypi_status['rtc_time_is_valid'] and (wittypi_status['rtc_time_local'] is not None):
-            #set systemtime from RTC
-            logger.info('Writing RTC time ' + wittypi_status['rtc_time_local'].strftime("%a %d %b %Y %H:%M:%S") + ' to system...')
-            rtc_to_system()
-            continue_wittypi_schedule()
-        if wittypi_status['is_rtc_connected'] and not wittypi_status['service_active']:
-            #add event to shutdown Pi from WittyPi button
-            add_halt_pin_event(halt_pin_event_detected)
-
 
         # check if GPS is configured and start background thread to sync time to GPS if required.
         gpsSensors = get_sensors(settings, 99)
@@ -358,6 +352,11 @@ def main():
         bouncetime = 100 # ignoring further edges for 100ms for switch bounce handling
         # register button press event
         GPIO.add_event_detect(GPIO_BTN, GPIO.BOTH, callback=button_pressed, bouncetime=bouncetime)
+
+        # TODO add description what is done here and why
+        if settings['display']['enabled']:
+            tOLed = threading.Thread(target=oled, args=())
+            tOLed.start()
 
         # blink with LED on startup
         tblink = threading.Thread(target=blink_led, args = (GPIO_LED,))
