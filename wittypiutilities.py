@@ -136,7 +136,7 @@ def check_wittypi_schedule(settings, wittypi_status):
     except Exception as ex:
         logger.exception("Error in function check_wittypi_schedule")
 
-def check_wittypi_rtc(settings, wittypi_status):
+def check_wittypi_rtc(settings, wittypi_status, notinitiatedFromBoot=True):
     try:
         if wittypi_status['is_rtc_connected']:
             if not wittypi_status['rtc_time_is_valid']:
@@ -147,10 +147,10 @@ def check_wittypi_rtc(settings, wittypi_status):
             else:
                 timenow = datetime.now(local_tz)
                 abs_timedelta_totalseconds = round(get_abs_timedifference(timenow, wittypi_status['rtc_time_local']))
-                if abs_timedelta_totalseconds >= 300:
+                if notinitiatedFromBoot and abs_timedelta_totalseconds >= 300:
                     logger.critical("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
                     wittypi_status['time_out_of_snyc'] = True
-                elif abs_timedelta_totalseconds >= 60:
+                elif notinitiatedFromBoot and abs_timedelta_totalseconds >= 60:
                     logger.warning("Difference between RTC time and sytstem time is " + str(abs_timedelta_totalseconds) + " seconds")
                     wittypi_status['time_out_of_snyc'] = False
                 else:
@@ -165,7 +165,7 @@ def check_wittypi_rtc(settings, wittypi_status):
         logger.exception("Error in function check_wittypi_rtc")
 
 
-def check_wittypi(settings):
+def check_wittypi(settings, notinitiatedFromBoot=True):
     wittypi_status = {}
     try:
         wittypi_status = get_wittypi_status(settings)
@@ -184,7 +184,7 @@ def check_wittypi(settings):
                 alarm_type = check_alarm_flags(wittypi_status['alarm_flags'])
                 if alarm_type == 1:
                     if wittypi_status['startup_time_local'] is not None:
-                        logger.debug("HoneyPi was woken up by Startup Alarm : " + wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
+                        logger.info("HoneyPi was woken up by Startup Alarm : " + wittypi_status['startup_time_local'].strftime("%a %d %b %Y %H:%M:%S"))
                     else:
                         logger.info("HoneyPi was woken up by Startup Alarm from RTC!")
                     logger.debug("Clearing WittyPi (or other RTC) alarm flags!")
@@ -192,7 +192,7 @@ def check_wittypi(settings):
                 elif alarm_type == 2:
                     logger.warning("HoneyPi was woken up by Shutdown Alarm from RTC, should go to sleep!")
                     do_shutdown()
-            wittypi_status = check_wittypi_rtc(settings, wittypi_status)
+            wittypi_status = check_wittypi_rtc(settings, wittypi_status, notinitiatedFromBoot)
             #create WittyPi folder if not existing to be able to save schedule file.
             if wittypi_status['wittyPiPath'] == "" or wittypi_status['wittyPiPath'] is None:
                 path = homeFolder + '/wittypi'
