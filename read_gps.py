@@ -15,13 +15,12 @@ import inspect
 
 logger = logging.getLogger('HoneyPi.gps')
 
-gps = PA1010D()
-
-timeout=30
-waitforfix=True
-
 from constant import local_tz
 utc_tz = pytz.timezone('UTC')
+
+gps = None
+timeout=30
+waitforfix=True
 
 def init_gps(gpsSensor):
     global gps
