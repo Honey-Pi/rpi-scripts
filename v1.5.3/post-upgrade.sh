@@ -12,7 +12,7 @@ if [ "$(id -u)" != 0 ]; then
     exit 1
 fi
 
-VERSION="v1.5.2"
+VERSION="v1.5.3"
 
 echo '>>> Running post-upgrade script...'
 
@@ -153,6 +153,11 @@ echo '>>> Install pip3 timezonefinder and numpy - v1.3.7 - PA1010D (gps)'
 apt-get -y install --no-install-recommends libopenblas-dev
 pip3 install timezonefinder==6.1.8 # required since version v1.3.7 - PA1010D (gps)
 pip3 install numpy # Required for ds18b20
+
+# required since version v1.5.3
+echo '>>> Migrate from python3-rpi.gpio to python3-rpi-lgpio because old lib did not work with bookworm OS on Zero - v1.5.3'
+apt-get -y remove python3-rpi.gpio
+apt-get -y install python3-rpi-lgpio
 
 echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
 sed -i '/(sleep 2;python3/c\#' /etc/rc.local # disable autostart in rc.local
