@@ -1,12 +1,12 @@
-[ -z $BASH ] && { exec bash "$0" "$@" || exit; }
 #!/bin/bash
+
+[ -z $BASH ] && { exec bash "$0" "$@" || exit; }
+
 # file: post-upgrade.sh
-#
 # This script will install required software for HoneyPi after an upgrade.
 # It is recommended to run it in your home directory.
-#
 
-# check if sudo is used
+# Ensure the script is run as root
 if [ "$(id -u)" != 0 ]; then
     echo 'Sorry, you need to run this script with sudo'
     exit 1
@@ -14,162 +14,147 @@ fi
 
 VERSION="v1.5.3"
 
-echo '>>> Running post-upgrade script...'
+log() {
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a /var/log/honeypi_post_upgrade.log
+}
 
-if cmp -s /etc/network/interfaces /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/interfaces
-then
-   echo "The interfaces file is already the correct file..."
-else
-   echo "The interfaces file is different..."
-   mv /etc/network/interfaces /etc/network/interfaces.orig
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/interfaces /etc/network/interfaces
+replace_if_different() {
+    local src=$1
+    local dest=$2
+    local backup=$3
+    if [ ! -f "$dest" ]; then
+        log "The destination file $dest does not exist, copying directly..."
+        cp "$src" "$dest"
+    elif cmp -s "$src" "$dest"; then
+        log "The $(basename $dest) file is already the correct file..."
+    else
+        log "The $(basename $dest) file is different..."
+        [ -n "$backup" ] && mv "$dest" "$backup"
+        cp "$src" "$dest"
+    fi
+}
 
-fi
-if cmp -s /home/pi/HoneyPi/update.sh /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/update.sh
-then
-   echo "The update.sh file is already the correct file..."
-else
-   echo "The update.sh file is different..."
-   mv /home/pi/HoneyPi/update.sh /home/pi/HoneyPi/update.sh.orig
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/update.sh /home/pi/HoneyPi/update.sh
-   chmod a+x /home/pi/HoneyPi/update.sh
+install_packages_if_missing() {
+    for pkg in "$@"; do
+        if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+            log "Installing package $pkg"
+            apt-get install -y --no-install-recommends "$pkg"
+        else
+            log "Package $pkg is already installed"
+        fi
+    done
+}
 
-fi
-if cmp -s /etc/dhcpcd.conf /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/dhcpcd.conf
-then
-   echo "The dhcpcd.conf file is already the correct file..."
-else
-   echo "The dhcpcd.conf file is different..."
-   mv /etc/dhcpcd.conf /etc/dhcpcd.conf.orig
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/dhcpcd.conf /etc/dhcpcd.conf
-fi
-if cmp -s /etc/dnsmasq.conf /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/dnsmasq.conf
-then
-   echo "The dnsmasq.conf file is already the correct file..."
-else
-   echo "The dnsmasq.conf file is different..."
-   mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/dnsmasq.conf /etc/dnsmasq.conf
+install_pip_package_if_missing() {
+    for pkg in "$@"; do
+        if ! pip3 show "$pkg" > /dev/null 2>&1; then
+            log "Installing pip package $pkg"
+            pip3 install "$pkg"
+        else
+            log "Pip package $pkg is already installed"
+        fi
+    done
+}
 
-fi
-if cmp -s /etc/default/hostapd /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd
-then
-   echo "The hostapd default conf file is already the correct file..."
-else
-   echo "The hostapd default conf file is different..."
-   mv /etc/default/hostapd /etc/default/hostapd.orig
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd /etc/default/hostapd
-fi
-if cmp -s /etc/hostapd/hostapd.conf.tmpl /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd.conf.tmpl
-then
-   echo "The hostapd.conf.tmpl default conf file is already the correct file..."
-else
-   echo "The hostapd.conf.tmpl default conf file is different..."
-   mv /etc/hostapd/hostapd.conf.tmpl /etc/hostapd/hostapd.conf.tmpl.orig
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd.conf.tmpl /etc/hostapd/hostapd.conf.tmpl
-fi
+update_config_file() {
+    local file=$1
+    local pattern=$2
+    local entry=$3
+    if grep -q "$pattern" "$file"; then
+        log "$entry already set in $file, skipping."
+    else
+        echo "$entry" >> "$file"
+        log "Added $entry to $file"
+    fi
+}
 
-# changes after v1.3.4
-if cmp -s /etc/lighttpd/lighttpd.conf /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/lighttpd.conf
-then
-   echo "The lighttpd.conf default conf file is already the correct file..."
-else
-   echo "The lighttpd.conf default conf file is different..."
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/lighttpd.conf /etc/lighttpd/lighttpd.conf
-   service lighttpd force-reload
+# Determine the correct config file path
+CONFIG_FILE="/boot/config.txt"
+if grep -q 'DO NOT EDIT THIS FILE' /boot/config.txt; then
+    CONFIG_FILE="/boot/firmware/config.txt"
 fi
 
-# changes with v1.4.3
-if cmp -s /etc/ntpsec/ntp.conf /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/ntp.conf
-then
-   echo "The lighttpd.conf default conf file is already the correct file..."
+log "Using $CONFIG_FILE for configuration updates."
+
+log '>>> Running post-upgrade script...'
+
+# Apply additional configurations
+mkdir -p /var/log/ntpsec/
+mkdir -p /etc/ntpsec/
+
+# Replace configuration files if different
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/interfaces" "/etc/network/interfaces" "/etc/network/interfaces.orig"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/update.sh" "/home/pi/HoneyPi/update.sh" "/home/pi/HoneyPi/update.sh.orig"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/dhcpcd.conf" "/etc/dhcpcd.conf" "/etc/dhcpcd.conf.orig"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/dnsmasq.conf" "/etc/dnsmasq.conf" "/etc/dnsmasq.conf.orig"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd" "/etc/default/hostapd" "/etc/default/hostapd.orig"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd.conf.tmpl" "/etc/hostapd/hostapd.conf.tmpl" "/etc/hostapd/hostapd.conf.tmpl.orig"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/lighttpd.conf" "/etc/lighttpd/lighttpd.conf"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/ntp.conf" "/etc/ntpsec/ntp.conf"
+
+# Restart lighttpd if configuration changed
+if cmp -s "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/lighttpd.conf" "/etc/lighttpd/lighttpd.conf"; then
+    log "The lighttpd.conf file is already the correct file..."
 else
-   echo "The lighttpd.conf default conf file is different..."
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/ntp.conf /etc/ntpsec/ntp.conf
-   mkdir /var/log/ntpsec/
-   chown -R ntpsec:ntpsec /var/log/ntpsec/
+    log "The lighttpd.conf file is different..."
+    cp "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/lighttpd.conf" "/etc/lighttpd/lighttpd.conf"
+    service lighttpd force-reload
 fi
 
 apt-get -y update --allow-releaseinfo-change
+export PIP_ROOT_USER_ACTION=ignore
 
-echo "Install required modules after v1.3.4...for for dht..."
-apt-get -y install --no-install-recommends libgpiod2
-pip3 install adafruit-circuitpython-dht
+log "Install required modules after v1.3.4 for dht..."
+install_packages_if_missing libgpiod2
+install_pip_package_if_missing adafruit-circuitpython-dht
 
-echo "Install required modules after v1.3.7 used for oled display..."
-pip3 install Pillow smbus2
-apt-get -y install --no-install-recommends libopenjp2-7 libtiff5
+log "Install required modules after v1.3.7 used for oled display..."
+install_pip_package_if_missing Pillow smbus2
+install_packages_if_missing libopenjp2-7 libtiff5
 
-echo "Install required modules after v1.3.7 used for ds18b20..."
-pip3 install ds18b20
+log "Install required modules after v1.3.7 used for ds18b20..."
+install_pip_package_if_missing ds18b20
 
-echo "Install required modules after v1.3.7 used for rak811..."
-pip3 install rak811
+log "Install required modules after v1.3.7 used for rak811..."
+install_pip_package_if_missing rak811
 
-echo "Install required modules after v1.3.7 used for WittyPi..."
-pip3 install smbus2 pytz
+log "Install required modules after v1.3.7 used for WittyPi..."
+install_pip_package_if_missing smbus2 pytz
 
-echo "Install required modules after v1.3.7 used for PA1010D..."
-pip3 install pynmea2
+log "Install required modules after v1.3.7 used for PA1010D..."
+install_pip_package_if_missing pynmea2
 
-echo "Install required modules after v1.3.7...for for dht..."
-apt-get -y install --no-install-recommends python3-psutil
-echo "Finished installing modules"
+log "Install required modules after v1.3.7 for dht..."
+install_packages_if_missing python3-psutil
 
-echo "Install required modules after v1.3.9 used for rak811 & WittyPi..."
-if grep -q 'dtoverlay=pi3-miniuart-bt' /boot/config.txt; then
-  echo 'Seems setting Pi3/4 Bluetooth to use mini-UART is done already, skip this step.'
-else
-  echo 'dtoverlay=pi3-miniuart-bt' >> /boot/config.txt
-fi
-echo "Install required modules after v1.3.9 used for WittyPi..."
-echo '>>> Enable I2C'
-if grep -q 'i2c-bcm2708' /etc/modules; then
-  echo 'Seems i2c-bcm2708 module already exists, skip this step.'
-else
-  echo 'i2c-bcm2708' >> /etc/modules
-fi
-if grep -q 'i2c-dev' /etc/modules; then
-  echo 'Seems i2c-dev module already exists, skip this step.'
-else
-  echo 'i2c-dev' >> /etc/modules
-fi
-if grep -q 'dtparam=i2c1=on' /boot/config.txt; then
-  echo 'Seems i2c1 parameter already set, skip this step.'
-else
-  echo 'dtparam=i2c1=on' >> /boot/config.txt
-fi
-if grep -q 'dtparam=i2c_arm=on' /boot/config.txt; then
-  echo 'Seems i2c_arm parameter already set, skip this step.'
-else
-  echo 'dtparam=i2c_arm=on' >> /boot/config.txt
-fi
+log "Install required modules after v1.3.9 used for rak811 & WittyPi..."
+update_config_file "$CONFIG_FILE" "dtoverlay=pi3-miniuart-bt" "dtoverlay=pi3-miniuart-bt"
 
-# required since version v1.4
-echo '>>> Uninstall old numpy pip package - v1.4'
+log "Enable I2C"
+update_config_file "/etc/modules" "i2c-bcm2708" "i2c-bcm2708"
+update_config_file "/etc/modules" "i2c-dev" "i2c-dev"
+update_config_file "$CONFIG_FILE" "dtparam=i2c1=on" "dtparam=i2c1=on"
+update_config_file "$CONFIG_FILE" "dtparam=i2c_arm=on" "dtparam=i2c_arm=on"
+ 
+log 'Uninstall pip numpy python3-numpy'
 pip3 uninstall --yes numpy
 apt-get -y remove python3-numpy
-echo '>>> Install pip3 timezonefinder and numpy - v1.3.7 - PA1010D (gps)'
-apt-get -y install --no-install-recommends libopenblas-dev
-pip3 install timezonefinder==6.1.8 # required since version v1.3.7 - PA1010D (gps)
-pip3 install numpy # Required for ds18b20
 
-# required since version v1.5.3
-echo '>>> Migrate from python3-rpi.gpio to python3-rpi-lgpio because old lib did not work with bookworm OS on Zero - v1.5.3'
-apt-get -y remove python3-rpi.gpio
-apt-get -y install python3-rpi-lgpio
+log 'Install pip3 timezonefinder and numpy'
+install_packages_if_missing libopenblas-dev
+install_pip_package_if_missing timezonefinder==6.1.8 numpy
 
-echo "Migrate autostart from rc.local to systemd service - v1.3.7..."
-sed -i '/(sleep 2;python3/c\#' /etc/rc.local # disable autostart in rc.local
-if cmp -s /lib/systemd/system/honeypi.service /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/honeypi.service
-then
-   echo "The honeypi.service file is already the correct file..."
-else
-   echo "The honeypi.service file is different..."
-   cp /home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/honeypi.service /lib/systemd/system/honeypi.service
-   chmod 644 /lib/systemd/system/honeypi.service
-   systemctl daemon-reload
-   systemctl enable honeypi.service
+log "Migrate autostart from rc.local to systemd service"
+if grep -q 'sleep 2;python3' /etc/rc.local; then
+    sed -i '/(sleep 2;python3/c\#' /etc/rc.local # disable autostart in rc.local
+fi
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/honeypi.service" "/lib/systemd/system/honeypi.service"
+
+# Reload systemd daemon and enable HoneyPi service if necessary
+if ! systemctl is-enabled honeypi.service >/dev/null 2>&1; then
+    chmod 644 /lib/systemd/system/honeypi.service
+    systemctl daemon-reload
+    systemctl enable honeypi.service
 fi
 
 echo "postupdatefinished 1" >> /var/www/html/version.txt
