@@ -80,7 +80,6 @@ log '>>> Running post-upgrade script...'
 
 # Apply additional configurations
 mkdir -p /var/log/ntpsec/
-mkdir -p /etc/ntpsec/
 
 # Replace configuration files if different
 replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/interfaces" "/etc/network/interfaces" "/etc/network/interfaces.orig"
@@ -90,7 +89,7 @@ replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlay
 replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd" "/etc/default/hostapd" "/etc/default/hostapd.orig"
 replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/hostapd.conf.tmpl" "/etc/hostapd/hostapd.conf.tmpl" "/etc/hostapd/hostapd.conf.tmpl.orig"
 replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/lighttpd.conf" "/etc/lighttpd/lighttpd.conf"
-replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/ntp.conf" "/etc/ntpsec/ntp.conf"
+replace_if_different "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/ntp.conf" "/etc/ntp.conf"
 
 # Restart lighttpd if configuration changed
 if cmp -s "/home/pi/HoneyPi/rpi-scripts/$VERSION/post-upgrade-overlays/lighttpd.conf" "/etc/lighttpd/lighttpd.conf"; then
