@@ -50,7 +50,7 @@ def manage_transfer_to_ts(ts_channels, ts_fields, server_url, offline, debug, ts
     except Exception as ex:
         logger.exception("Exception during manage_transfer_to_ts")
 
-def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning):
+def measure(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning, settings):
     measurementIsRunning.value = 1 # set flag
     ts_fields = {}
     try:
@@ -301,7 +301,7 @@ def start_measurement(measurement_stop):
 
                 if startNewMeasurement:
                     q = Queue()
-                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning))
+                    p = Process(target=measure, args=(q, offline, debug, ts_channels, ts_server_url, filtered_temperature, ds18b20Sensors, bme680Sensors, bme680Inits, dhtSensors, aht10Sensors, sht31Sensors, sht25Sensors, hdc1008Sensors, bh1750Sensors, tcSensors, bme280Sensors, pcf8591Sensors, ee895Sensors, gpsSensors, weightSensors, hxInits, connectionErrors, measurementIsRunning, settings))
                     p.start()
 
                     # determine timeout value for Process.join()
